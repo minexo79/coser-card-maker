@@ -1,12 +1,9 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useQRCode } from './useQRCode';
-import {
-  CARD_CANVAS,
-  CARD_IMAGE_AREA,
-  CARD_QR_CODE,
-  CARD_TEXT,
-  CARD_UPLOAD
-} from '../constants/cardLayout';
+import { CARD_TEMPLATES } from '../models/cardTemplates.js';
+
+// 2026.3.29 Blackcat 先指定1P模板的配置
+const template1p = CARD_TEMPLATES['1p'];
 
 export const useCardMaker = () => {
   const [formData, setFormData] = useState({
@@ -54,7 +51,7 @@ export const useCardMaker = () => {
 
   const handleImageUpload = useCallback((file) => {
     if (file) {
-      const maxSize = CARD_UPLOAD.maxFileSizeBytes;
+      const maxSize = template1p.upload.maxFileSizeBytes;
       if (file.size > maxSize) {
         alert('圖片檔案太大，請選擇小於 5MB 的圖片');
         return;
@@ -113,8 +110,8 @@ export const useCardMaker = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
-      canvas.width = CARD_CANVAS.width;
-      canvas.height = CARD_CANVAS.height;
+      canvas.width = template1p.canvas.width;
+      canvas.height = template1p.canvas.height;
       
       // 載入底圖
       const baseImg = new Image();
@@ -132,7 +129,7 @@ export const useCardMaker = () => {
       console.log('> 底圖載入成功');
       
       // 繪製底圖
-      ctx.drawImage(baseImg, 0, 0, CARD_CANVAS.width, CARD_CANVAS.height);
+      ctx.drawImage(baseImg, 0, 0, template1p.canvas.width, template1p.canvas.height);
       
       // 繪製用戶圖片
       if (imageData) {
@@ -145,26 +142,26 @@ export const useCardMaker = () => {
         
         if (userImg.complete && userImg.naturalWidth > 0) {
           const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-          const areaAspect = CARD_IMAGE_AREA.width / CARD_IMAGE_AREA.height;
+          const areaAspect = template1p.imageSlots[0].width / template1p.imageSlots[0].height;
           
           let drawWidth, drawHeight, drawX, drawY;
           
           if (imgAspect > areaAspect) {
-            drawHeight = CARD_IMAGE_AREA.height;
+            drawHeight = template1p.imageSlots[0].height;
             drawWidth = drawHeight * imgAspect;
-            const offsetPixels = (drawWidth - CARD_IMAGE_AREA.width) * formData.imageOffsetX / 100;
-            drawX = CARD_IMAGE_AREA.x - (drawWidth - CARD_IMAGE_AREA.width) / 2 + offsetPixels;
-            drawY = CARD_IMAGE_AREA.y;
+            const offsetPixels = (drawWidth - template1p.imageSlots[0].width) * formData.imageOffsetX / 100;
+            drawX = template1p.imageSlots[0].x - (drawWidth - template1p.imageSlots[0].width) / 2 + offsetPixels;
+            drawY = template1p.imageSlots[0].y;
           } else {
-            drawWidth = CARD_IMAGE_AREA.width;
+            drawWidth = template1p.imageSlots[0].width;
             drawHeight = drawWidth / imgAspect;
-            drawX = CARD_IMAGE_AREA.x;
-            drawY = CARD_IMAGE_AREA.y - (drawHeight - CARD_IMAGE_AREA.height) / 2;
+            drawX = template1p.imageSlots[0].x;
+            drawY = template1p.imageSlots[0].y - (drawHeight - template1p.imageSlots[0].height) / 2;
           }
           
           ctx.save();
           ctx.beginPath();
-          ctx.rect(CARD_IMAGE_AREA.x, CARD_IMAGE_AREA.y, CARD_IMAGE_AREA.width, CARD_IMAGE_AREA.height);
+          ctx.rect(template1p.imageSlots[0].x, template1p.imageSlots[0].y, template1p.imageSlots[0].width, template1p.imageSlots[0].height);
           ctx.clip();
           
           ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
@@ -176,7 +173,7 @@ export const useCardMaker = () => {
       if (formData.showQRCode && formData.websiteUrl) {
         try {
           const qrCanvas = await generateQRCodeCanvas(formData.websiteUrl, {
-            width: CARD_QR_CODE.size - CARD_QR_CODE.contentPadding,
+            width: template1p.qrCode.size - template1p.qrCode.contentPadding,
             margin: 0,
             color: {
               dark: '#000000',
@@ -185,14 +182,14 @@ export const useCardMaker = () => {
           });
           
           if (qrCanvas) {
-            const qrSize = CARD_QR_CODE.size - CARD_QR_CODE.contentPadding;
-            const qrX = CARD_CANVAS.width - qrSize;
-            const qrY = CARD_CANVAS.height - qrSize;
+            const qrSize = template1p.qrCode.size - template1p.qrCode.contentPadding;
+            const qrX = template1p.canvas.width - qrSize;
+            const qrY = template1p.canvas.height - qrSize;
             
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
             ctx.fillRect(
-              qrX - CARD_QR_CODE.backgroundPadding,
-              qrY - CARD_QR_CODE.backgroundPadding,
+              qrX - template1p.qrCode.backgroundPadding,
+              qrY - template1p.qrCode.backgroundPadding,
               qrSize,
               qrSize
             );
@@ -202,8 +199,8 @@ export const useCardMaker = () => {
               qrCanvas,
               qrX,
               qrY,
-              qrSize - CARD_QR_CODE.contentPadding,
-              qrSize - CARD_QR_CODE.contentPadding
+              qrSize - template1p.qrCode.contentPadding,
+              qrSize - template1p.qrCode.contentPadding
             );
           }
         } catch (qrError) {
@@ -216,7 +213,7 @@ export const useCardMaker = () => {
       
       // 標題支持以空格或手動換行分行，並根據行數垂直居中顯示
       if (formData.title) {
-        ctx.font = ` ${CARD_TEXT.title.fontSize}px ${CARD_TEXT.fontFamily}`;
+        ctx.font = ` ${template1p.textPositions.title.fontSize}px ${template1p.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
@@ -231,39 +228,39 @@ export const useCardMaker = () => {
               .split(/ +/)
               .filter((segment) => segment.length > 0);
           });
-        const lineHeight = CARD_TEXT.title.lineHeight;
-        const centerY = CARD_TEXT.title.centerY;
+        const lineHeight = template1p.textPositions.title.lineHeight;
+        const centerY = template1p.textPositions.title.centerY;
         const startY = centerY - ((titleLines.length - 1) * lineHeight) / 2;
 
         titleLines.forEach((line, index) => {
-          ctx.fillText(line, CARD_TEXT.title.x, startY + lineHeight * index);
+          ctx.fillText(line, template1p.textPositions.title.x, startY + lineHeight * index);
         });
       }
 
       if (formData.nickname) {
-        ctx.font = ` ${CARD_TEXT.nickname.fontSize}px ${CARD_TEXT.fontFamily}`;
+        ctx.font = ` ${template1p.textPositions.nickname.fontSize}px ${template1p.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.nickname, CARD_TEXT.nickname.x, CARD_TEXT.nickname.y);
+        ctx.fillText(formData.nickname, template1p.textPositions.nickname.x, template1p.textPositions.nickname.y);
       }
       
       if (formData.category) {
-        ctx.font = ` ${CARD_TEXT.category.fontSize}px ${CARD_TEXT.fontFamily}`;
+        ctx.font = ` ${template1p.textPositions.category.fontSize}px ${template1p.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.category, CARD_TEXT.category.x, CARD_TEXT.category.y);
+        ctx.fillText(formData.category, template1p.textPositions.category.x, template1p.textPositions.category.y);
       }
       
       // 貼合使用者的輸入訊息，進行自動換行處理
       if (formData.message) {
-        ctx.font = ` ${CARD_TEXT.message.fontSize}px ${CARD_TEXT.fontFamily}`;
+        ctx.font = ` ${template1p.textPositions.message.fontSize}px ${template1p.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
-        const maxWidth = CARD_TEXT.message.maxWidth;
-        const lineHeight = CARD_TEXT.message.lineHeight;
-        const startY = CARD_TEXT.message.startY;
-        const messageX = CARD_TEXT.message.x;
+        const maxWidth = template1p.textPositions.message.maxWidth;
+        const lineHeight = template1p.textPositions.message.lineHeight;
+        const startY = template1p.textPositions.message.startY;
+        const messageX = template1p.textPositions.message.x;
         const inputLines = formData.message.split(/\r?\n/);
         const renderedLines = [];
 
@@ -300,7 +297,7 @@ export const useCardMaker = () => {
 
       if (formData.date || formData.cosrole) {
         ctx.fillStyle = 'white';
-        ctx.font = ` ${CARD_TEXT.dateRole.fontSize}px ${CARD_TEXT.fontFamily}`;
+        ctx.font = ` ${template1p.textPositions.dateRole.fontSize}px ${template1p.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
@@ -317,7 +314,7 @@ export const useCardMaker = () => {
         }
         
         if (displayText) {
-          ctx.fillText(displayText, CARD_TEXT.dateRole.x, CARD_TEXT.dateRole.y);
+          ctx.fillText(displayText, template1p.textPositions.dateRole.x, template1p.textPositions.dateRole.y);
         }
       }
       
@@ -354,8 +351,8 @@ export const useCardMaker = () => {
     
     try {
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = CARD_CANVAS.downloadWidth;
-      tempCanvas.height = CARD_CANVAS.downloadHeight;
+      tempCanvas.width = template1p.canvas.downloadWidth;
+      tempCanvas.height = template1p.canvas.downloadHeight;
       
       const originalCanvas = canvasRef.current;
       canvasRef.current = tempCanvas;
