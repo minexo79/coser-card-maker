@@ -30,7 +30,7 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
       <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-auto">
         {/* 標題欄 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800">卡片預覽</h3>
+          <h3 className="text-lg text-gray-800">卡片預覽</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}

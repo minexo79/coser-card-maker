@@ -1,5 +1,13 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useQRCode } from './useQRCode';
+import {
+  CARD_CANVAS,
+  CARD_IMAGE_AREA,
+  CARD_QR_CODE,
+  CARD_TEXT,
+  CARD_UPLOAD,
+  DEFAULT_BASE_IMAGE_LAYOUT
+} from '../constants/cardLayout';
 
 export const useCardMaker = () => {
   const [formData, setFormData] = useState({
@@ -47,9 +55,9 @@ export const useCardMaker = () => {
 
   const handleImageUpload = useCallback((file) => {
     if (file) {
-      const maxSize = 10 * 1024 * 1024;
+      const maxSize = CARD_UPLOAD.maxFileSizeBytes;
       if (file.size > maxSize) {
-        alert('圖片檔案太大，請選擇小於 10MB 的圖片');
+        alert('圖片檔案太大，請選擇小於 5MB 的圖片');
         return;
       }
       const reader = new FileReader();
@@ -79,38 +87,88 @@ export const useCardMaker = () => {
 
   const createDefaultBaseImage = useCallback(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 1000;
-    canvas.height = 960;
+    canvas.width = CARD_CANVAS.width;
+    canvas.height = CARD_CANVAS.height;
     const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#f0f8ff';
-    ctx.fillRect(0, 0, 1000, 960);
+    ctx.fillRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.background.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.background.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.background.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.background.height
+    );
 
     ctx.strokeStyle = '#4682b4';
-    ctx.lineWidth = 3;
-    ctx.strokeRect(10, 10, 780, 780);
+    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.lineWidth;
+    ctx.strokeRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.height
+    );
 
     ctx.fillStyle = 'rgba(250, 250, 250, 0.8)';
-    ctx.fillRect(20, 60, 320, 720);
+    ctx.fillRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.height
+    );
     ctx.strokeStyle = '#c8c8c8';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(20, 60, 320, 720);
+    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.lineWidth;
+    ctx.strokeRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.height
+    );
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(360, 60, 270, 610);
+    ctx.fillRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.height
+    );
     ctx.strokeStyle = '#969696';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(360, 60, 270, 610);
+    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.lineWidth;
+    ctx.strokeRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.height
+    );
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(20, 416, 320, 64);
+    ctx.fillRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.height
+    );
     ctx.strokeStyle = '#c8c8c8';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(20, 416, 320, 64);
+    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.namePanel.lineWidth;
+    ctx.strokeRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.height
+    );
 
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(20, 560, 320, 200);
-    ctx.strokeRect(20, 560, 320, 200);
+    ctx.fillRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.height
+    );
+    ctx.strokeRect(
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.x,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.y,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.width,
+      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.height
+    );
 
     return canvas.toDataURL();
   }, []);
@@ -144,14 +202,14 @@ export const useCardMaker = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
-      canvas.width = 1000;
-      canvas.height = 960;
+      canvas.width = CARD_CANVAS.width;
+      canvas.height = CARD_CANVAS.height;
       
       // 載入底圖
       const baseImg = new Image();
       baseImg.crossOrigin = 'anonymous';
       
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         baseImg.onload = resolve;
         baseImg.onerror = () => {
           baseImg.src = createDefaultBaseImage();
@@ -161,7 +219,7 @@ export const useCardMaker = () => {
       });
       
       // 繪製底圖
-      ctx.drawImage(baseImg, 0, 0, 1000, 960);
+      ctx.drawImage(baseImg, 0, 0, CARD_CANVAS.width, CARD_CANVAS.height);
       
       // 繪製用戶圖片
       if (imageData) {
@@ -173,34 +231,27 @@ export const useCardMaker = () => {
         });
         
         if (userImg.complete && userImg.naturalWidth > 0) {
-          const imgArea = {
-            x: 515.7,
-            y: 75.6,
-            width: 439,
-            height: 761
-          };
-          
           const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-          const areaAspect = imgArea.width / imgArea.height;
+          const areaAspect = CARD_IMAGE_AREA.width / CARD_IMAGE_AREA.height;
           
           let drawWidth, drawHeight, drawX, drawY;
           
           if (imgAspect > areaAspect) {
-            drawHeight = imgArea.height;
+            drawHeight = CARD_IMAGE_AREA.height;
             drawWidth = drawHeight * imgAspect;
-            const offsetPixels = (drawWidth - imgArea.width) * formData.imageOffsetX / 100;
-            drawX = imgArea.x - (drawWidth - imgArea.width) / 2 + offsetPixels;
-            drawY = imgArea.y;
+            const offsetPixels = (drawWidth - CARD_IMAGE_AREA.width) * formData.imageOffsetX / 100;
+            drawX = CARD_IMAGE_AREA.x - (drawWidth - CARD_IMAGE_AREA.width) / 2 + offsetPixels;
+            drawY = CARD_IMAGE_AREA.y;
           } else {
-            drawWidth = imgArea.width;
+            drawWidth = CARD_IMAGE_AREA.width;
             drawHeight = drawWidth / imgAspect;
-            drawX = imgArea.x;
-            drawY = imgArea.y - (drawHeight - imgArea.height) / 2;
+            drawX = CARD_IMAGE_AREA.x;
+            drawY = CARD_IMAGE_AREA.y - (drawHeight - CARD_IMAGE_AREA.height) / 2;
           }
           
           ctx.save();
           ctx.beginPath();
-          ctx.rect(imgArea.x, imgArea.y, imgArea.width, imgArea.height);
+          ctx.rect(CARD_IMAGE_AREA.x, CARD_IMAGE_AREA.y, CARD_IMAGE_AREA.width, CARD_IMAGE_AREA.height);
           ctx.clip();
           
           ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
@@ -212,7 +263,7 @@ export const useCardMaker = () => {
       if (formData.showQRCode && formData.websiteUrl) {
         try {
           const qrCanvas = await generateQRCodeCanvas(formData.websiteUrl, {
-            width: 110.9,
+            width: CARD_QR_CODE.size - CARD_QR_CODE.contentPadding,
             margin: 0,
             color: {
               dark: '#000000',
@@ -221,23 +272,26 @@ export const useCardMaker = () => {
           });
           
           if (qrCanvas) {
-            const qrSize = 110.9;
-            const qrX = 1000 - qrSize;
-            const qrY = 960 - qrSize;
+            const qrSize = CARD_QR_CODE.size - CARD_QR_CODE.contentPadding;
+            const qrX = CARD_CANVAS.width - qrSize;
+            const qrY = CARD_CANVAS.height - qrSize;
             
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(qrX - 5, qrY - 5, qrSize + 5, qrSize + 5);
+            ctx.fillRect(
+              qrX - CARD_QR_CODE.backgroundPadding,
+              qrY - CARD_QR_CODE.backgroundPadding,
+              qrSize,
+              qrSize
+            );
+          
             
-            ctx.strokeStyle = '#cccccc';
-            ctx.lineWidth = 1;
-            ctx.strokeRect(qrX - 5, qrY - 5, qrSize + 5, qrSize + 5);
-            
-            ctx.drawImage(qrCanvas, qrX, qrY, qrSize - 5, qrSize - 5);
-            
-            ctx.fillStyle = '#666666';
-            ctx.font = '10px Arial, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.fillText('掃碼訪問', qrX + qrSize/2, qrY + qrSize + 15);
+            ctx.drawImage(
+              qrCanvas,
+              qrX,
+              qrY,
+              qrSize - CARD_QR_CODE.contentPadding,
+              qrSize - CARD_QR_CODE.contentPadding
+            );
           }
         } catch (qrError) {
           console.error('QR Code繪製失敗:', qrError);
@@ -245,58 +299,95 @@ export const useCardMaker = () => {
       }
 
       // 繪製文字
-      ctx.fillStyle = '#2c3e50';
+      ctx.fillStyle = '#303030';
       
+      // 標題支持以空格或手動換行分行，並根據行數垂直居中顯示
       if (formData.title) {
-        ctx.font = 'bold 36px Arial, Helvetica, sans-serif';
+        ctx.font = ` ${CARD_TEXT.title.fontSize}px ${CARD_TEXT.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.title, 261.1, 140.15);
+
+        const titleLines = formData.title
+          .split(/\r?\n/)
+          .flatMap((line) => {
+            if (!line) {
+              return [''];
+            }
+
+            return line
+              .split(/ +/)
+              .filter((segment) => segment.length > 0);
+          });
+        const lineHeight = CARD_TEXT.title.lineHeight;
+        const centerY = CARD_TEXT.title.centerY;
+        const startY = centerY - ((titleLines.length - 1) * lineHeight) / 2;
+
+        titleLines.forEach((line, index) => {
+          ctx.fillText(line, CARD_TEXT.title.x, startY + lineHeight * index);
+        });
       }
 
       if (formData.nickname) {
-        ctx.font = 'bold 36px Arial, Helvetica, sans-serif';
+        ctx.font = ` ${CARD_TEXT.nickname.fontSize}px ${CARD_TEXT.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.nickname, 261.1, 351.15);
+        ctx.fillText(formData.nickname, CARD_TEXT.nickname.x, CARD_TEXT.nickname.y);
       }
       
       if (formData.category) {
-        ctx.font = 'bold 36px Arial, Helvetica, sans-serif';
+        ctx.font = ` ${CARD_TEXT.category.fontSize}px ${CARD_TEXT.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.category, 261.1, 562.15);
+        ctx.fillText(formData.category, CARD_TEXT.category.x, CARD_TEXT.category.y);
       }
       
+      // 貼合使用者的輸入訊息，進行自動換行處理
       if (formData.message) {
-        ctx.font = 'bold 26px Arial, Helvetica, sans-serif';
+        ctx.font = ` ${CARD_TEXT.message.fontSize}px ${CARD_TEXT.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
-        const maxWidth = 400;
-        const lineHeight = 20;
-        const words = formData.message.split('');
-        let line = '';
-        let y = 725;
-        
-        for (let i = 0; i < words.length; i++) {
-          const testLine = line + words[i];
-          const metrics = ctx.measureText(testLine);
-          
-          if (metrics.width > maxWidth && line !== '') {
-            ctx.fillText(line, 261.1, y);
-            line = words[i];
-            y += lineHeight;
-          } else {
-            line = testLine;
+        const maxWidth = CARD_TEXT.message.maxWidth;
+        const lineHeight = CARD_TEXT.message.lineHeight;
+        const startY = CARD_TEXT.message.startY;
+        const messageX = CARD_TEXT.message.x;
+        const inputLines = formData.message.split(/\r?\n/);
+        const renderedLines = [];
+
+        inputLines.forEach((inputLine) => {
+          if (inputLine === '') {
+            renderedLines.push('');
+            return;
           }
-        }
-        ctx.fillText(line, 261.1, y);
+
+          const characters = inputLine.split('');
+          let line = '';
+
+          for (let i = 0; i < characters.length; i++) {
+            const testLine = line + characters[i];
+            const metrics = ctx.measureText(testLine);
+
+            if (metrics.width > maxWidth && line !== '') {
+              renderedLines.push(line);
+              line = characters[i];
+            } else {
+              line = testLine;
+            }
+          }
+
+          if (line) {
+            renderedLines.push(line);
+          }
+        });
+
+        renderedLines.forEach((renderedLine, index) => {
+          ctx.fillText(renderedLine, messageX, startY + lineHeight * index);
+        });
       }
 
       if (formData.date || formData.cosrole) {
         ctx.fillStyle = 'white';
-        ctx.font = 'bold 24px Arial, Helvetica, sans-serif';
+        ctx.font = ` ${CARD_TEXT.dateRole.fontSize}px ${CARD_TEXT.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
@@ -305,7 +396,7 @@ export const useCardMaker = () => {
         let displayText = '';
         
         if (dateText && roleText) {
-          displayText = `${dateText} / ${roleText}`;
+          displayText = `${dateText} ${roleText}`;
         } else if (dateText) {
           displayText = dateText;
         } else if (roleText) {
@@ -313,7 +404,7 @@ export const useCardMaker = () => {
         }
         
         if (displayText) {
-          ctx.fillText(displayText, 735.45, 49.3);
+          ctx.fillText(displayText, CARD_TEXT.dateRole.x, CARD_TEXT.dateRole.y);
         }
       }
       
@@ -349,8 +440,8 @@ export const useCardMaker = () => {
     
     try {
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = 1000;
-      tempCanvas.height = 960;
+      tempCanvas.width = CARD_CANVAS.downloadWidth;
+      tempCanvas.height = CARD_CANVAS.downloadHeight;
       
       const originalCanvas = canvasRef.current;
       canvasRef.current = tempCanvas;

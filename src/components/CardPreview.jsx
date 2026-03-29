@@ -4,7 +4,8 @@ import { ZoomIn } from 'lucide-react';
 const CardPreview = ({ canvasRef, isLoading, onPreviewClick }) => {
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="relative bg-gray-50 rounded-xl p-4 w-full max-w-md mx-auto">
+      {/* 預覽區容器，直接把圖片放大到跟Container一樣大 (max-w-md -> max-w-max) */}
+      <div className="relative bg-gray-50 rounded-xl p-4 w-full max-w-max mx-auto">
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
             <div className="flex flex-col items-center gap-3">

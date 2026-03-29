@@ -30,7 +30,7 @@ const ImageUpload = ({ onImageUpload }) => {
 
   return (
     <div className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
+      <label className="block text-sm text-gray-700 mb-2">
         上傳圖片
       </label>
       
@@ -43,7 +43,7 @@ const ImageUpload = ({ onImageUpload }) => {
         }}
       >
         <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+          <div className="w-12 h-9 bg-blue-100 rounded-full flex items-center justify-center">
             <ImageIcon className="w-6 h-6 text-blue-600" />
           </div>
           <div>
