@@ -60,7 +60,7 @@ export const DEFAULT_BASE_IMAGE_LAYOUT = {
 
 export const CARD_IMAGE_AREA = {
   x: 390.3,
-  y: 87.3,
+  y: 91.5,
   width: 439.5,
   height: 532.7
 };
@@ -69,30 +69,30 @@ export const CARD_TEXT = {
   fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
   title: {
     fontSize: 36,
-    x: 1027,
-    centerY: 136.25,
+    x: 193.1,
+    centerY: 131.15,
     lineHeight: 38
   },
   nickname: {
     fontSize: 36,
-    x: 1027,
-    y: 391.35
+    x: 193.1,
+    y: 395.55
   },
   category: {
     fontSize: 36,
-    x: 1027,
-    y: 608.05
+    x: 193.1,
+    y: 612.25
   },
   message: {
     fontSize: 30,
-    x: 193.1,
-    startY: 364.7,
+    x: 1027,
+    startY: 110,
     maxWidth: 300,
     lineHeight: 36
   },
   dateRole: {
     fontSize: 26,
     x: 610.05,
-    y: 646.3
+    y: 650.5
   }
 };

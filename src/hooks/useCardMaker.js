@@ -215,7 +215,7 @@ export const useCardMaker = () => {
           baseImg.src = createDefaultBaseImage();
           baseImg.onload = resolve;
         };
-        baseImg.src = '/img/card_base.png';
+        baseImg.src = '/img/card_base_1p.png';
       });
       
       // 繪製底圖
