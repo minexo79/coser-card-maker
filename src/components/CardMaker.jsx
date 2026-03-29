@@ -28,7 +28,7 @@ const CardMaker = () => {
     if (formData.showQRCode === undefined || formData.showQRCode === null) {
       updateFormData('showQRCode', true);
     }
-    
+
     // 如果沒有網址或網址為空，則設定為當前網址
     if (!formData.websiteUrl || formData.websiteUrl.trim() === '') {
       resetToCurrentUrl();
@@ -37,7 +37,7 @@ const CardMaker = () => {
     const timer = setTimeout(() => {
       renderCanvas();
     }, 300);
-    
+
     return () => clearTimeout(timer);
   }, [formData, imageData, renderCanvas]);
 
@@ -51,7 +51,7 @@ const CardMaker = () => {
               <ImageIcon className="w-6 h-6 text-blue-600" />
               圖片內容設定
             </h2>
-            
+
             {/* 活動輸入 */}
             <div className="mb-4">
               <label className="block text-sm  text-gray-700 mb-2">
@@ -79,7 +79,7 @@ const CardMaker = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
               />
             </div>
-            
+
             {/* 類別選擇 */}
             <div className="mb-6">
               <label className="block text-sm  text-gray-700 mb-3">
@@ -108,7 +108,7 @@ const CardMaker = () => {
                   />
                   <span className="ml-2 text-sm font-medium text-gray-700">攝影</span>
                 </label>
-                  <label className="flex items-center cursor-pointer">
+                <label className="flex items-center cursor-pointer">
                   <input
                     type="radio"
                     name="category"
@@ -135,7 +135,7 @@ const CardMaker = () => {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus resize-none transition-all duration-200"
               />
             </div>
-          
+
 
             {/* D1 的資訊框，左方日期，右方角色名稱 */}
             <div className="mb-4 grid grid-cols-2">
@@ -150,7 +150,7 @@ const CardMaker = () => {
                   name="trip-start"
                   value={formData.date}
                   onChange={(e) => updateFormData('date', e.target.value)}
-                  min="2001-01-01" 
+                  min="2001-01-01"
                   max="2099-12-31">
                 </input>
               </div>
@@ -172,7 +172,7 @@ const CardMaker = () => {
 
             {/* 圖片上傳 */}
             <ImageUpload onImageUpload={handleImageUpload} />
-            
+
             {/* 圖片位置調整 */}
             {imageData && (
               <div className="mb-6">
@@ -198,7 +198,13 @@ const CardMaker = () => {
                 </p>
               </div>
             )}
-            
+
+            {/* 問題反饋連結 */}
+            <div className="text-right text-sm/6 text-gray-500 mt-8">
+              <a href="https://forms.gle/ddpGAjKPXj1TsYVP9" target="_blank" rel="noopener noreferrer">
+                遇到問題請點我反饋!
+              </a>
+            </div>
           </div>
         </div>
 
@@ -208,7 +214,7 @@ const CardMaker = () => {
             <h2 className="text-2xl text-gray-800 text-center mb-6">
               圖片預覽
             </h2>
-            
+
             <CardPreview
               canvasRef={canvasRef}
               isLoading={isLoading}
@@ -228,6 +234,7 @@ const CardMaker = () => {
       {/* 版權聲明 */}
       <div className="text-center text-sm/6 text-gray-500 mt-8">
         <p>AniconDIVA CardMaker 2026 @ Designed & Developed By Blackcat.</p>
+        <a href="https://www.vecteezy.com/free-vector/figure">Figure Vectors by Vecteezy</a>
       </div>
     </div>
   );
