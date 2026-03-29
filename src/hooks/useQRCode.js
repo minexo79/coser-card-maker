@@ -22,7 +22,7 @@ export const useQRCode = () => {
       setQrCodeData(qrDataURL);
       return qrDataURL;
     } catch (error) {
-      console.error('QR Code生成失敗:', error);
+      console.error('> QR Code生成失敗:', error);
       return null;
     }
   }, []);
@@ -44,7 +44,7 @@ export const useQRCode = () => {
       await QRCode.toCanvas(canvas, text, defaultOptions);
       return canvas;
     } catch (error) {
-      console.error('QR Code Canvas生成失敗:', error);
+      console.error('> QR Code Canvas生成失敗:', error);
       return null;
     }
   }, []);

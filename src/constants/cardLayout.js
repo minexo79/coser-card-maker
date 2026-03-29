@@ -15,49 +15,6 @@ export const CARD_QR_CODE = {
   backgroundPadding: 5
 };
 
-export const DEFAULT_BASE_IMAGE_LAYOUT = {
-  background: {
-    x: 0,
-    y: 0,
-    width: 1000,
-    height: 960
-  },
-  outerBorder: {
-    x: 10,
-    y: 10,
-    width: 780,
-    height: 780,
-    lineWidth: 3
-  },
-  leftPanel: {
-    x: 20,
-    y: 60,
-    width: 320,
-    height: 720,
-    lineWidth: 1
-  },
-  imagePanel: {
-    x: 360,
-    y: 60,
-    width: 270,
-    height: 610,
-    lineWidth: 2
-  },
-  namePanel: {
-    x: 20,
-    y: 416,
-    width: 320,
-    height: 64,
-    lineWidth: 1
-  },
-  messagePanel: {
-    x: 20,
-    y: 560,
-    width: 320,
-    height: 200
-  }
-};
-
 export const CARD_IMAGE_AREA = {
   x: 390.3,
   y: 91.5,

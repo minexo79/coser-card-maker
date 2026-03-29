@@ -93,8 +93,8 @@ card-maker-react/
 **Canvas 繪製流程（`renderCanvas`）**
 ```
 1. 設定 canvas 尺寸（來自 CARD_CANVAS 常數）
-2. 載入底圖 /img/card_base_1p.png
-   └─ 失敗時 fallback 至 createDefaultBaseImage()（純程式碼繪製的矩形版面）
+2. 載入底圖 /img/card_base.png
+   └─ 失敗時跳出錯誤提示
 3. 若有使用者圖片：
    └─ 計算 cover 裁切比例（imageOffsetX 控制水平偏移）
    └─ canvas.clip() 限制繪製區域

@@ -5,8 +5,7 @@ import {
   CARD_IMAGE_AREA,
   CARD_QR_CODE,
   CARD_TEXT,
-  CARD_UPLOAD,
-  DEFAULT_BASE_IMAGE_LAYOUT
+  CARD_UPLOAD
 } from '../constants/cardLayout';
 
 export const useCardMaker = () => {
@@ -69,7 +68,7 @@ export const useCardMaker = () => {
       };
       
       reader.onerror = (error) => {
-        console.error('讀取檔案時發生錯誤:', error);
+        console.error('> 讀取檔案時發生錯誤:', error);
         alert('圖片讀取失敗，請重試');
       };
       
@@ -83,94 +82,6 @@ export const useCardMaker = () => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${month}-${day}`;
-  }, []);
-
-  const createDefaultBaseImage = useCallback(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = CARD_CANVAS.width;
-    canvas.height = CARD_CANVAS.height;
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = '#f0f8ff';
-    ctx.fillRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.background.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.background.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.background.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.background.height
-    );
-
-    ctx.strokeStyle = '#4682b4';
-    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.lineWidth;
-    ctx.strokeRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.outerBorder.height
-    );
-
-    ctx.fillStyle = 'rgba(250, 250, 250, 0.8)';
-    ctx.fillRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.height
-    );
-    ctx.strokeStyle = '#c8c8c8';
-    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.lineWidth;
-    ctx.strokeRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.leftPanel.height
-    );
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.height
-    );
-    ctx.strokeStyle = '#969696';
-    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.lineWidth;
-    ctx.strokeRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.imagePanel.height
-    );
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.height
-    );
-    ctx.strokeStyle = '#c8c8c8';
-    ctx.lineWidth = DEFAULT_BASE_IMAGE_LAYOUT.namePanel.lineWidth;
-    ctx.strokeRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.namePanel.height
-    );
-
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.height
-    );
-    ctx.strokeRect(
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.x,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.y,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.width,
-      DEFAULT_BASE_IMAGE_LAYOUT.messagePanel.height
-    );
-
-    return canvas.toDataURL();
   }, []);
 
   // 修改 renderCanvas，添加防重複渲染邏輯
@@ -209,14 +120,16 @@ export const useCardMaker = () => {
       const baseImg = new Image();
       baseImg.crossOrigin = 'anonymous';
       
-      await new Promise((resolve) => {
+      await new Promise((resolve, reject) => {
         baseImg.onload = resolve;
         baseImg.onerror = () => {
-          baseImg.src = createDefaultBaseImage();
-          baseImg.onload = resolve;
+          console.error('> 底圖載入失敗，請確認 card_base.png 是否存在');
+          reject(new Error('無法載入底圖，請稍後再試'));
         };
-        baseImg.src = '/img/card_base_1p.png';
+        baseImg.src = '/img/card_base.png';
       });
+
+      console.log('> 底圖載入成功');
       
       // 繪製底圖
       ctx.drawImage(baseImg, 0, 0, CARD_CANVAS.width, CARD_CANVAS.height);
@@ -294,7 +207,7 @@ export const useCardMaker = () => {
             );
           }
         } catch (qrError) {
-          console.error('QR Code繪製失敗:', qrError);
+          console.error('> QR Code繪製失敗:', qrError);
         }
       }
 
@@ -413,14 +326,15 @@ export const useCardMaker = () => {
       return canvas.toDataURL();
       
     } catch (error) {
-      console.error('渲染Canvas時發生錯誤:', error);
+      console.error('> 渲染Canvas時發生錯誤:', error);
+      alert(error.message || '渲染卡片時發生錯誤，請稍後再試');
       return null;
     } finally {
       setIsLoading(false);
       // 清除渲染標記
       isRenderingRef.current = false;
     }
-  }, [formDataString, imageData, createDefaultBaseImage, generateQRCodeCanvas, formatDateToMMDD, formData]);
+  }, [formDataString, imageData, generateQRCodeCanvas, formatDateToMMDD, formData]);
 
   // 創建防抖版本的 renderCanvas
   const debouncedRenderCanvas = useCallback(() => {
@@ -456,7 +370,7 @@ export const useCardMaker = () => {
       canvasRef.current = originalCanvas;
       
     } catch (error) {
-      console.error('下載失敗:', error);
+      console.error('> 下載失敗:', error);
       alert('下載失敗，請稍後再試');
     } finally {
       setIsLoading(false);
