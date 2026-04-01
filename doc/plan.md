@@ -37,34 +37,7 @@
 
 ---
 
-## Phase 2 — Navigation Shell（條款 + 首頁）
-
-**目標**：加入使用者流程前置畫面，DIY 頁面維持現狀完整。
-
-### 步驟
-
-1. 新建 `src/hooks/useAppNavigation.js`
-   - 狀態機：`'terms'` → `'home'` → `'diy'`
-   - 初始值永遠是 `'terms'`
-   - 暴露：`currentPage`、`acceptTerms()`、`goToDiy()`、`goToHome()`
-2. 新建 `src/components/TermsModal.jsx`
-   - 全螢幕遮罩，顯示使用條款文字
-   - 「同意並繼續」→ `acceptTerms()` → 導向 `'home'`
-3. 新建 `src/components/HomePage.jsx`
-   - **合作活動**：灰底、disabled、標示「即將推出」（不實作功能）
-   - **DIY 製作**：可點擊 → `goToDiy()`
-4. 更新 `src/App.jsx`：依 `currentPage` 渲染對應畫面
-5. 測試：
-   - `useAppNavigation` 所有狀態轉換
-   - `TermsModal` 渲染與按鈕行為
-   - `HomePage` 兩卡片渲染與 disabled 狀態
-
-### 驗收
-> 開啟 App → 條款 → 首頁 → DIY，製作功能與 Phase 1 完全相同。
-
----
-
-## Phase 3 — Hook 重構：支援多天數狀態
+## Phase 2 — Hook 重構：支援多天數狀態
 
 **目標**：`useCardMaker` 的圖片與日期狀態改為 per-day 結構，並接通 Model。
 
@@ -96,7 +69,7 @@
 
 ---
 
-## Phase 4 — DIY View UI 更新
+## Phase 3 — DIY View UI 更新
 
 **目標**：表單加入天數切換下拉，D2 欄位條件渲染。
 
@@ -118,15 +91,13 @@
 
 ---
 
-## Phase 5 — 2p Canvas 多槽渲染
+## Phase 4 — 多p Canvas 多槽渲染
 
-**目標**：補入 2p 實際座標，Canvas 依天數繪製多個圖片槽。
-
-> ⚠️ **前置條件**：需提供 `card_base_2p.png` 的實際像素尺寸及各圖片槽座標後才能進行。
+**目標**：補入 2p 甚至 多p 實際座標，Canvas 依天數繪製多個圖片槽。
 
 ### 步驟
 
-1. 填入 `src/models/cardTemplates.js` 的 2p `null` 佔位座標
+1. 填入 `src/models/cardTemplates.js` 的 np `null` 佔位座標
 2. 更新 `src/hooks/useCardMaker.js` 的 `renderCanvas`：
    - 依 `template.imageSlots` 陣列迭代
    - 每個 slot 從 `imageDatas[slot.key]` 取圖、`imageOffsets[slot.key]` 做水平偏移
@@ -137,6 +108,33 @@
 
 ### 驗收
 > 選 2天後兩張圖分別出現在 Day 1 / Day 2 圖框。
+
+---
+
+## Phase 5 — Navigation Shell（條款 + 首頁）
+
+**目標**：加入使用者流程前置畫面，DIY 頁面維持現狀完整。
+
+### 步驟
+
+1. 新建 `src/hooks/useAppNavigation.js`
+   - 狀態機：`'terms'` → `'home'` → `'diy'`
+   - 初始值永遠是 `'terms'`
+   - 暴露：`currentPage`、`acceptTerms()`、`goToDiy()`、`goToHome()`
+2. 新建 `src/components/TermsModal.jsx`
+   - 全螢幕遮罩，顯示使用條款文字
+   - 「同意並繼續」→ `acceptTerms()` → 導向 `'home'`
+3. 新建 `src/components/HomePage.jsx`
+   - **合作活動**：灰底、disabled、標示「即將推出」（不實作功能）
+   - **DIY 製作**：可點擊 → `goToDiy()`
+4. 更新 `src/App.jsx`：依 `currentPage` 渲染對應畫面
+5. 測試：
+   - `useAppNavigation` 所有狀態轉換
+   - `TermsModal` 渲染與按鈕行為
+   - `HomePage` 兩卡片渲染與 disabled 狀態
+
+### 驗收
+> 開啟 App → 條款 → 首頁 → DIY，製作功能與 Phase 1 完全相同。
 
 ---
 

@@ -5,6 +5,8 @@
 
 export const CARD_TEMPLATES = {
   '1p': {
+    // 底圖來源
+    baseImagePath: '/img/card_base_1p.png',
     // 畫布配置
     canvas: {
       width: 1220,
@@ -67,12 +69,14 @@ export const CARD_TEMPLATES = {
     }
   },
   '2p': {
+    // 底圖來源
+    baseImagePath: '/img/card_base_2p.png',
     // 畫布配置
     canvas: {
-      width: null, // 待 Phase 5 補充
-      height: null,
-      downloadWidth: null,
-      downloadHeight: null
+      width: 1700,
+      height: 850,
+      downloadWidth: 1700,
+      downloadHeight: 850
     },
     // 圖片上傳限制
     upload: {
@@ -89,18 +93,18 @@ export const CARD_TEMPLATES = {
       {
         key: 'd1',
         label: '第一天',
-        x: null, // 待 Phase 5 補充
-        y: null,
-        width: null,
-        height: null
+        x: 390.8,
+        y: 87.3,
+        width: 439.5,
+        height: 532.7
       },
       {
         key: 'd2',
         label: '第二天',
-        x: null, // 待 Phase 5 補充
-        y: null,
-        width: null,
-        height: null
+        x: 865.3,
+        y: 87.3,
+        width: 439.5,
+        height: 532.7
       }
     ],
     // 文字位置配置
@@ -108,31 +112,111 @@ export const CARD_TEMPLATES = {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
       title: {
         fontSize: 36,
-        x: null, // 待 Phase 5 補充
-        centerY: null,
+        x: 193.1,
+        centerY: 131.15,
         lineHeight: 38
       },
       nickname: {
         fontSize: 36,
-        x: null, // 待 Phase 5 補充
-        y: null
+        x: 193.1,
+        y: 395.55
       },
       category: {
         fontSize: 36,
-        x: null, // 待 Phase 5 補充
-        y: null
+        x: 193.1,
+        y: 612.25
       },
       message: {
         fontSize: 30,
-        x: null, // 待 Phase 5 補充
-        startY: null,
+        x: 1502,
+        startY: 110,
         maxWidth: 300,
         lineHeight: 36
       },
       dateRole: {
         fontSize: 26,
-        x: null, // 待相應補充
-        y: null
+        x: 610.05,
+        y: 650.5
+      }
+    }
+  },
+  '3p': {
+    // 底圖來源
+    baseImagePath: '/img/card_base_3p.png',
+    // 畫布配置
+    canvas: {
+      width: 1960,
+      height: 860,
+      downloadWidth: 1960,
+      downloadHeight: 860
+    },
+    // 圖片上傳限制
+    upload: {
+      maxFileSizeBytes: 5 * 1024 * 1024
+    },
+    // QR 碼配置
+    qrCode: {
+      size: 152,
+      contentPadding: 10,
+      backgroundPadding: 5
+    },
+    // 圖片槽定義
+    imageSlots: [
+      {
+        key: 'd1',
+        label: '第一天',
+        x: 394.3,
+        y: 87.3,
+        width: 367.2,
+        height: 532.7
+      },
+      {
+        key: 'd2',
+        label: '第二天',
+        x: 796.4,
+        y: 87.3,
+        width: 367.2,
+        height: 532.7
+      },
+      {
+        key: 'd3',
+        label: '第三天',
+        x: 1198.6,
+        y: 87.3,
+        width: 367.2,
+        height: 532.7
+      }
+    ],
+    // 文字位置配置
+    textPositions: {
+      fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
+      title: {
+        fontSize: 36,
+        x: 193.1,
+        centerY: 131.15,
+        lineHeight: 38
+      },
+      nickname: {
+        fontSize: 36,
+        x: 193.1,
+        y: 395.55
+      },
+      category: {
+        fontSize: 36,
+        x: 193.1,
+        y: 612.25
+      },
+      message: {
+        fontSize: 30,
+        x: 1762.9,
+        startY: 110,
+        maxWidth: 300,
+        lineHeight: 36
+      },
+      dateRole: {
+        fontSize: 26,
+        x: 610.05,
+        y: 650.5
       }
     }
   }

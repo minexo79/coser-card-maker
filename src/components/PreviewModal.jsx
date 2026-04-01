@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { X, Download } from 'lucide-react';
 
 const PreviewModal = ({ show, canvasRef, onClose }) => {
+  const previewImageRef = useRef(null);
+
   useEffect(() => {
     if (show) {
       document.body.style.overflow = 'hidden';
@@ -13,6 +15,19 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
       document.body.style.overflow = 'unset';
     };
   }, [show]);
+
+  useEffect(() => {
+    if (!show) {
+      return;
+    }
+
+    const currentCanvas = canvasRef.current;
+    const currentImage = previewImageRef.current;
+
+    if (currentCanvas && currentImage) {
+      currentImage.src = currentCanvas.toDataURL();
+    }
+  }, [show, canvasRef]);
 
   const handleDownload = () => {
     if (canvasRef.current) {
@@ -50,15 +65,13 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
         
         {/* 圖片內容 */}
         <div className="p-6 flex items-center justify-center">
-          {canvasRef.current && (
-            <img
-              src={canvasRef.current.toDataURL()}
-              alt="卡片預覽"
-              className="max-w-full max-h-[70vh] rounded-lg shadow-lg"
-              onClick={onClose}
-              style={{ cursor: 'pointer' }}
-            />
-          )}
+          <img
+            ref={previewImageRef}
+            alt="卡片預覽"
+            className="max-w-full max-h-[70vh] rounded-lg shadow-lg"
+            onClick={onClose}
+            style={{ cursor: 'pointer' }}
+          />
         </div>
         
         <div className="p-4 text-center border-t border-gray-200">

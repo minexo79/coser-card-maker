@@ -1,37 +1,37 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import { Upload, Image as ImageIcon } from 'lucide-react';
 
-const ImageUpload = ({ onImageUpload }) => {
+const ImageUpload = ({ onImageUpload, label = '上傳圖片' }) => {
   const fileInputRef = useRef(null);
 
   const handleFileChange = (e) => {
-    console.log('iOS - File change triggered');
+    console.log('> File change triggered');
     const file = e.target.files?.[0];
     
     if (file) {
-      console.log('iOS - File details:', {
+      console.log('> File details:', {
         name: file.name,
         size: file.size,
         type: file.type
       });
       onImageUpload(file);
     } else {
-      console.log('iOS - No file selected');
+      console.log('> No file selected');
     }
   };
 
   const handleClick = (e) => {
     e.preventDefault();
-    console.log('iOS - Click triggered');
+    console.log('> Click triggered');
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
   };
 
   return (
-    <div className="mb-6">
+    <div className="mb-2">
       <label className="block text-sm text-gray-700 mb-2">
-        上傳圖片
+        {label}
       </label>
       
       <div

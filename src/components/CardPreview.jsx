@@ -1,4 +1,3 @@
-import React from 'react';
 import { ZoomIn } from 'lucide-react';
 
 const CardPreview = ({ canvasRef, isLoading, onPreviewClick }) => {

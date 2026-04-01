@@ -2,76 +2,261 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import { useQRCode } from './useQRCode';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 
-// 2026.3.29 Blackcat 先指定1P模板的配置
-const template1p = CARD_TEMPLATES['1p'];
+// return YYYY-MM-DD format string for today, used as default date value in date input.
+const getCurrentDateString = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Parse day keys (for example d1, d2, d10) into numeric indexes.
+const getDayIndexFromKey = (dayKey) => {
+  const match = /^d(\d+)$/i.exec(dayKey || '');
+  if (!match) return Number.POSITIVE_INFINITY;
+  return Number.parseInt(match[1], 10);
+};
+
+// Build template lookup by day count so future templates can plug in directly.
+const buildTemplateConfig = () => {
+  const entries = Object.entries(CARD_TEMPLATES)
+    .map(([key, template]) => ({
+      key,
+      template,
+      slotCount: template?.imageSlots?.length || 0
+    }))
+    .filter((entry) => entry.slotCount > 0)
+    .sort((a, b) => a.slotCount - b.slotCount);
+
+  const templateByDayCount = {};
+  entries.forEach((entry) => {
+    templateByDayCount[entry.slotCount] = entry.template;
+  });
+
+  const supportedDayCounts = Object.keys(templateByDayCount)
+    .map((value) => Number.parseInt(value, 10))
+    .filter((value) => Number.isFinite(value))
+    .sort((a, b) => a - b);
+
+  return {
+    entries,
+    templateByDayCount,
+    supportedDayCounts
+  };
+};
+
+// Build per-day state objects from dynamic day keys.
+const createStateByDayKeys = (dayKeys, valueFactory) => {
+  return dayKeys.reduce((acc, dayKey) => {
+    acc[dayKey] = valueFactory(dayKey);
+    return acc;
+  }, {});
+};
 
 export const useCardMaker = () => {
-  const [formData, setFormData] = useState({
+  // Build template config once and reuse it across renders.
+  const templateConfig = useMemo(() => buildTemplateConfig(), []);
+  const defaultDayCount = templateConfig.supportedDayCounts[0] || 1;
+
+  // Collect all day keys from all templates to keep state shape consistent.
+  const allDayKeys = useMemo(() => {
+    const keys = new Set();
+    templateConfig.entries.forEach((entry) => {
+      (entry.template.imageSlots || []).forEach((slot) => {
+        if (slot?.key) {
+          keys.add(slot.key);
+        }
+      });
+    });
+
+    if (keys.size === 0) {
+      keys.add('d1');
+    }
+
+    return Array.from(keys).sort((a, b) => getDayIndexFromKey(a) - getDayIndexFromKey(b));
+  }, [templateConfig.entries]);
+
+  const supportedDayCounts = templateConfig.supportedDayCounts;
+
+  const [sharedFormData, setSharedFormData] = useState({
     title: '',
     nickname: '',
     message: '',
     category: 'COSER',
-    date: '',
-    cosrole: '',
-    imageOffsetX: 0
+    showQRCode: true,
+    websiteUrl: ''
   });
+
+  const [dayDetails, setDayDetails] = useState(() =>
+    createStateByDayKeys(allDayKeys, () => ({ date: '', cosrole: '' }))
+  );
+
+  const [imageDatas, setImageDatas] = useState(() =>
+    createStateByDayKeys(allDayKeys, () => null)
+  );
+
+  const [imageOffsets, setImageOffsets] = useState(() =>
+    createStateByDayKeys(allDayKeys, () => 0)
+  );
+
+  // Normalize user-selected day count to a supported template day count.
+  const normalizeDayCount = useCallback(
+    (requestedDayCount) => {
+      if (supportedDayCounts.length === 0) return defaultDayCount;
+      const value = Number.parseInt(requestedDayCount, 10);
+      if (supportedDayCounts.includes(value)) return value;
+
+      const fallback = [...supportedDayCounts]
+        .reverse()
+        .find((count) => count <= value);
+
+      return fallback || supportedDayCounts[0];
+    },
+    [defaultDayCount, supportedDayCounts]
+  );
+
+  const [dayCount, setDayCountState] = useState(defaultDayCount);
+  const setDayCount = useCallback(
+    (requestedDayCount) => {
+      setDayCountState(normalizeDayCount(requestedDayCount));
+    },
+    [normalizeDayCount]
+  );
   
-  const [imageData, setImageData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { generateQRCodeCanvas } = useQRCode();
   const canvasRef = useRef(null);
   
-  // 添加防抖和緩存相關的 refs
+  // Refs for render debouncing and render lock.
   const renderTimeoutRef = useRef(null);
   const lastRenderDataRef = useRef(null);
   const isRenderingRef = useRef(false);
 
-  // 創建一個穩定的 formData 字符串用於比較
+  const getCurrentTemplate = useCallback(() => {
+    // Resolve template by day count. Fall back safely to default then 1p.
+    return templateConfig.templateByDayCount[dayCount]
+      || templateConfig.templateByDayCount[defaultDayCount]
+      || CARD_TEMPLATES['1p'];
+  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount]);
+
+  const addDaysToDate = useCallback((dateValue, days) => {
+    if (!dateValue) return '';
+    const date = new Date(dateValue);
+    if (Number.isNaN(date.getTime())) return '';
+    date.setDate(date.getDate() + days);
+    return date.toISOString().split('T')[0];
+  }, []);
+
+  const updateDayDetail = useCallback((dayKey, field, value) => {
+    if (field === 'imageOffsetX') {
+      setImageOffsets((prev) => ({
+        ...prev,
+        [dayKey]: value
+      }));
+      return;
+    }
+
+    if (dayKey === 'd1' && field === 'date') {
+      // Use d1 as start date and auto-fill later days as consecutive dates.
+      setDayDetails((prev) => ({
+        ...prev,
+        ...allDayKeys.reduce((acc, key) => {
+          const dayIndex = getDayIndexFromKey(key);
+          const offsetDays = Number.isFinite(dayIndex) ? Math.max(dayIndex - 1, 0) : 0;
+          acc[key] = {
+            ...(prev[key] || {}),
+            date: addDaysToDate(value, offsetDays)
+          };
+          return acc;
+        }, {})
+      }));
+      return;
+    }
+
+    setDayDetails((prev) => ({
+      ...prev,
+      [dayKey]: {
+        ...prev[dayKey],
+        [field]: value
+      }
+    }));
+  }, [addDaysToDate, allDayKeys]);
+
+  // Stable serialized snapshot for render change detection.
   const formDataString = useMemo(() => {
     return JSON.stringify({
-      title: formData.title || '',
-      nickname: formData.nickname || '',
-      message: formData.message || '',
-      category: formData.category || '',
-      date: formData.date || '',
-      cosrole: formData.cosrole || '',
-      imageOffsetX: formData.imageOffsetX || 0,
-      showQRCode: formData.showQRCode,
-      websiteUrl: formData.websiteUrl || ''
+      title: sharedFormData.title || '',
+      nickname: sharedFormData.nickname || '',
+      message: sharedFormData.message || '',
+      category: sharedFormData.category || '',
+      showQRCode: sharedFormData.showQRCode,
+      websiteUrl: sharedFormData.websiteUrl || '',
+      dayCount,
+      dayDetails,
+      imageDatas,
+      imageOffsets
     });
-  }, [formData]);
+  }, [sharedFormData, dayCount, dayDetails, imageDatas, imageOffsets]);
+
+  // Backward-compatible flat form data for legacy UI consumers.
+  const formData = useMemo(() => {
+    // Keep old access paths: formData.date and formData.cosrole.
+    return {
+      ...sharedFormData,
+      date: dayDetails.d1?.date || '',
+      cosrole: dayDetails.d1?.cosrole || '',
+      imageOffsetX: imageOffsets.d1 ?? 0
+    };
+  }, [sharedFormData, dayDetails, imageOffsets]);
 
   const updateFormData = useCallback((field, value) => {
-    setFormData(prev => ({
+    if (field === 'date' || field === 'cosrole') {
+      updateDayDetail('d1', field, value);
+      return;
+    }
+
+    if (field === 'imageOffsetX') {
+      setImageOffsets((prev) => ({
+        ...prev,
+        d1: value
+      }));
+      return;
+    }
+
+    setSharedFormData((prev) => ({
       ...prev,
       [field]: value
     }));
-  }, []);
+  }, [updateDayDetail]);
 
-  const handleImageUpload = useCallback((file) => {
+  const handleImageUpload = useCallback((file, dayKey = 'd1') => {
     if (file) {
-      const maxSize = template1p.upload.maxFileSizeBytes;
+      const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
       if (file.size > maxSize) {
-        alert('圖片檔案太大，請選擇小於 5MB 的圖片');
+        alert('Image is too large. Please upload a file smaller than 5MB.');
         return;
       }
       const reader = new FileReader();
       
       reader.onload = (e) => {
         if (e.target?.result) {
-          setImageData(e.target.result);
+          setImageDatas((prev) => ({
+            ...prev,
+            [dayKey]: e.target.result
+          }));
         }
       };
       
       reader.onerror = (error) => {
-        console.error('> 讀取檔案時發生錯誤:', error);
-        alert('圖片讀取失敗，請重試');
+        console.error('Failed to read uploaded file:', error);
+        alert('Failed to read image file. Please try again.');
       };
       
       reader.readAsDataURL(file);
     }
-  }, []);
+  }, [getCurrentTemplate]);
 
   const formatDateToMMDD = useCallback((dateValue) => {
     if (!dateValue) return '';
@@ -81,26 +266,32 @@ export const useCardMaker = () => {
     return `${month}-${day}`;
   }, []);
 
-  // 修改 renderCanvas，添加防重複渲染邏輯
+  // Render canvas with lock and cache checks to avoid duplicate work.
   const renderCanvas = useCallback(async () => {
     if (!canvasRef.current) return null;
+
+    // If canvas config is incomplete, fall back to 1p to avoid render failure.
+    const template = getCurrentTemplate();
+    const hasCanvasConfig = Number.isFinite(template?.canvas?.width) && Number.isFinite(template?.canvas?.height);
+    const renderTemplate = hasCanvasConfig ? template : CARD_TEMPLATES['1p'];
+    const imageSlots = renderTemplate.imageSlots || [];
     
-    // 檢查是否正在渲染中
+    // Skip if another render is in progress.
     if (isRenderingRef.current) {
-      console.log('Canvas正在渲染中，跳過此次請求');
+      console.log('Canvas is already rendering. Skip this request.');
       return null;
     }
     
-    // 創建當前數據的快照用於比較
-    const currentDataSnapshot = formDataString + (imageData || '');
+    // Build snapshot for lightweight render dedupe.
+    const currentDataSnapshot = formDataString;
     
-    // 如果數據沒有變化，跳過渲染
+    // Skip when data has not changed.
     if (lastRenderDataRef.current === currentDataSnapshot) {
-      console.log('數據未變化，跳過渲染');
+      console.log('Render data unchanged. Skip render.');
       return null;
     }
     
-    // 設置渲染標記
+    // Set render lock.
     isRenderingRef.current = true;
     lastRenderDataRef.current = currentDataSnapshot;
     
@@ -110,58 +301,67 @@ export const useCardMaker = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
-      canvas.width = template1p.canvas.width;
-      canvas.height = template1p.canvas.height;
+      canvas.width = renderTemplate.canvas.width;
+      canvas.height = renderTemplate.canvas.height;
       
-      // 載入底圖
+      // Load base image.
       const baseImg = new Image();
       baseImg.crossOrigin = 'anonymous';
       
       await new Promise((resolve, reject) => {
         baseImg.onload = resolve;
         baseImg.onerror = () => {
-          console.error('> 底圖載入失敗，請確認 card_base.png 是否存在');
-          reject(new Error('無法載入底圖，請稍後再試'));
+          console.error('Base image failed to load. Check image asset path.');
+          reject(new Error('Failed to load base image. Please try again later.'));
         };
-        baseImg.src = '/img/card_base.png';
+        // Base image path is template-driven for extensibility.
+        baseImg.src = renderTemplate.baseImagePath || '/img/card_base.png';
       });
 
-      console.log('> 底圖載入成功');
+      console.log('Base image loaded.');
       
-      // 繪製底圖
-      ctx.drawImage(baseImg, 0, 0, template1p.canvas.width, template1p.canvas.height);
+      // Draw base image.
+      ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
       
-      // 繪製用戶圖片
-      if (imageData) {
+      // Draw all user image slots based on current template.
+      for (const imageSlot of imageSlots) {
+        const dayKey = imageSlot?.key;
+        const currentImageData = dayKey ? imageDatas[dayKey] : null;
+        const currentImageOffset = dayKey ? (imageOffsets[dayKey] ?? 0) : 0;
+
+        if (!currentImageData) {
+          continue;
+        }
+
         const userImg = new Image();
         await new Promise((resolve) => {
           userImg.onload = resolve;
           userImg.onerror = resolve;
-          userImg.src = imageData;
+          userImg.src = currentImageData;
         });
         
         if (userImg.complete && userImg.naturalWidth > 0) {
           const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-          const areaAspect = template1p.imageSlots[0].width / template1p.imageSlots[0].height;
+          const areaAspect = imageSlot.width / imageSlot.height;
           
           let drawWidth, drawHeight, drawX, drawY;
           
           if (imgAspect > areaAspect) {
-            drawHeight = template1p.imageSlots[0].height;
+            drawHeight = imageSlot.height;
             drawWidth = drawHeight * imgAspect;
-            const offsetPixels = (drawWidth - template1p.imageSlots[0].width) * formData.imageOffsetX / 100;
-            drawX = template1p.imageSlots[0].x - (drawWidth - template1p.imageSlots[0].width) / 2 + offsetPixels;
-            drawY = template1p.imageSlots[0].y;
+            const offsetPixels = (drawWidth - imageSlot.width) * currentImageOffset / 100;
+            drawX = imageSlot.x - (drawWidth - imageSlot.width) / 2 + offsetPixels;
+            drawY = imageSlot.y;
           } else {
-            drawWidth = template1p.imageSlots[0].width;
+            drawWidth = imageSlot.width;
             drawHeight = drawWidth / imgAspect;
-            drawX = template1p.imageSlots[0].x;
-            drawY = template1p.imageSlots[0].y - (drawHeight - template1p.imageSlots[0].height) / 2;
+            drawX = imageSlot.x;
+            drawY = imageSlot.y - (drawHeight - imageSlot.height) / 2;
           }
           
           ctx.save();
           ctx.beginPath();
-          ctx.rect(template1p.imageSlots[0].x, template1p.imageSlots[0].y, template1p.imageSlots[0].width, template1p.imageSlots[0].height);
+          ctx.rect(imageSlot.x, imageSlot.y, imageSlot.width, imageSlot.height);
           ctx.clip();
           
           ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
@@ -170,10 +370,10 @@ export const useCardMaker = () => {
       }
       
       // 繪製QR Code
-      if (formData.showQRCode && formData.websiteUrl) {
+      if (sharedFormData.showQRCode && sharedFormData.websiteUrl) {
         try {
-          const qrCanvas = await generateQRCodeCanvas(formData.websiteUrl, {
-            width: template1p.qrCode.size - template1p.qrCode.contentPadding,
+          const qrCanvas = await generateQRCodeCanvas(sharedFormData.websiteUrl, {
+            width: renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding,
             margin: 0,
             color: {
               dark: '#000000',
@@ -182,14 +382,14 @@ export const useCardMaker = () => {
           });
           
           if (qrCanvas) {
-            const qrSize = template1p.qrCode.size - template1p.qrCode.contentPadding;
-            const qrX = template1p.canvas.width - qrSize;
-            const qrY = template1p.canvas.height - qrSize;
+            const qrSize = renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding;
+            const qrX = renderTemplate.canvas.width - qrSize;
+            const qrY = renderTemplate.canvas.height - qrSize;
             
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
             ctx.fillRect(
-              qrX - template1p.qrCode.backgroundPadding,
-              qrY - template1p.qrCode.backgroundPadding,
+              qrX - renderTemplate.qrCode.backgroundPadding,
+              qrY - renderTemplate.qrCode.backgroundPadding,
               qrSize,
               qrSize
             );
@@ -199,25 +399,25 @@ export const useCardMaker = () => {
               qrCanvas,
               qrX,
               qrY,
-              qrSize - template1p.qrCode.contentPadding,
-              qrSize - template1p.qrCode.contentPadding
+              qrSize - renderTemplate.qrCode.contentPadding,
+              qrSize - renderTemplate.qrCode.contentPadding
             );
           }
         } catch (qrError) {
-          console.error('> QR Code繪製失敗:', qrError);
+          console.error('Failed to draw QR code:', qrError);
         }
       }
 
-      // 繪製文字
+      // Draw text.
       ctx.fillStyle = '#303030';
       
-      // 標題支持以空格或手動換行分行，並根據行數垂直居中顯示
-      if (formData.title) {
-        ctx.font = ` ${template1p.textPositions.title.fontSize}px ${template1p.textPositions.fontFamily}`;
+      // Title: split by spaces/newlines and vertically center all lines.
+      if (sharedFormData.title) {
+        ctx.font = ` ${renderTemplate.textPositions.title.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const titleLines = formData.title
+        const titleLines = sharedFormData.title
           .split(/\r?\n/)
           .flatMap((line) => {
             if (!line) {
@@ -228,40 +428,40 @@ export const useCardMaker = () => {
               .split(/ +/)
               .filter((segment) => segment.length > 0);
           });
-        const lineHeight = template1p.textPositions.title.lineHeight;
-        const centerY = template1p.textPositions.title.centerY;
+        const lineHeight = renderTemplate.textPositions.title.lineHeight;
+        const centerY = renderTemplate.textPositions.title.centerY;
         const startY = centerY - ((titleLines.length - 1) * lineHeight) / 2;
 
         titleLines.forEach((line, index) => {
-          ctx.fillText(line, template1p.textPositions.title.x, startY + lineHeight * index);
+          ctx.fillText(line, renderTemplate.textPositions.title.x, startY + lineHeight * index);
         });
       }
 
-      if (formData.nickname) {
-        ctx.font = ` ${template1p.textPositions.nickname.fontSize}px ${template1p.textPositions.fontFamily}`;
+      if (sharedFormData.nickname) {
+        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.nickname, template1p.textPositions.nickname.x, template1p.textPositions.nickname.y);
+        ctx.fillText(sharedFormData.nickname, renderTemplate.textPositions.nickname.x, renderTemplate.textPositions.nickname.y);
       }
       
-      if (formData.category) {
-        ctx.font = ` ${template1p.textPositions.category.fontSize}px ${template1p.textPositions.fontFamily}`;
+      if (sharedFormData.category) {
+        ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(formData.category, template1p.textPositions.category.x, template1p.textPositions.category.y);
+        ctx.fillText(sharedFormData.category, renderTemplate.textPositions.category.x, renderTemplate.textPositions.category.y);
       }
       
-      // 貼合使用者的輸入訊息，進行自動換行處理
-      if (formData.message) {
-        ctx.font = ` ${template1p.textPositions.message.fontSize}px ${template1p.textPositions.fontFamily}`;
+      // Message: wrap by measured width while preserving line breaks.
+      if (sharedFormData.message) {
+        ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         
-        const maxWidth = template1p.textPositions.message.maxWidth;
-        const lineHeight = template1p.textPositions.message.lineHeight;
-        const startY = template1p.textPositions.message.startY;
-        const messageX = template1p.textPositions.message.x;
-        const inputLines = formData.message.split(/\r?\n/);
+        const maxWidth = renderTemplate.textPositions.message.maxWidth;
+        const lineHeight = renderTemplate.textPositions.message.lineHeight;
+        const startY = renderTemplate.textPositions.message.startY;
+        const messageX = renderTemplate.textPositions.message.x;
+        const inputLines = sharedFormData.message.split(/\r?\n/);
         const renderedLines = [];
 
         inputLines.forEach((inputLine) => {
@@ -295,16 +495,23 @@ export const useCardMaker = () => {
         });
       }
 
-      if (formData.date || formData.cosrole) {
-        ctx.fillStyle = 'white';
-        ctx.font = ` ${template1p.textPositions.dateRole.fontSize}px ${template1p.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const dateText = formData.date ? formatDateToMMDD(formData.date) : '';
-        const roleText = formData.cosrole || '';
+      ctx.fillStyle = 'white';
+      ctx.font = ` ${renderTemplate.textPositions.dateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      imageSlots.forEach((slot) => {
+        const dayKey = slot?.key;
+        const currentDayDetail = dayKey ? (dayDetails[dayKey] || { date: '', cosrole: '' }) : { date: '', cosrole: '' };
+
+        if (!currentDayDetail.date && !currentDayDetail.cosrole) {
+          return;
+        }
+
+        const dateText = currentDayDetail.date ? formatDateToMMDD(currentDayDetail.date) : '';
+        const roleText = currentDayDetail.cosrole || '';
         let displayText = '';
-        
+
         if (dateText && roleText) {
           displayText = `${dateText} ${roleText}`;
         } else if (dateText) {
@@ -312,79 +519,73 @@ export const useCardMaker = () => {
         } else if (roleText) {
           displayText = roleText;
         }
-        
-        if (displayText) {
-          ctx.fillText(displayText, template1p.textPositions.dateRole.x, template1p.textPositions.dateRole.y);
+
+        if (!displayText) {
+          return;
         }
-      }
+
+        const useTemplateSinglePosition = imageSlots.length === 1;
+        const fallbackX = slot.x + slot.width / 2;
+        const fallbackY = slot.y + slot.height + renderTemplate.textPositions.dateRole.fontSize;
+        const textX = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.x : fallbackX;
+        const textY = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.y : fallbackY;
+        ctx.fillText(displayText, textX, textY);
+      });
       
       ctx.fillStyle = '#2c3e50';
 
       return canvas.toDataURL();
       
     } catch (error) {
-      console.error('> 渲染Canvas時發生錯誤:', error);
-      alert(error.message || '渲染卡片時發生錯誤，請稍後再試');
+      console.error('Canvas render failed:', error);
+      alert(error.message || 'Rendering failed. Please try again later.');
       return null;
     } finally {
       setIsLoading(false);
-      // 清除渲染標記
+      // Release render lock.
       isRenderingRef.current = false;
     }
-  }, [formDataString, imageData, generateQRCodeCanvas, formatDateToMMDD, formData]);
+  }, [
+    dayDetails,
+    formDataString,
+    generateQRCodeCanvas,
+    formatDateToMMDD,
+    getCurrentTemplate,
+    imageDatas,
+    imageOffsets,
+    sharedFormData
+  ]);
 
-  // 創建防抖版本的 renderCanvas
+  // Debounced wrapper around renderCanvas.
   const debouncedRenderCanvas = useCallback(() => {
-    // 清除之前的計時器
+    // Clear previous timer.
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
     }
     
-    // 設置新的計時器
+    // Schedule delayed render.
     renderTimeoutRef.current = setTimeout(() => {
       renderCanvas();
-    }, 300); // 300ms 防抖延遲
-  }, [renderCanvas]);
-
-  const downloadCard = useCallback(async () => {
-    setIsLoading(true);
-    
-    try {
-      const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = template1p.canvas.downloadWidth;
-      tempCanvas.height = template1p.canvas.downloadHeight;
-      
-      const originalCanvas = canvasRef.current;
-      canvasRef.current = tempCanvas;
-      
-      await renderCanvas();
-      
-      const link = document.createElement('a');
-      link.download = `card-${Date.now()}.png`;
-      link.href = tempCanvas.toDataURL('image/png', 1.0);
-      link.click();
-      
-      canvasRef.current = originalCanvas;
-      
-    } catch (error) {
-      console.error('> 下載失敗:', error);
-      alert('下載失敗，請稍後再試');
-    } finally {
-      setIsLoading(false);
-    }
+    }, 300); // 300ms delay
   }, [renderCanvas]);
 
   return {
     formData,
-    imageData,
+    imageDatas,
+    imageOffsets,
+    dayDetails,
+    dayCount,
+    supportedDayCounts,
     isLoading,
     showModal,
     canvasRef,
+    getCurrentDateString,
     updateFormData,
-    formatDateToMMDD,
+    updateDayDetail,
     handleImageUpload,
-    renderCanvas: debouncedRenderCanvas, // 返回防抖版本
-    downloadCard,
+    getCurrentTemplate,
+    renderCanvas: debouncedRenderCanvas, // Return debounced version.
+    setDayCount,
     setShowModal
   };
 };

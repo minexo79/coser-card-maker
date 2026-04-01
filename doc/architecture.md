@@ -1,9 +1,14 @@
 # 專案架構與開發流程說明
 
 ## 1. 專案概覽
-**Anicon DIVA CardMaker** 是一個以 React + HTML5 Canvas 為核心的預定圖製作工具。使用者在左側表單填入活動資訊並上傳圖片後，右側即時預覽合成後的卡片，完成後可下載為 PNG 圖檔。
+
+Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製作工具。
+使用者在左側表單填入活動資訊、設定天數、上傳每日圖片，右側即時預覽合成後的卡片，最後可下載 PNG。
+
+目前系統已採用「模板驅動」架構，支援多種版型，並以同一套 Hook 邏輯動態處理多天資料。
 
 ### 技術棧
+
 | 類別 | 工具 / 版本 |
 |---|---|
 | UI 框架 | React 19 |
@@ -12,33 +17,38 @@
 | 圖片合成 | HTML5 Canvas API |
 | QR Code | qrcode 1.5 |
 | 圖示 | lucide-react |
+| 測試 | Vitest + Testing Library |
 
 ---
 
 ## 2. 目錄結構
 
-```
+```text
 card-maker-react/
 ├── public/
-│   ├── fonts/                  # 自訂字型
-│   └── img/
-│       └── card_base.png       # 卡片底圖（靜態資源）
+│   ├── fonts/                        # 字型資源
+│   └── img/                          # 卡片底圖（1p/2p/3p）
 ├── src/
-│   ├── main.jsx                # 應用程式入口，掛載 React root
-│   ├── App.jsx                 # 根元件，提供背景色包覆 CardMaker
-│   ├── index.css               # 全域樣式（Tailwind base + 自訂 class）
+│   ├── main.jsx                      # 應用入口
+│   ├── App.jsx                       # 根元件
+│   ├── index.css                     # 全域樣式
 │   ├── components/
-│   │   ├── CardMaker.jsx       # 主容器元件
-│   │   ├── CardPreview.jsx     # Canvas 預覽展示元件
-│   │   ├── ImageUpload.jsx     # 圖片上傳元件
-│   │   └── PreviewModal.jsx    # 放大預覽與下載 Modal
+│   │   ├── CardMaker.jsx             # 主容器（表單 + 預覽）
+│   │   ├── CardPreview.jsx           # Canvas 預覽展示
+│   │   ├── ImageUpload.jsx           # 圖片上傳元件
+│   │   └── PreviewModal.jsx          # 放大預覽與下載
 │   ├── hooks/
-│   │   ├── useCardMaker.js     # 核心邏輯 Hook
-│   │   └── useQRCode.js        # QR Code 產生 Hook
-│   └── constants/
-│       └── cardLayout.js       # 版面所有尺寸與文字位置常數
+│   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
+│   │   └── useQRCode.js              # QR Code 生成
+│   ├── models/
+│   │   └── cardTemplates.js          # 1p/2p/3p 模板設定
+│   └── __tests__/
+│       ├── components/
+│       ├── hooks/
+│       └── models/
 ├── doc/
-│   └── architecture.md         # 本文件
+│   ├── architecture.md               # 本文件
+│   └── plan.md
 ├── index.html
 ├── vite.config.js
 ├── tailwind.config.js
@@ -48,139 +58,183 @@ card-maker-react/
 
 ---
 
-## 3. 架構分層
-### 3.1 元件層（`src/components/`）
-#### `CardMaker.jsx` — 主容器
-- 整個應用的主視圖，採 **12 欄 grid** 佈局（左 4 欄表單、右 8 欄預覽）。
-- 呼叫 `useCardMaker` Hook 取得所有狀態與行為。
-- 透過 `useEffect` 監聽 `formData` 與 `imageData` 的變化，以 **300ms debounce** 自動觸發 `renderCanvas()`。
-- 處理表單欄位：活動名稱、暱稱、類別（COSER / 攝影師）、日期、角色名、留言、QR Code 開關與網址輸入。
+## 3. 分層說明
 
-#### `CardPreview.jsx` — Canvas 預覽
-- 純展示（presentational）元件，只接收 `canvasRef`、`isLoading`、`onPreviewClick` props。
-- 渲染 `<canvas>` 元素，顯示 loading spinner 和「點擊放大」懸停提示。
+### 3.1 Components 層（src/components）
 
-#### `ImageUpload.jsx` — 圖片上傳
-- 封裝 `<input type="file">` 的點擊與 `change` 事件。
-- 針對 iOS Safari 做相容處理（`touchAction: manipulation`、`WebkitTapHighlightColor`）。
-- 限制格式為 JPG / PNG，大小驗證由 `useCardMaker` 負責。
+#### CardMaker.jsx
 
-#### `PreviewModal.jsx` — 放大預覽與下載
-- 使用 `fixed inset-0` 全螢幕遮罩。
-- 從 `canvasRef.current.toDataURL()` 讀取圖片並以 `<img>` 顯示。
-- 下載功能：動態建立 `<a download>`，檔名格式為 `card-preview-{timestamp}.png`。
-- 開啟時鎖定 `document.body` 捲軸（`overflow: hidden`）。
+- 主畫面容器，採 12 欄 grid 佈局（左側設定、右側預覽）。
+- 呼叫 useCardMaker 取得所有狀態與行為。
+- 控制主要表單欄位：活動名稱、起始日期、天數、暱稱、類別、留言。
+- 依當前模板的 imageSlots 產生每日設定區，並以 tab 切換要編輯的天數。
+- 以 useEffect 監聽資料變化，觸發 renderCanvas（hook 端已做 300ms debounce）。
 
----
+#### CardPreview.jsx
 
-### 3.2 Hook 層（`src/hooks/`）
+- 純展示元件，負責顯示 canvas 與 loading overlay。
+- 提供點擊放大入口（交由父層開啟 Modal）。
 
-#### `useCardMaker.js` — 核心邏輯
+#### ImageUpload.jsx
 
-**狀態管理**
-| 狀態 | 類型 | 說明 |
-|---|---|---|
-| `formData` | Object | 所有表單欄位值 |
-| `imageData` | string \| null | 使用者上傳圖片的 Base64 DataURL |
-| `isLoading` | boolean | Canvas 渲染中旗標 |
-| `showModal` | boolean | Modal 顯示控制 |
-**渲染最佳化**
+- 封裝檔案輸入，統一上傳互動與樣式。
+- 允許 image/* 類型，檔案大小由 useCardMaker 驗證。
 
-- `isRenderingRef`：防止同一時間重複觸發渲染。
-- `lastRenderDataRef`：儲存上次渲染的資料快照（`formDataString + imageData`），資料未變則跳過渲染。
-- `formDataString`：以 `useMemo` 將 `formData` 序列化為字串，作為輕量比對依據。
+#### PreviewModal.jsx
 
-**Canvas 繪製流程（`renderCanvas`）**
+- 顯示放大預覽並提供下載按鈕。
+- 透過 canvas.toDataURL() 取圖。
+- 開啟時鎖定 body 捲軸，關閉時還原。
+
+### 3.2 Hooks 層（src/hooks）
+
+#### useCardMaker.js
+
+核心責任：將「模板設定 + 使用者輸入 + 圖片資料」轉為最終 Canvas 內容。
+
+1. 模板驅動初始化
+
+- 由 CARD_TEMPLATES 動態建出 templateByDayCount 映射。
+- 自動推導 supportedDayCounts 與 defaultDayCount。
+- 統一蒐集所有 day key（d1, d2, d3...），確保各狀態物件結構一致。
+
+2. 狀態模型
+
+- sharedFormData：共用欄位（title, nickname, category, message, showQRCode, websiteUrl）
+- dayDetails：各天獨立欄位（date, cosrole）
+- imageDatas：各天圖片 DataURL
+- imageOffsets：各天圖片水平偏移
+- dayCount：目前天數
+- isLoading / showModal：UI 狀態
+
+3. 關鍵行為
+
+- normalizeDayCount：將使用者輸入正規化為可用模板天數。
+- updateDayDetail：更新特定天資料；若更新 d1 date，會自動推算後續日期。
+- handleImageUpload：驗證大小（5MB）並以 FileReader 轉 DataURL。
+- getCurrentTemplate：依 dayCount 回傳對應模板（含 fallback）。
+
+4. 渲染與效能控制
+
+- formDataString：將關鍵渲染資料序列化，作為變更快照。
+- isRenderingRef：渲染鎖，避免並發重入。
+- lastRenderDataRef：若快照未變，跳過渲染。
+- debouncedRenderCanvas：300ms 延遲觸發，減少高頻重算。
+
+5. Canvas 合成流程（renderCanvas）
+
+```text
+1) 取得當前模板並設定 canvas 尺寸
+2) 載入模板底圖（template.baseImagePath）
+3) 逐一繪製 imageSlots 對應的使用者圖片（cover 裁切 + clip）
+4) 若啟用 QR Code，生成後繪製於右下角
+5) 依模板 textPositions 繪製 title / nickname / category / message
+6) 逐日繪製 date + cosrole（MM-DD 轉換）
 ```
-1. 設定 canvas 尺寸（來自 CARD_CANVAS 常數）
-2. 載入底圖 /img/card_base.png
-   └─ 失敗時跳出錯誤提示
-3. 若有使用者圖片：
-   └─ 計算 cover 裁切比例（imageOffsetX 控制水平偏移）
-   └─ canvas.clip() 限制繪製區域
-4. 若啟用 QR Code：
-   └─ 呼叫 useQRCode.generateQRCodeCanvas()
-   └─ 繪製白底背景後貼上 QR Code（右下角）
-5. 繪製文字（title / nickname / category / message / dateRole）
-   └─ title 支援多行（空格或換行符拆分），自動垂直置中
-   └─ message 自動換行（measureText 超出 maxWidth 則斷行）
-```
 
-#### `useQRCode.js` — QR Code 產生
-提供兩個方法：
+#### useQRCode.js
 
-| 方法 | 輸出 | 用途 |
-|---|---|---|
-| `generateQRCode(text)` | DataURL string | 一般圖片用途 |
-| `generateQRCodeCanvas(text)` | HTMLCanvasElement | 直接合成至主 Canvas |
+- 封裝 qrcode 套件。
+- 提供 DataURL 與 Canvas 兩種輸出，主流程使用 Canvas 版本合成。
 
-預設設定：110.9px、黑白色、`errorCorrectionLevel: M`、`margin: 1`。
+### 3.3 Models 層（src/models）
 
----
+#### cardTemplates.js
 
-### 3.3 常數層（`src/constants/cardLayout.js`）
+此檔為版型設定唯一來源，集中定義：
 
-所有版面數值的**唯一真實來源**，修改版面時只需編輯此檔案。
+- baseImagePath：底圖來源
+- canvas：畫布尺寸
+- upload：上傳限制
+- qrCode：QR 尺寸與留白
+- imageSlots：多天圖片插槽（key/label/座標/尺寸）
+- textPositions：各文字區塊字級與座標
 
-| 匯出常數 | 說明 |
-|---|---|
-| `CARD_CANVAS` | 畫布尺寸（1220 × 850 px） |
-| `CARD_UPLOAD` | 上傳限制（最大 5 MB） |
-| `CARD_IMAGE_AREA` | 使用者圖片裁切區域座標與尺寸 |
-| `CARD_QR_CODE` | QR Code 尺寸與內外 padding |
-| `CARD_TEXT` | 各文字欄位的字族、字級、座標 |
-| `DEFAULT_BASE_IMAGE_LAYOUT` | fallback 底圖的矩形版面結構 |
+目前內建模板：
+
+- 1p：1 個圖片插槽
+- 2p：2 個圖片插槽
+- 3p：3 個圖片插槽
 
 ---
 
 ## 4. 資料流
 
-```
-使用者操作（表單輸入 / 圖片上傳）
-         │
-         ▼
-   useCardMaker
-   ├─ updateFormData() → setFormData()
-   └─ handleImageUpload() → FileReader → setImageData()
-         │
-         ▼ (formData / imageData 變化)
-   CardMaker useEffect (debounce 300ms)
-         │
-         ▼
-   renderCanvas()
-   ├─ 底圖（/img/card_base_1p.png 或 fallback）
-   ├─ 使用者圖片（cover 裁切 + clip）
-   ├─ QR Code（useQRCode → canvas 繪製）
-   └─ 文字（title / nickname / category / message / dateRole）
-         │
-         ▼
-   <canvas ref={canvasRef}>
-   ├─ CardPreview → 即時預覽
-   └─ PreviewModal → toDataURL() → 下載 PNG
+```text
+使用者操作（輸入欄位 / 天數切換 / 圖片上傳 / QR 開關）
+   ↓
+CardMaker 觸發事件
+   ↓
+useCardMaker 更新狀態
+  - sharedFormData
+  - dayDetails
+  - imageDatas
+  - imageOffsets
+   ↓
+CardMaker useEffect 呼叫 renderCanvas
+   ↓
+useCardMaker 內部 debounce + 快照去重 + 渲染鎖
+   ↓
+Canvas 合成（底圖 -> 每日圖片 -> QR -> 文字）
+   ↓
+CardPreview 即時顯示
+   ↓
+PreviewModal 以 toDataURL 放大檢視與下載
 ```
 
 ---
 
-## 5. 靜態資源
+## 5. 開發流程
 
-| 路徑 | 說明 |
-|---|---|
-| `public/img/card_base_1p.png` | 卡片底圖，由 Canvas 繪製時載入 |
-| `public/fonts/` | LINESeedTW 字型檔，CSS `@font-face` 引入，用於 Canvas `ctx.font` |
+### 5.1 本機啟動
 
-> **注意**：Canvas 繪製文字時使用的字型必須已由瀏覽器載入（DOM 中有使用該字型），否則會 fallback 至 Arial。`index.css` 以 Tailwind 全域 class 確保字型提前載入。
+```bash
+npm install
+npm run dev
+```
+
+預設網址：http://localhost:5173（vite --host，可區網存取）
+
+### 5.2 日常指令
+
+```bash
+npm run lint
+npm run test
+npm run coverage
+npm run build
+npm run preview
+```
+
+### 5.3 典型開發步驟
+
+```text
+1) 調整模板（cardTemplates.js）或 UI 欄位（CardMaker.jsx）
+2) 補上/調整 useCardMaker 的狀態與繪製邏輯
+3) 啟動 dev 確認畫面與輸出 PNG
+4) 執行 lint + test
+5) 再進行 build 驗證產出
+```
 
 ---
 
 ## 6. 擴充指引
 
-### 新增表單欄位
-1. 在 `useCardMaker.js` 的 `formData` 初始值新增欄位。
-2. 在 `cardLayout.js` 的 `CARD_TEXT` 新增對應的座標與字級常數。
-3. 在 `useCardMaker.js` 的 `renderCanvas()` 內新增繪製邏輯。
-4. 在 `CardMaker.jsx` 新增表單 UI 控制項。
+### 6.1 新增模板（例如 4p）
 
-### 更換底圖
-1. 將新圖片放入 `public/img/`。
-2. 修改 `useCardMaker.js` 中 `baseImg.src` 路徑。
-3. 依新底圖調整 `cardLayout.js` 中各區域的座標常數。
+1. 在 src/models/cardTemplates.js 新增模板物件。
+2. 新增對應底圖到 public/img。
+3. 設定 imageSlots（d1, d2, d3, d4）與 textPositions。
+4. 驗證 dayCount 切換、每日上傳、文字位置與下載結果。
+
+### 6.2 新增表單欄位
+
+1. 在 useCardMaker.js 新增欄位狀態與更新函式。
+2. 在 CardMaker.jsx 增加 UI 控制項。
+3. 在 renderCanvas 增加繪製規則。
+4. 視需求補測試。
+
+### 6.3 調整底圖與版面
+
+1. 替換模板的 baseImagePath 指向新檔。
+2. 調整 imageSlots 與 textPositions 座標。
+3. 逐模板檢查文字、裁切與 QR 位置。
