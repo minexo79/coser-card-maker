@@ -3,6 +3,17 @@
  * 包含所有支援的卡片模板配置，每個模板定義了畫布尺寸、圖片槽和文字位置
  */
 
+/**
+ * 支援的輸出比例
+ * 每個比例依模板寬度計算輸出高度，底圖居中，超出部分填背景色
+ */
+export const ASPECT_RATIOS = {
+  '16:9': { label: '16:9', widthRatio: 16, heightRatio: 9 },
+  '4:3':  { label: '4:3',  widthRatio: 4,  heightRatio: 3  }
+};
+
+export const DEFAULT_ASPECT_RATIO = '16:9';
+
 export const CARD_TEMPLATES = {
   '1p': {
     // 底圖來源

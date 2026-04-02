@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useQRCode } from './useQRCode';
-import { CARD_TEMPLATES } from '../models/cardTemplates.js';
+import { CARD_TEMPLATES, ASPECT_RATIOS, DEFAULT_ASPECT_RATIO } from '../models/cardTemplates.js';
 
 // return YYYY-MM-DD format string for today, used as default date value in date input.
 const getCurrentDateString = () => {
@@ -97,7 +97,7 @@ export const useCardMaker = () => {
   );
 
   const [imageOffsets, setImageOffsets] = useState(() =>
-    createStateByDayKeys(allDayKeys, () => 0)
+    createStateByDayKeys(allDayKeys, () => ({ x: 0, y: 0 }))
   );
 
   // Normalize user-selected day count to a supported template day count.
@@ -123,7 +123,9 @@ export const useCardMaker = () => {
     },
     [normalizeDayCount]
   );
-  
+
+  const [aspectRatio, setAspectRatio] = useState(DEFAULT_ASPECT_RATIO);
+
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const { generateQRCodeCanvas } = useQRCode();
@@ -150,14 +152,6 @@ export const useCardMaker = () => {
   }, []);
 
   const updateDayDetail = useCallback((dayKey, field, value) => {
-    if (field === 'imageOffsetX') {
-      setImageOffsets((prev) => ({
-        ...prev,
-        [dayKey]: value
-      }));
-      return;
-    }
-
     if (dayKey === 'd1' && field === 'date') {
       // Use d1 as start date and auto-fill later days as consecutive dates.
       setDayDetails((prev) => ({
@@ -194,34 +188,25 @@ export const useCardMaker = () => {
       showQRCode: sharedFormData.showQRCode,
       websiteUrl: sharedFormData.websiteUrl || '',
       dayCount,
+      aspectRatio,
       dayDetails,
       imageDatas,
       imageOffsets
     });
-  }, [sharedFormData, dayCount, dayDetails, imageDatas, imageOffsets]);
+  }, [sharedFormData, dayCount, aspectRatio, dayDetails, imageDatas, imageOffsets]);
 
   // Backward-compatible flat form data for legacy UI consumers.
   const formData = useMemo(() => {
-    // Keep old access paths: formData.date and formData.cosrole.
     return {
       ...sharedFormData,
       date: dayDetails.d1?.date || '',
-      cosrole: dayDetails.d1?.cosrole || '',
-      imageOffsetX: imageOffsets.d1 ?? 0
+      cosrole: dayDetails.d1?.cosrole || ''
     };
-  }, [sharedFormData, dayDetails, imageOffsets]);
+  }, [sharedFormData, dayDetails]);
 
   const updateFormData = useCallback((field, value) => {
     if (field === 'date' || field === 'cosrole') {
       updateDayDetail('d1', field, value);
-      return;
-    }
-
-    if (field === 'imageOffsetX') {
-      setImageOffsets((prev) => ({
-        ...prev,
-        d1: value
-      }));
       return;
     }
 
@@ -230,6 +215,14 @@ export const useCardMaker = () => {
       [field]: value
     }));
   }, [updateDayDetail]);
+
+  // Update 2D offset for a day slot (values in template pixel space).
+  const updateImageOffset = useCallback((dayKey, x, y) => {
+    setImageOffsets((prev) => ({
+      ...prev,
+      [dayKey]: { x, y }
+    }));
+  }, []);
 
   const handleImageUpload = useCallback((file, dayKey = 'd1') => {
     if (file) {
@@ -266,8 +259,21 @@ export const useCardMaker = () => {
     return `${month}-${day}`;
   }, []);
 
+  // Stretch-fill transform: per-axis scale to map template coords → output canvas coords.
+  const slotTransform = useMemo(() => {
+    const template = getCurrentTemplate();
+    const templateW = template?.canvas?.width || 0;
+    const templateH = template?.canvas?.height || 0;
+    if (!templateW || !templateH) return { scaleX: 1, scaleY: 1 };
+    const ratioConfig = ASPECT_RATIOS[aspectRatio] || ASPECT_RATIOS[DEFAULT_ASPECT_RATIO];
+    const outputW = templateW;
+    const outputH = Math.round(templateW * ratioConfig.heightRatio / ratioConfig.widthRatio);
+    return { scaleX: outputW / templateW, scaleY: outputH / templateH };
+  }, [aspectRatio, getCurrentTemplate]);
+
   // Render canvas with lock and cache checks to avoid duplicate work.
-  const renderCanvas = useCallback(async () => {
+  // Pass { silent: true } to skip the loading indicator (e.g. after drag-end).
+  const renderCanvas = useCallback(async ({ silent = false } = {}) => {
     if (!canvasRef.current) return null;
 
     // If canvas config is incomplete, fall back to 1p to avoid render failure.
@@ -295,39 +301,59 @@ export const useCardMaker = () => {
     isRenderingRef.current = true;
     lastRenderDataRef.current = currentDataSnapshot;
     
-    setIsLoading(true);
+    if (!silent) setIsLoading(true);
     
     try {
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
-      canvas.width = renderTemplate.canvas.width;
-      canvas.height = renderTemplate.canvas.height;
-      
+
+      // Calculate output canvas size based on selected aspect ratio.
+      const templateW = renderTemplate.canvas.width;
+      const templateH = renderTemplate.canvas.height;
+      const ratioConfig = ASPECT_RATIOS[aspectRatio] || ASPECT_RATIOS[DEFAULT_ASPECT_RATIO];
+      const outputW = templateW;
+      const outputH = Math.round(templateW * ratioConfig.heightRatio / ratioConfig.widthRatio);
+
+      // Draw everything on an offscreen canvas first so the visible canvas
+      // is only updated once (prevents blank-flash between clear and draw).
+      const offscreen = document.createElement('canvas');
+      offscreen.width = outputW;
+      offscreen.height = outputH;
+      const ctx = offscreen.getContext('2d');
+
+      // Stretch-fill: independent X/Y scale, base image fills canvas exactly (no crop, allows distortion).
+      const scaleX = outputW / templateW;
+      const scaleY = outputH / templateH;
+      const tx  = (x) => x * scaleX;
+      const ty  = (y) => y * scaleY;
+      const tsX = (w) => w * scaleX;
+      const tsY = (h) => h * scaleY;
+      const ts  = (s) => s * Math.min(scaleX, scaleY); // uniform scale for font sizes
+
       // Load base image.
       const baseImg = new Image();
       baseImg.crossOrigin = 'anonymous';
-      
+
       await new Promise((resolve, reject) => {
         baseImg.onload = resolve;
         baseImg.onerror = () => {
           console.error('Base image failed to load. Check image asset path.');
           reject(new Error('Failed to load base image. Please try again later.'));
         };
-        // Base image path is template-driven for extensibility.
         baseImg.src = renderTemplate.baseImagePath || '/img/card_base.png';
       });
 
       console.log('Base image loaded.');
-      
-      // Draw base image.
-      ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
-      
+
+      // Draw base image stretched to fill output canvas exactly (no bars, no crop).
+      ctx.drawImage(baseImg, 0, 0, outputW, outputH);
+
       // Draw all user image slots based on current template.
       for (const imageSlot of imageSlots) {
         const dayKey = imageSlot?.key;
         const currentImageData = dayKey ? imageDatas[dayKey] : null;
-        const currentImageOffset = dayKey ? (imageOffsets[dayKey] ?? 0) : 0;
+        const rawOffset = dayKey ? (imageOffsets[dayKey] ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
+        const offsetX = (typeof rawOffset === 'object' ? rawOffset.x : rawOffset) * scaleX;
+        const offsetY = (typeof rawOffset === 'object' ? rawOffset.y : 0) * scaleY;
 
         if (!currentImageData) {
           continue;
@@ -339,31 +365,34 @@ export const useCardMaker = () => {
           userImg.onerror = resolve;
           userImg.src = currentImageData;
         });
-        
+
         if (userImg.complete && userImg.naturalWidth > 0) {
+          const slotX = tx(imageSlot.x);
+          const slotY = ty(imageSlot.y);
+          const slotW = tsX(imageSlot.width);
+          const slotH = tsY(imageSlot.height);
           const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-          const areaAspect = imageSlot.width / imageSlot.height;
-          
-          let drawWidth, drawHeight, drawX, drawY;
-          
+          const areaAspect = slotW / slotH;
+
+          let drawWidth, drawHeight;
           if (imgAspect > areaAspect) {
-            drawHeight = imageSlot.height;
-            drawWidth = drawHeight * imgAspect;
-            const offsetPixels = (drawWidth - imageSlot.width) * currentImageOffset / 100;
-            drawX = imageSlot.x - (drawWidth - imageSlot.width) / 2 + offsetPixels;
-            drawY = imageSlot.y;
+            drawHeight = slotH;
+            drawWidth = slotH * imgAspect;
           } else {
-            drawWidth = imageSlot.width;
-            drawHeight = drawWidth / imgAspect;
-            drawX = imageSlot.x;
-            drawY = imageSlot.y - (drawHeight - imageSlot.height) / 2;
+            drawWidth = slotW;
+            drawHeight = slotW / imgAspect;
           }
-          
+
+          // Center + apply 2D pan offset, then clamp so image always fills slot.
+          let drawX = slotX - (drawWidth - slotW) / 2 + offsetX;
+          let drawY = slotY - (drawHeight - slotH) / 2 + offsetY;
+          drawX = Math.min(slotX, Math.max(slotX - (drawWidth - slotW), drawX));
+          drawY = Math.min(slotY, Math.max(slotY - (drawHeight - slotH), drawY));
+
           ctx.save();
           ctx.beginPath();
-          ctx.rect(imageSlot.x, imageSlot.y, imageSlot.width, imageSlot.height);
+          ctx.rect(slotX, slotY, slotW, slotH);
           ctx.clip();
-          
           ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
           ctx.restore();
         }
@@ -372,36 +401,21 @@ export const useCardMaker = () => {
       // 繪製QR Code
       if (sharedFormData.showQRCode && sharedFormData.websiteUrl) {
         try {
+          const qrNativeSize = ts(renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding);
           const qrCanvas = await generateQRCodeCanvas(sharedFormData.websiteUrl, {
-            width: renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding,
+            width: Math.round(qrNativeSize),
             margin: 0,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
+            color: { dark: '#000000', light: '#FFFFFF' }
           });
-          
+
           if (qrCanvas) {
-            const qrSize = renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding;
-            const qrX = renderTemplate.canvas.width - qrSize;
-            const qrY = renderTemplate.canvas.height - qrSize;
-            
+            const qrX = tx(renderTemplate.canvas.width - renderTemplate.qrCode.size);
+            const qrY = ty(renderTemplate.canvas.height - renderTemplate.qrCode.size);
+            const bgPad = ts(renderTemplate.qrCode.backgroundPadding);
+
             ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(
-              qrX - renderTemplate.qrCode.backgroundPadding,
-              qrY - renderTemplate.qrCode.backgroundPadding,
-              qrSize,
-              qrSize
-            );
-          
-            
-            ctx.drawImage(
-              qrCanvas,
-              qrX,
-              qrY,
-              qrSize - renderTemplate.qrCode.contentPadding,
-              qrSize - renderTemplate.qrCode.contentPadding
-            );
+            ctx.fillRect(qrX - bgPad, qrY - bgPad, qrNativeSize + bgPad * 2, qrNativeSize + bgPad * 2);
+            ctx.drawImage(qrCanvas, qrX, qrY, qrNativeSize, qrNativeSize);
           }
         } catch (qrError) {
           console.error('Failed to draw QR code:', qrError);
@@ -410,57 +424,52 @@ export const useCardMaker = () => {
 
       // Draw text.
       ctx.fillStyle = '#303030';
-      
+
       // Title: split by spaces/newlines and vertically center all lines.
       if (sharedFormData.title) {
-        ctx.font = ` ${renderTemplate.textPositions.title.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.font = ` ${ts(renderTemplate.textPositions.title.fontSize)}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
         const titleLines = sharedFormData.title
           .split(/\r?\n/)
           .flatMap((line) => {
-            if (!line) {
-              return [''];
-            }
-
-            return line
-              .split(/ +/)
-              .filter((segment) => segment.length > 0);
+            if (!line) return [''];
+            return line.split(/ +/).filter((s) => s.length > 0);
           });
-        const lineHeight = renderTemplate.textPositions.title.lineHeight;
-        const centerY = renderTemplate.textPositions.title.centerY;
+        const lineHeight = ts(renderTemplate.textPositions.title.lineHeight);
+        const centerY = ty(renderTemplate.textPositions.title.centerY);
         const startY = centerY - ((titleLines.length - 1) * lineHeight) / 2;
 
         titleLines.forEach((line, index) => {
-          ctx.fillText(line, renderTemplate.textPositions.title.x, startY + lineHeight * index);
+          ctx.fillText(line, tx(renderTemplate.textPositions.title.x), startY + lineHeight * index);
         });
       }
 
       if (sharedFormData.nickname) {
-        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.font = ` ${ts(renderTemplate.textPositions.nickname.fontSize)}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(sharedFormData.nickname, renderTemplate.textPositions.nickname.x, renderTemplate.textPositions.nickname.y);
+        ctx.fillText(sharedFormData.nickname, tx(renderTemplate.textPositions.nickname.x), ty(renderTemplate.textPositions.nickname.y));
       }
-      
+
       if (sharedFormData.category) {
-        ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.font = ` ${ts(renderTemplate.textPositions.category.fontSize)}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText(sharedFormData.category, renderTemplate.textPositions.category.x, renderTemplate.textPositions.category.y);
+        ctx.fillText(sharedFormData.category, tx(renderTemplate.textPositions.category.x), ty(renderTemplate.textPositions.category.y));
       }
-      
+
       // Message: wrap by measured width while preserving line breaks.
       if (sharedFormData.message) {
-        ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.font = ` ${ts(renderTemplate.textPositions.message.fontSize)}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
-        
-        const maxWidth = renderTemplate.textPositions.message.maxWidth;
-        const lineHeight = renderTemplate.textPositions.message.lineHeight;
-        const startY = renderTemplate.textPositions.message.startY;
-        const messageX = renderTemplate.textPositions.message.x;
+
+        const maxWidth = ts(renderTemplate.textPositions.message.maxWidth);
+        const lineHeight = ts(renderTemplate.textPositions.message.lineHeight);
+        const startY = ty(renderTemplate.textPositions.message.startY);
+        const messageX = tx(renderTemplate.textPositions.message.x);
         const inputLines = sharedFormData.message.split(/\r?\n/);
         const renderedLines = [];
 
@@ -496,7 +505,7 @@ export const useCardMaker = () => {
       }
 
       ctx.fillStyle = 'white';
-      ctx.font = ` ${renderTemplate.textPositions.dateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+      ctx.font = ` ${ts(renderTemplate.textPositions.dateRole.fontSize)}px ${renderTemplate.textPositions.fontFamily}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -504,35 +513,35 @@ export const useCardMaker = () => {
         const dayKey = slot?.key;
         const currentDayDetail = dayKey ? (dayDetails[dayKey] || { date: '', cosrole: '' }) : { date: '', cosrole: '' };
 
-        if (!currentDayDetail.date && !currentDayDetail.cosrole) {
-          return;
-        }
+        if (!currentDayDetail.date && !currentDayDetail.cosrole) return;
 
         const dateText = currentDayDetail.date ? formatDateToMMDD(currentDayDetail.date) : '';
         const roleText = currentDayDetail.cosrole || '';
         let displayText = '';
-
-        if (dateText && roleText) {
-          displayText = `${dateText} ${roleText}`;
-        } else if (dateText) {
-          displayText = dateText;
-        } else if (roleText) {
-          displayText = roleText;
-        }
-
-        if (!displayText) {
-          return;
-        }
+        if (dateText && roleText) displayText = `${dateText} ${roleText}`;
+        else if (dateText) displayText = dateText;
+        else if (roleText) displayText = roleText;
+        if (!displayText) return;
 
         const useTemplateSinglePosition = imageSlots.length === 1;
-        const fallbackX = slot.x + slot.width / 2;
-        const fallbackY = slot.y + slot.height + renderTemplate.textPositions.dateRole.fontSize;
-        const textX = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.x : fallbackX;
-        const textY = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.y : fallbackY;
+        const textX = useTemplateSinglePosition
+          ? tx(renderTemplate.textPositions.dateRole.x)
+          : tx(slot.x + slot.width / 2);
+        const textY = useTemplateSinglePosition
+          ? ty(renderTemplate.textPositions.dateRole.y)
+          : ty(slot.y + slot.height) + ts(renderTemplate.textPositions.dateRole.fontSize);
         ctx.fillText(displayText, textX, textY);
       });
-      
+
       ctx.fillStyle = '#2c3e50';
+
+      // All drawing is done — atomically copy offscreen canvas to visible canvas.
+      // This single drawImage call is synchronous, preventing any blank-frame flash.
+      if (canvas.width !== outputW || canvas.height !== outputH) {
+        canvas.width = outputW;
+        canvas.height = outputH;
+      }
+      canvas.getContext('2d').drawImage(offscreen, 0, 0);
 
       return canvas.toDataURL();
       
@@ -541,11 +550,12 @@ export const useCardMaker = () => {
       alert(error.message || 'Rendering failed. Please try again later.');
       return null;
     } finally {
-      setIsLoading(false);
+      if (!silent) setIsLoading(false);
       // Release render lock.
       isRenderingRef.current = false;
     }
   }, [
+    aspectRatio,
     dayDetails,
     formDataString,
     generateQRCodeCanvas,
@@ -556,17 +566,19 @@ export const useCardMaker = () => {
     sharedFormData
   ]);
 
-  // Debounced wrapper around renderCanvas.
+  // Debounced wrapper around renderCanvas (with loading indicator).
   const debouncedRenderCanvas = useCallback(() => {
-    // Clear previous timer.
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
     }
-    
-    // Schedule delayed render.
     renderTimeoutRef.current = setTimeout(() => {
       renderCanvas();
-    }, 300); // 300ms delay
+    }, 300);
+  }, [renderCanvas]);
+
+  // Immediate silent render — no loading flash, used after drag-end.
+  const renderCanvasSilent = useCallback(() => {
+    renderCanvas({ silent: true });
   }, [renderCanvas]);
 
   return {
@@ -583,9 +595,14 @@ export const useCardMaker = () => {
     updateFormData,
     updateDayDetail,
     handleImageUpload,
+    updateImageOffset,
     getCurrentTemplate,
-    renderCanvas: debouncedRenderCanvas, // Return debounced version.
+    renderCanvas: debouncedRenderCanvas,
+    renderCanvasSilent,
     setDayCount,
-    setShowModal
+    setShowModal,
+    aspectRatio,
+    setAspectRatio,
+    slotTransform
   };
 };
