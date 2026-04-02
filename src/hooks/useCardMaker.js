@@ -437,6 +437,32 @@ export const useCardMaker = () => {
         });
       }
 
+      // Message: split by spaces/newlines and vertically center all lines.
+      if (sharedFormData.message) {
+        ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        const messageLines = sharedFormData.message
+          .split(/\r?\n/)
+          .flatMap((line) => {
+            if (!line) {
+              return [''];
+            }
+
+            return line
+              .split(/ +/)
+              .filter((segment) => segment.length > 0);
+          });
+        const lineHeight = renderTemplate.textPositions.message.lineHeight;
+        const centerY = renderTemplate.textPositions.message.centerY;
+        const startY = centerY - ((messageLines.length - 1) * lineHeight) / 2;
+
+        messageLines.forEach((line, index) => {
+          ctx.fillText(line, renderTemplate.textPositions.message.x, startY + lineHeight * index);
+        });
+      }
+
       if (sharedFormData.nickname) {
         ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
@@ -450,50 +476,7 @@ export const useCardMaker = () => {
         ctx.textBaseline = 'middle';
         ctx.fillText(sharedFormData.category, renderTemplate.textPositions.category.x, renderTemplate.textPositions.category.y);
       }
-      
-      // Message: wrap by measured width while preserving line breaks.
-      if (sharedFormData.message) {
-        ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        
-        const maxWidth = renderTemplate.textPositions.message.maxWidth;
-        const lineHeight = renderTemplate.textPositions.message.lineHeight;
-        const startY = renderTemplate.textPositions.message.startY;
-        const messageX = renderTemplate.textPositions.message.x;
-        const inputLines = sharedFormData.message.split(/\r?\n/);
-        const renderedLines = [];
-
-        inputLines.forEach((inputLine) => {
-          if (inputLine === '') {
-            renderedLines.push('');
-            return;
-          }
-
-          const characters = inputLine.split('');
-          let line = '';
-
-          for (let i = 0; i < characters.length; i++) {
-            const testLine = line + characters[i];
-            const metrics = ctx.measureText(testLine);
-
-            if (metrics.width > maxWidth && line !== '') {
-              renderedLines.push(line);
-              line = characters[i];
-            } else {
-              line = testLine;
-            }
-          }
-
-          if (line) {
-            renderedLines.push(line);
-          }
-        });
-
-        renderedLines.forEach((renderedLine, index) => {
-          ctx.fillText(renderedLine, messageX, startY + lineHeight * index);
-        });
-      }
+    
 
       ctx.fillStyle = 'white';
       ctx.font = ` ${renderTemplate.textPositions.dateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
