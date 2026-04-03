@@ -50,25 +50,25 @@ const CardMaker = () => {
 
     return (
       <div key={dayKey} className="mb-6 rounded-lg border border-gray-200 p-4">
-        <div className="mb-2 grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-sm text-gray-700 mb-2">日期</label>
+        <div className="mb-2 gap-3">
+          {/* <div>
+            <label className="block text-xs mb-2">日期</label>
             <input
               type="text"
               value={detail?.date || getCurrentDateString()}
               readOnly
               placeholder='請在上方設定日期'
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-600"
+              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm"
             />
-          </div>
+          </div> */}
           <div>
-            <label className="block text-sm text-gray-700 mb-2">角色名稱</label>
+            <label className="block text-xs text-gray-700 mb-2">{detail?.date || getCurrentDateString()} 角色名稱</label>
             <input
               type="text"
               value={detail?.cosrole || ''}
               onChange={(e) => updateDayDetail(dayKey, 'cosrole', e.target.value)}
               placeholder="輸入角色名稱"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200 text-sm"
             />
           </div>
         </div>
@@ -140,11 +140,11 @@ const CardMaker = () => {
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
             <h2 className="text-2xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
               <ImageIcon className="w-6 h-6 text-blue-600" />
-              圖片內容設定
+              內容設定
             </h2>
 
             <div className="mb-6">
-              <div className="grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="內容設定分頁">
+              <div className="grid grid-cols-3 gap-2 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="內容設定分頁">
                 <button
                   type="button"
                   role="tab"
@@ -166,6 +166,17 @@ const CardMaker = () => {
                   }`}
                 >
                   預定資訊
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeSettingsTab === 'social'}
+                  onClick={() => setActiveSettingsTab('social')}
+                  className={`rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                    activeSettingsTab === 'social' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/70'
+                  }`}
+                >
+                  社群資訊
                 </button>
               </div>
             </div>
@@ -260,37 +271,38 @@ const CardMaker = () => {
 
             {activeSettingsTab === 'schedule' && (
               <>
-                {/* 日期設定（連續天數只需設定一次） */}
-                <div className="mb-4">
-                  <label className="block text-sm text-gray-700 mb-2">起始日期</label>
-                  <input
-                    type="date"
-                    value={dayDetails.d1?.date || new Date().toISOString().split('T')[0]} // 預設為今天
-                    onChange={(e) => updateDayDetail('d1', 'date', e.target.value)}
-                    min="2001-01-01"
-                    max="2099-12-31"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200 text-base"
-                    style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
-                  />
+                {/* 日期設定 & 天數切換 */}
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">起始日期</label>
+                    <input
+                      type="date"
+                      value={dayDetails.d1?.date || new Date().toISOString().split('T')[0]} // 預設為今天
+                      onChange={(e) => updateDayDetail('d1', 'date', e.target.value)}
+                      min="2001-01-01"
+                      max="2099-12-31"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200 text-base"
+                      style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">天數</label>
+                    <select
+                      value={dayCount}
+                      onChange={(e) => setDayCount(parseInt(e.target.value, 10))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
+                      style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                      
+                    >
+                      {supportedDayCounts.map((count) => (
+                        <option key={count} value={count}>{count}天</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
-                {/* 天數切換 */}
-                <div className="mb-4">
-                  <label className="block text-sm text-gray-700 mb-2">天數</label>
-                  <select
-                    value={dayCount}
-                    onChange={(e) => setDayCount(parseInt(e.target.value, 10))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
-                    style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
-                    
-                  >
-                    {supportedDayCounts.map((count) => (
-                      <option key={count} value={count}>{count}天</option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* DaySlot 區塊：以 Tab 切換 Day 1 / Day 2 設定 */}
+                {/* DaySlot 區塊：以 Tab 切換 Day X 設定 */}
                 {visibleDaySlots.length > 1 && (
                   <div className="mb-4">
                     <div className="grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="天數設定切換">
@@ -305,7 +317,7 @@ const CardMaker = () => {
                             role="tab"
                             aria-selected={isActive}
                             onClick={() => setActiveDayKey(slot.key)}
-                            className={`rounded-md px-3 py-2 text-sm font-medium transition-all ${
+                            className={`rounded-md px-4 py-2 text-sm font-medium transition-all ${
                               isActive ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/70'
                             }`}
                           >
@@ -318,6 +330,14 @@ const CardMaker = () => {
                 )}
 
                 {activeSlot && renderDaySlot(activeSlot)}
+              </>
+            )}
+
+            {activeSettingsTab === 'social' && (
+              <>
+                <div className="mb-4">
+                  <p>TODO</p>
+                </div>
               </>
             )}
 

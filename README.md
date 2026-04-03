@@ -1,26 +1,18 @@
 # Anicon DIVA CardMaker
-
-Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製作工具。
+本專案是一個以 React + HTML5 Canvas 為核心的預定圖製作工具。
 使用者可填入活動資訊、上傳多天圖片，右側即時預覽合成結果，最後下載為 PNG 圖片檔案。
 
 ## 主要功能
 
-- 支援多天數模板切換
-- 每天可分別上傳圖片與調整水平偏移
-- 以起始日期自動推算後續天數日期
-- 即時 Canvas 合成預覽（含文字排版與裁切）
-- 可選擇是否顯示 QR Code，並輸入自訂網址
-- 點擊預覽可開啟 Modal 放大並下載 PNG
+- [X] 多天數模板切換
+- [X] 分別上傳圖片與調整水平偏移
+- [ ] 社群連結 (以QRCode) 顯示
+- [ ] 支援客製化預定底圖 (超連結方式存取)
 
 ## 技術棧
-
-- React 19
-- Vite 8
-- Tailwind CSS 3
-- HTML5 Canvas API
+- React + Vite
+- Vitest
 - qrcode 1.5
-- lucide-react
-- Vitest + Testing Library
 
 ## 專案架構
 
@@ -37,6 +29,7 @@ card-maker-react/
 │   │   ├── CardMaker.jsx         # 主頁容器（表單與預覽佈局）
 │   │   ├── CardPreview.jsx       # Canvas 預覽展示
 │   │   ├── ImageUpload.jsx       # 圖片上傳元件
+│   │   ├── Copyright.jsx         # 版權聲明
 │   │   └── PreviewModal.jsx      # 放大預覽與下載
 │   ├── hooks/
 │   │   ├── useCardMaker.js       # 核心狀態與 Canvas 繪製流程
@@ -74,6 +67,4 @@ card-maker-react/
 4. 視需要更新測試。
 
 ## 文件
-
 - 架構與流程詳解：`doc/architecture.md`
-- 開發規劃：`doc/plan.md`

@@ -11,8 +11,8 @@ Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製
 
 | 類別 | 工具 / 版本 |
 |---|---|
-| UI 框架 | React 19 |
-| 建置工具 | Vite 8 |
+| UI 框架 | React |
+| 建置工具 | Vite |
 | 樣式 | Tailwind CSS 3 |
 | 圖片合成 | HTML5 Canvas API |
 | QR Code | qrcode 1.5 |
@@ -36,6 +36,7 @@ card-maker-react/
 │   │   ├── CardMaker.jsx             # 主容器（表單 + 預覽）
 │   │   ├── CardPreview.jsx           # Canvas 預覽展示
 │   │   ├── ImageUpload.jsx           # 圖片上傳元件
+│   │   ├── Copyright.jsx             # 版權聲明
 │   │   └── PreviewModal.jsx          # 放大預覽與下載
 │   ├── hooks/
 │   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
@@ -48,7 +49,6 @@ card-maker-react/
 │       └── models/
 ├── doc/
 │   ├── architecture.md               # 本文件
-│   └── plan.md
 ├── index.html
 ├── vite.config.js
 ├── tailwind.config.js
@@ -149,12 +149,6 @@ card-maker-react/
 - qrCode：QR 尺寸與留白
 - imageSlots：多天圖片插槽（key/label/座標/尺寸）
 - textPositions：各文字區塊字級與座標
-
-目前內建模板：
-
-- 1p：1 個圖片插槽
-- 2p：2 個圖片插槽
-- 3p：3 個圖片插槽
 
 ---
 

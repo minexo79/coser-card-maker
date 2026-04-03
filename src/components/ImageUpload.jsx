@@ -43,17 +43,8 @@ const ImageUpload = ({ onImageUpload, label = '上傳圖片' }) => {
         }}
       >
         <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-9 bg-blue-100 rounded-full flex items-center justify-center">
             <ImageIcon className="w-6 h-6 text-blue-600" />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-gray-700">點擊上傳圖片</p>
-            <p className="text-xs text-gray-500">支援 JPG, PNG 格式</p>
-          </div>
-          <div className="flex items-center gap-1 text-blue-600">
-            <Upload className="w-4 h-4" />
-            <span className="text-sm font-medium">選擇檔案</span>
-          </div>
+            <p className="text-xs font-medium">點擊上傳圖片 (支援 JPG, PNG 格式)</p>
         </div>
       </div>
       
