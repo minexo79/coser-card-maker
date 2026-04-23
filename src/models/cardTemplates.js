@@ -10,9 +10,9 @@ export const CARD_TEMPLATES = {
     // 畫布配置
     canvas: {
       width: 1220,
-      height: 850,
+      height: 700,
       downloadWidth: 1220,
-      downloadHeight: 850
+      downloadHeight: 700
     },
     // 圖片上傳限制
     upload: {
@@ -30,7 +30,7 @@ export const CARD_TEMPLATES = {
         key: 'd1',
         label: '第一天',
         x: 390.3,
-        y: 91.5,
+        y: 83.6,
         width: 439.5,
         height: 532.7
       }
@@ -47,12 +47,12 @@ export const CARD_TEMPLATES = {
       nickname: {
         fontSize: 36,
         x: 193.1,
-        y: 395.55
+        y: 387.75
       },
       category: {
         fontSize: 36,
         x: 193.1,
-        y: 612.25
+        y: 604.45
       },
       message: {
         fontSize: 30,
@@ -63,7 +63,7 @@ export const CARD_TEMPLATES = {
       dateRole: {
         fontSize: 26,
         x: 610.05,
-        y: 650.5
+        y: 642.7
       }
     }
   },
@@ -73,9 +73,9 @@ export const CARD_TEMPLATES = {
     // 畫布配置
     canvas: {
       width: 1700,
-      height: 850,
+      height: 700,
       downloadWidth: 1700,
-      downloadHeight: 850
+      downloadHeight: 700
     },
     // 圖片上傳限制
     upload: {
@@ -92,16 +92,16 @@ export const CARD_TEMPLATES = {
       {
         key: 'd1',
         label: '第一天',
-        x: 390.8,
-        y: 87.3,
+        x: 393,
+        y: 83.6,
         width: 439.5,
         height: 532.7
       },
       {
         key: 'd2',
         label: '第二天',
-        x: 865.3,
-        y: 87.3,
+        x: 867.5,
+        y: 83.6,
         width: 439.5,
         height: 532.7
       }
@@ -118,12 +118,12 @@ export const CARD_TEMPLATES = {
       nickname: {
         fontSize: 36,
         x: 193.1,
-        y: 395.55
+        y: 387.75
       },
       category: {
         fontSize: 36,
         x: 193.1,
-        y: 612.25
+        y: 604.45
       },
       message: {
         fontSize: 30,
@@ -134,7 +134,7 @@ export const CARD_TEMPLATES = {
       dateRole: {
         fontSize: 26,
         x: 610.05,
-        y: 650.5
+        y: 642.7
       }
     }
   },
@@ -144,9 +144,9 @@ export const CARD_TEMPLATES = {
     // 畫布配置
     canvas: {
       width: 1470,
-      height: 980,
+      height: 850,
       downloadWidth: 1470,
-      downloadHeight: 980
+      downloadHeight: 850
     },
     // 圖片上傳限制
     upload: {
@@ -164,7 +164,7 @@ export const CARD_TEMPLATES = {
         key: 'd1',
         label: '第一天',
         x: 38.8,
-        y: 298.6,
+        y: 300.8,
         width: 439.5,
         height: 456.7
       },
@@ -172,7 +172,7 @@ export const CARD_TEMPLATES = {
         key: 'd2',
         label: '第二天',
         x: 513.3,
-        y: 298.6,
+        y: 300.8,
         width: 439.5,
         height: 456.7
       },
@@ -180,7 +180,7 @@ export const CARD_TEMPLATES = {
         key: 'd3',
         label: '第三天',
         x: 991.7,
-        y: 298.6,
+        y: 300.8,
         width: 439.5,
         height: 456.7
       }
@@ -191,29 +191,29 @@ export const CARD_TEMPLATES = {
       title: {
         fontSize: 36,
         x: 201,
-        centerY: 128.45,
+        centerY: 130.65,
         lineHeight: 38
       },
       nickname: {
         fontSize: 36,
         x: 557,
-        y: 154.75,
+        y: 156.95,
       },
       category: {
         fontSize: 36,
         x: 913,
-        y: 154.75,
+        y: 156.95,
       },
       message: {
         fontSize: 30,
         x: 1269,
-        centerY: 154.75,
+        centerY: 156.95,
         lineHeight: 36
       },
       dateRole: {
         fontSize: 26,
-        x: 258.55,
-        y: 781.6
+        x: 172.5,
+        y: 783.9
       }
     }
   },
@@ -223,9 +223,9 @@ export const CARD_TEMPLATES = {
     // 畫布配置
     canvas: {
       width: 1690,
-      height: 980,
+      height: 850,
       downloadWidth: 1690,
-      downloadHeight: 980
+      downloadHeight: 850
     },
     // 圖片上傳限制
     upload: {
@@ -243,7 +243,7 @@ export const CARD_TEMPLATES = {
         key: 'd1',
         label: '第一天',
         x: 32.5,
-        y: 294.5,
+        y: 300.8,
         width: 380,
         height: 456.7
       },
@@ -251,7 +251,7 @@ export const CARD_TEMPLATES = {
         key: 'd2',
         label: '第二天',
         x: 447.5,
-        y: 294.5,
+        y: 300.8,
         width: 380,
         height: 456.7
       },
@@ -259,7 +259,7 @@ export const CARD_TEMPLATES = {
         key: 'd3',
         label: '第三天',
         x: 862.5,
-        y: 294.5,
+        y: 300.8,
         width: 380,
         height: 456.7
       },
@@ -267,7 +267,7 @@ export const CARD_TEMPLATES = {
         key: 'd4',
         label: '第四天',
         x: 1277.5,
-        y: 294.5,
+        y: 300.8,
         width: 380,
         height: 456.7
       }
@@ -277,19 +277,19 @@ export const CARD_TEMPLATES = {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
       title: {
         fontSize: 36,
-        x: 194.7,
-        centerY: 124.35,
+        x: 195,
+        centerY: 130.65,
         lineHeight: 38
       },
       nickname: {
         fontSize: 36,
-        x: 544.1,
-        y: 150.65,
+        x: 554.1,
+        y: 156.95,
       },
       category: {
         fontSize: 36,
         x: 913.4,
-        y: 150.65,
+        y: 156.95,
       },
       message: {
         fontSize: 30,
@@ -300,7 +300,7 @@ export const CARD_TEMPLATES = {
       dateRole: {
         fontSize: 26,
         x: 222.5,
-        y: 777.6
+        y: 783.9
       }
     }
   }

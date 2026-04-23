@@ -116,10 +116,11 @@ const CardMaker = () => {
   // 當資料變化時重新渲染
   useEffect(() => {
     // 預設開啟 QR Code 顯示
+    // 2026.4.24 Blackcat: 關閉QRCode顯示，部分臉書社團對於宣傳有些疑慮
     if (formData.showQRCode === undefined || formData.showQRCode === null) {
-      updateFormData('showQRCode', true);
+      updateFormData('showQRCode', false);
     }
-
+    
     // 如果沒有網址或網址為空，則設定為當前網址
     if (!formData.websiteUrl || formData.websiteUrl.trim() === '') {
       resetToCurrentUrl();
@@ -144,7 +145,7 @@ const CardMaker = () => {
             </h2>
 
             <div className="mb-6">
-              <div className="grid grid-cols-3 gap-2 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="內容設定分頁">
+              <div className="grid grid-cols-2 gap-2 rounded-lg bg-gray-100 p-1" role="tablist" aria-label="內容設定分頁">
                 <button
                   type="button"
                   role="tab"
@@ -166,17 +167,6 @@ const CardMaker = () => {
                   }`}
                 >
                   預定資訊
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeSettingsTab === 'social'}
-                  onClick={() => setActiveSettingsTab('social')}
-                  className={`rounded-md px-3 py-2 text-sm font-medium transition-all ${
-                    activeSettingsTab === 'social' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:bg-white/70'
-                  }`}
-                >
-                  社群資訊
                 </button>
               </div>
             </div>
@@ -249,6 +239,17 @@ const CardMaker = () => {
                         className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
                       />
                       <span className="ml-2 text-sm font-medium text-gray-700">官方</span>
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="category"
+                        value="其他"
+                        checked={formData.category === '其他'}
+                        onChange={(e) => updateFormData('category', e.target.value)}
+                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm font-medium text-gray-700">其他</span>
                     </label>
                   </div>
                 </div>
@@ -330,14 +331,6 @@ const CardMaker = () => {
                 )}
 
                 {activeSlot && renderDaySlot(activeSlot)}
-              </>
-            )}
-
-            {activeSettingsTab === 'social' && (
-              <>
-                <div className="mb-4">
-                  <p>TODO</p>
-                </div>
               </>
             )}
 

@@ -84,7 +84,7 @@ export const useCardMaker = () => {
     nickname: '',
     message: '',
     category: 'COSER',
-    showQRCode: true,
+    showQRCode: false,
     websiteUrl: ''
   });
 
