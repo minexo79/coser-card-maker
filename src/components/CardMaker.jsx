@@ -131,14 +131,14 @@ const CardMaker = () => {
         {/* <!-- Left Side: Logo From favicon.ico --> */}
         <div class="flex items-center gap-2">
           <img src="/favicon.ico" alt="Logo" class="w-8 h-8" />
-          <span class="font-bold text-lg text-gray-800">場次預定製作工具</span>
+          <span class="text-lg text-gray-800">場次預定製作工具</span>
         </div>
       </nav>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
-            <h2 className="text-2xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
+            <h2 className="text-xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
               <SettingIcon className="w-6 h-6 text-blue-600" />
               內容設定
             </h2>
@@ -196,7 +196,7 @@ const CardMaker = () => {
 
                 {/* 身分選擇 */}
                 <div className="mb-6">
-                  <label className="block text-sm text-gray-700 mb-3">
+                  <label className="block text-xs text-gray-700 mb-3">
                     身分
                   </label>
                   <div className="grid grid-cols-4 gap-3">
@@ -308,7 +308,7 @@ const CardMaker = () => {
         {/* 右側預覽區域 */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
-            <h2 className="text-2xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
+            <h2 className="text-xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
               <ImageIcon className="w-6 h-6 text-blue-600" />
               圖片預覽
             </h2>
