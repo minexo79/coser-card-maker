@@ -35,7 +35,7 @@ describe('卡片模板', () => {
       expect(template1p.canvas).toHaveProperty('downloadWidth');
       expect(template1p.canvas).toHaveProperty('downloadHeight');
       expect(template1p.canvas.width).toBe(1220);
-      expect(template1p.canvas.height).toBe(850);
+      expect(template1p.canvas.height).toBe(700);
     });
 
     it('upload 應該擁有 maxFileSizeBytes', () => {
@@ -71,6 +71,13 @@ describe('卡片模板', () => {
       expect(template1p.textPositions).toHaveProperty('category');
       expect(template1p.textPositions).toHaveProperty('message');
       expect(template1p.textPositions).toHaveProperty('dateRole');
+
+      ['title', 'nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+        expect(template1p.textPositions[key]).toHaveProperty('x');
+        expect(template1p.textPositions[key]).toHaveProperty('y');
+        expect(template1p.textPositions[key]).toHaveProperty('width');
+        expect(template1p.textPositions[key]).toHaveProperty('height');
+      });
     });
   });
 
@@ -112,6 +119,13 @@ describe('卡片模板', () => {
       expect(template2p.textPositions).toHaveProperty('category');
       expect(template2p.textPositions).toHaveProperty('message');
       expect(template2p.textPositions).toHaveProperty('dateRole');
+
+      ['title', 'nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+        expect(template2p.textPositions[key]).toHaveProperty('x');
+        expect(template2p.textPositions[key]).toHaveProperty('y');
+        expect(template2p.textPositions[key]).toHaveProperty('width');
+        expect(template2p.textPositions[key]).toHaveProperty('height');
+      });
     });
   });
 });

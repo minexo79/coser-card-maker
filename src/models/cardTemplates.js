@@ -32,38 +32,47 @@ export const CARD_TEMPLATES = {
         x: 390.3,
         y: 83.6,
         width: 439.5,
-        height: 532.7
+        height: 532.7,
+        dateRole: {
+          fontSize: 26,
+          x: 390.3,
+          y: 616.4,
+          width: 439.5,
+          height: 52.6
+        }
       }
     ],
+    titleImage: {
+      fontSize: 36,
+      x: 30.8,
+      y: 31,
+      width: 324.4,
+      height: 204.5,
+    },
     // 文字位置配置
     textPositions: {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
-      title: {
-        fontSize: 36,
-        x: 193.1,
-        centerY: 131.15,
-        lineHeight: 38
-      },
       nickname: {
         fontSize: 36,
-        x: 193.1,
-        y: 387.75
+        x: 30.8,
+        y: 323.2,
+        width: 324.4,
+        height: 129.1
       },
       category: {
         fontSize: 36,
-        x: 193.1,
-        y: 604.45
+        x: 30.8,
+        y: 539.9,
+        width: 324.4,
+        height: 129.1
       },
       message: {
         fontSize: 30,
-        x: 1027,
-        centerY: 236.1,
-        lineHeight: 36
-      },
-      dateRole: {
-        fontSize: 26,
-        x: 610.05,
-        y: 642.7
+        x: 864.8,
+        y: 31,
+        width: 324.4,
+        height: 341.8,
+        lineHeight: 42
       }
     }
   },
@@ -95,7 +104,14 @@ export const CARD_TEMPLATES = {
         x: 393,
         y: 83.6,
         width: 439.5,
-        height: 532.7
+        height: 532.7,
+        dateRole: {
+          fontSize: 26,
+          x: 390.3,
+          y: 616.4,
+          width: 439.5,
+          height: 52.6
+        }
       },
       {
         key: 'd2',
@@ -103,38 +119,47 @@ export const CARD_TEMPLATES = {
         x: 867.5,
         y: 83.6,
         width: 439.5,
-        height: 532.7
+        height: 532.7,
+        dateRole: {
+          fontSize: 26,
+          x: 867.5,
+          y: 616.4,
+          width: 439.5,
+          height: 52.6
+        }
       }
     ],
+    titleImage: {
+      fontSize: 36,
+      x: 33.6,
+      y: 31,
+      width: 324.4,
+      height: 204.5,
+    },
     // 文字位置配置
     textPositions: {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
-      title: {
-        fontSize: 36,
-        x: 193.1,
-        centerY: 131.15,
-        lineHeight: 38
-      },
       nickname: {
         fontSize: 36,
-        x: 193.1,
-        y: 387.75
+        x: 33.6,
+        y: 323.2,
+        width: 324.4,
+        height: 129.1
       },
       category: {
         fontSize: 36,
-        x: 193.1,
-        y: 604.45
+        x: 33.6,
+        y: 539.9,
+        width: 324.4,
+        height: 129.1
       },
       message: {
         fontSize: 30,
-        x: 1502,
-        centerY: 236.1,
-        lineHeight: 36
-      },
-      dateRole: {
-        fontSize: 26,
-        x: 610.05,
-        y: 642.7
+        x: 1342,
+        y: 83.6,
+        width: 324.4,
+        height: 289.2,
+        lineHeight: 42
       }
     }
   },
@@ -166,7 +191,14 @@ export const CARD_TEMPLATES = {
         x: 38.8,
         y: 300.8,
         width: 439.5,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 38.8,
+          y: 757.6,
+          width: 439.5,
+          height: 52.6
+        }
       },
       {
         key: 'd2',
@@ -174,7 +206,14 @@ export const CARD_TEMPLATES = {
         x: 513.3,
         y: 300.8,
         width: 439.5,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 513.3,
+          y: 757.6,
+          width: 439.5,
+          height: 52.6
+        }
       },
       {
         key: 'd3',
@@ -182,38 +221,47 @@ export const CARD_TEMPLATES = {
         x: 991.7,
         y: 300.8,
         width: 439.5,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 991.7,
+          y: 757.6,
+          width: 439.5,
+          height: 52.6
+        }
       }
     ],
+    titleImage: {
+      fontSize: 36,
+      x: 38.8,
+      y: 39.8,
+      width: 324.4,
+      height: 181.7,
+    },
     // 文字位置配置
     textPositions: {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
-      title: {
-        fontSize: 36,
-        x: 201,
-        centerY: 130.65,
-        lineHeight: 38
-      },
       nickname: {
         fontSize: 36,
-        x: 557,
-        y: 156.95,
+        x: 394.8,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
       },
       category: {
         fontSize: 36,
-        x: 913,
-        y: 156.95,
+        x: 750.8,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
       },
       message: {
-        fontSize: 30,
-        x: 1269,
-        centerY: 156.95,
-        lineHeight: 36
-      },
-      dateRole: {
         fontSize: 26,
-        x: 172.5,
-        y: 783.9
+        x: 1106.8,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
+        lineHeight: 38
       }
     }
   },
@@ -245,7 +293,14 @@ export const CARD_TEMPLATES = {
         x: 32.5,
         y: 300.8,
         width: 380,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 32.5,
+          y: 757.6,
+          width: 380,
+          height: 52.6
+        }
       },
       {
         key: 'd2',
@@ -253,7 +308,14 @@ export const CARD_TEMPLATES = {
         x: 447.5,
         y: 300.8,
         width: 380,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 447.5,
+          y: 757.6,
+          width: 380,
+          height: 52.6
+        }
       },
       {
         key: 'd3',
@@ -261,7 +323,14 @@ export const CARD_TEMPLATES = {
         x: 862.5,
         y: 300.8,
         width: 380,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 862.5,
+          y: 757.6,
+          width: 380,
+          height: 52.6
+        }
       },
       {
         key: 'd4',
@@ -269,38 +338,47 @@ export const CARD_TEMPLATES = {
         x: 1277.5,
         y: 300.8,
         width: 380,
-        height: 456.7
+        height: 456.7,
+        dateRole: {
+          fontSize: 26,
+          x: 1277.5,
+          y: 757.6,
+          width: 380,
+          height: 52.6
+        }
       }
     ],
+    titleImage: {
+      fontSize: 36,
+      x: 32.5,
+      y: 39.8,
+      width: 324.4,
+      height: 181.7,
+    },
     // 文字位置配置
     textPositions: {
       fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
-      title: {
-        fontSize: 36,
-        x: 195,
-        centerY: 130.65,
-        lineHeight: 38
-      },
       nickname: {
         fontSize: 36,
-        x: 554.1,
-        y: 156.95,
+        x: 391.9,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
       },
       category: {
         fontSize: 36,
-        x: 913.4,
-        y: 156.95,
+        x: 751.2,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
       },
       message: {
-        fontSize: 30,
-        x: 1495.3,
-        centerY: 150.65,
-        lineHeight: 36
-      },
-      dateRole: {
         fontSize: 26,
-        x: 222.5,
-        y: 783.9
+        x: 1333.1,
+        y: 92.4,
+        width: 324.4,
+        height: 129.1,
+        lineHeight: 38
       }
     }
   }

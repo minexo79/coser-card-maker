@@ -103,7 +103,6 @@ card-maker-react/
 - sharedFormData：共用欄位（title, nickname, category, message, showQRCode, websiteUrl）
 - dayDetails：各天獨立欄位（date, cosrole）
 - imageDatas：各天圖片 DataURL
-- imageOffsets：各天圖片水平偏移
 - dayCount：目前天數
 - isLoading / showModal：UI 狀態
 
@@ -127,8 +126,8 @@ card-maker-react/
 1) 取得當前模板並設定 canvas 尺寸
 2) 載入模板底圖（template.baseImagePath）
 3) 逐一繪製 imageSlots 對應的使用者圖片（cover 裁切 + clip）
-4) 若啟用 QR Code，生成後繪製於右下角
-5) 依模板 textPositions 繪製 title / nickname / category / message
+4) 繪製 titleImage 對應的使用者圖片（調整至與Template一樣大小，所以會有其他白邊出現）
+5) 依模板 textPositions 繪製 nickname / category / message
 6) 逐日繪製 date + cosrole（MM-DD 轉換）
 ```
 
@@ -148,6 +147,7 @@ card-maker-react/
 - upload：上傳限制
 - qrCode：QR 尺寸與留白
 - imageSlots：多天圖片插槽（key/label/座標/尺寸）
+- titleImage：活動圖片插槽
 - textPositions：各文字區塊字級與座標
 
 ---
