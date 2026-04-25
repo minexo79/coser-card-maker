@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
+import { Settings as SettingIcon } from 'lucide-react';
 import { useCardMaker } from '../hooks/useCardMaker';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
@@ -27,6 +28,7 @@ const CardMaker = () => {
     updateFormData,
     updateDayDetail,
     handleImageUpload,
+    handleTitleImageUpload,
     getCurrentTemplate,
     renderCanvas,
     setDayCount,
@@ -51,16 +53,6 @@ const CardMaker = () => {
     return (
       <div key={dayKey} className="mb-6 rounded-lg border border-gray-200 p-4">
         <div className="mb-2 gap-3">
-          {/* <div>
-            <label className="block text-xs mb-2">日期</label>
-            <input
-              type="text"
-              value={detail?.date || getCurrentDateString()}
-              readOnly
-              placeholder='請在上方設定日期'
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-400 text-sm"
-            />
-          </div> */}
           <div>
             <label className="block text-xs text-gray-700 mb-2">{detail?.date || getCurrentDateString()} 角色名稱</label>
             <input
@@ -134,13 +126,20 @@ const CardMaker = () => {
   }, [dayCount, dayDetails, formData, imageDatas, imageOffsets, renderCanvas, resetToCurrentUrl, updateFormData]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-2">
+      <nav class="flex items-center justify-between p-4 text-white">
+        {/* <!-- Left Side: Logo From favicon.ico --> */}
+        <div class="flex items-center gap-2">
+          <img src="/favicon.ico" alt="Logo" class="w-8 h-8" />
+          <span class="font-bold text-lg text-gray-800">場次預定製作工具</span>
+        </div>
+      </nav>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
             <h2 className="text-2xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
-              <ImageIcon className="w-6 h-6 text-blue-600" />
+              <SettingIcon className="w-6 h-6 text-blue-600" />
               內容設定
             </h2>
 
@@ -173,17 +172,11 @@ const CardMaker = () => {
 
             {activeSettingsTab === 'basic' && (
               <>
-                {/* 活動輸入 */}
+                {/* 活動標題圖上傳 */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-700 mb-2">
-                    活動名稱
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => updateFormData('title', e.target.value)}
-                    placeholder="輸入活動名稱"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
+                  <ImageUpload
+                    label="活動圖片"
+                    onImageUpload={handleTitleImageUpload}
                   />
                 </div>
 
@@ -201,56 +194,25 @@ const CardMaker = () => {
                   />
                 </div>
 
-                {/* 類別選擇 */}
+                {/* 身分選擇 */}
                 <div className="mb-6">
-                  <label className="block text-sm  text-gray-700 mb-3">
-                    類別
+                  <label className="block text-sm text-gray-700 mb-3">
+                    身分
                   </label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="category"
-                        value="COSER"
-                        checked={formData.category === 'COSER'}
-                        onChange={(e) => updateFormData('category', e.target.value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">COSER</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="category"
-                        value="攝影"
-                        checked={formData.category === '攝影'}
-                        onChange={(e) => updateFormData('category', e.target.value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">攝影</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="category"
-                        value="官方"
-                        checked={formData.category === '官方'}
-                        onChange={(e) => updateFormData('category', e.target.value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">官方</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="category"
-                        value="其他"
-                        checked={formData.category === '其他'}
-                        onChange={(e) => updateFormData('category', e.target.value)}
-                        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">其他</span>
-                    </label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {['COSER', '攝影', '官方', '路人'].map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => updateFormData('category', category)}
+                        className={`p-3 rounded-lg border-2 transition-all duration-200 font-medium text-sm ${
+                          formData.category === category
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-gray-50'
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -346,7 +308,8 @@ const CardMaker = () => {
         {/* 右側預覽區域 */}
         <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
-            <h2 className="text-2xl text-gray-800 text-center mb-6">
+            <h2 className="text-2xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
+              <ImageIcon className="w-6 h-6 text-blue-600" />
               圖片預覽
             </h2>
 

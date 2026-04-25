@@ -88,6 +88,8 @@ export const useCardMaker = () => {
     websiteUrl: ''
   });
 
+  const [titleImageData, setTitleImageData] = useState(null);
+
   const [dayDetails, setDayDetails] = useState(() =>
     createStateByDayKeys(allDayKeys, () => ({ date: '', cosrole: '' }))
   );
@@ -187,7 +189,7 @@ export const useCardMaker = () => {
   // Stable serialized snapshot for render change detection.
   const formDataString = useMemo(() => {
     return JSON.stringify({
-      title: sharedFormData.title || '',
+      titleImageData: titleImageData || '',
       nickname: sharedFormData.nickname || '',
       message: sharedFormData.message || '',
       category: sharedFormData.category || '',
@@ -198,18 +200,19 @@ export const useCardMaker = () => {
       imageDatas,
       imageOffsets
     });
-  }, [sharedFormData, dayCount, dayDetails, imageDatas, imageOffsets]);
+  }, [sharedFormData, titleImageData, dayCount, dayDetails, imageDatas, imageOffsets]);
 
   // Backward-compatible flat form data for legacy UI consumers.
   const formData = useMemo(() => {
     // Keep old access paths: formData.date and formData.cosrole.
     return {
       ...sharedFormData,
+      titleImageData,
       date: dayDetails.d1?.date || '',
       cosrole: dayDetails.d1?.cosrole || '',
       imageOffsetX: imageOffsets.d1 ?? 0
     };
-  }, [sharedFormData, dayDetails, imageOffsets]);
+  }, [sharedFormData, titleImageData, dayDetails, imageOffsets]);
 
   const updateFormData = useCallback((field, value) => {
     if (field === 'date' || field === 'cosrole') {
@@ -256,6 +259,33 @@ export const useCardMaker = () => {
       
       reader.readAsDataURL(file);
     }
+  }, [getCurrentTemplate]);
+
+  const handleTitleImageUpload = useCallback((file) => {
+    if (!file) {
+      return;
+    }
+
+    const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
+    if (file.size > maxSize) {
+      alert('Image is too large. Please upload a file smaller than 5MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setTitleImageData(e.target.result);
+      }
+    };
+
+    reader.onerror = (error) => {
+      console.error('Failed to read title image file:', error);
+      alert('Failed to read image file. Please try again.');
+    };
+
+    reader.readAsDataURL(file);
   }, [getCurrentTemplate]);
 
   const formatDateToMMDD = useCallback((dateValue) => {
@@ -410,38 +440,74 @@ export const useCardMaker = () => {
 
       // Draw text.
       ctx.fillStyle = '#303030';
+
+      const getTextBoxCenter = (box) => {
+        const width = box?.width ?? 0;
+        const height = box?.height ?? 0;
+        return {
+          x: (box?.x ?? 0) + (width / 2),
+          y: (box?.y ?? 0) + (height / 2),
+          width,
+          height
+        };
+      };
       
-      // Title: split by spaces/newlines and vertically center all lines.
-      if (sharedFormData.title) {
-        ctx.font = ` ${renderTemplate.textPositions.title.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-
-        const titleLines = sharedFormData.title
-          .split(/\r?\n/)
-          .flatMap((line) => {
-            if (!line) {
-              return [''];
-            }
-
-            return line
-              .split(/ +/)
-              .filter((segment) => segment.length > 0);
-          });
-        const lineHeight = renderTemplate.textPositions.title.lineHeight;
-        const centerY = renderTemplate.textPositions.title.centerY;
-        const startY = centerY - ((titleLines.length - 1) * lineHeight) / 2;
-
-        titleLines.forEach((line, index) => {
-          ctx.fillText(line, renderTemplate.textPositions.title.x, startY + lineHeight * index);
+      if (titleImageData) {
+        const titleImage = new Image();
+        await new Promise((resolve) => {
+          titleImage.onload = resolve;
+          titleImage.onerror = resolve;
+          titleImage.src = titleImageData;
         });
+
+        if (titleImage.complete && titleImage.naturalWidth > 0 && titleImage.naturalHeight > 0) {
+          const titleArea = renderTemplate.titleImage;
+          const titleAspect = titleImage.naturalWidth / titleImage.naturalHeight;
+          const areaAspect = titleArea.width / titleArea.height;
+
+          let drawWidth = titleArea.width;
+          let drawHeight = titleArea.height;
+          let drawX = titleArea.x;
+          let drawY = titleArea.y;
+
+          // Keep the full title image visible and center it in the reserved box.
+          if (titleAspect > areaAspect) {
+            drawHeight = titleArea.width / titleAspect;
+            drawY = titleArea.y + (titleArea.height - drawHeight) / 2;
+          } else {
+            drawWidth = titleArea.height * titleAspect;
+            drawX = titleArea.x + (titleArea.width - drawWidth) / 2;
+          }
+
+          ctx.drawImage(titleImage, drawX, drawY, drawWidth, drawHeight);
+        }
       }
 
-      // Message: split by spaces/newlines and vertically center all lines.
+      // 暱稱
+      if (sharedFormData.nickname) {
+        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const nicknameBox = getTextBoxCenter(renderTemplate.textPositions.nickname);
+        ctx.fillText(sharedFormData.nickname, nicknameBox.x, nicknameBox.y);
+      }
+      
+      // 身分
+      if (sharedFormData.category) {
+        ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const categoryBox = getTextBoxCenter(renderTemplate.textPositions.category);
+        ctx.fillText(sharedFormData.category, categoryBox.x, categoryBox.y);
+      }
+
+      // 備註
       if (sharedFormData.message) {
         ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
+
+        const messageBox = getTextBoxCenter(renderTemplate.textPositions.message);
 
         const messageLines = sharedFormData.message
           .split(/\r?\n/)
@@ -455,31 +521,16 @@ export const useCardMaker = () => {
               .filter((segment) => segment.length > 0);
           });
         const lineHeight = renderTemplate.textPositions.message.lineHeight;
-        const centerY = renderTemplate.textPositions.message.centerY;
-        const startY = centerY - ((messageLines.length - 1) * lineHeight) / 2;
+        const startY = messageBox.y - ((messageLines.length - 1) * lineHeight) / 2;
 
         messageLines.forEach((line, index) => {
-          ctx.fillText(line, renderTemplate.textPositions.message.x, startY + lineHeight * index);
+          ctx.fillText(line, messageBox.x, startY + lineHeight * index);
         });
-      }
-
-      if (sharedFormData.nickname) {
-        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(sharedFormData.nickname, renderTemplate.textPositions.nickname.x, renderTemplate.textPositions.nickname.y);
-      }
-      
-      if (sharedFormData.category) {
-        ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(sharedFormData.category, renderTemplate.textPositions.category.x, renderTemplate.textPositions.category.y);
       }
     
 
+      // 出角資訊
       ctx.fillStyle = 'white';
-      ctx.font = ` ${renderTemplate.textPositions.dateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -507,12 +558,15 @@ export const useCardMaker = () => {
           return;
         }
 
-        const useTemplateSinglePosition = imageSlots.length === 1;
-        const fallbackX = slot.x + slot.width / 2;
-        const fallbackY = slot.y + slot.height + renderTemplate.textPositions.dateRole.fontSize;
-        const textX = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.x : fallbackX;
-        const textY = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.y : fallbackY;
-        ctx.fillText(displayText, textX, textY);
+        // Get dateRole config from the image slot
+        const slotDateRole = slot?.dateRole;
+        if (!slotDateRole) {
+          return;
+        }
+
+        ctx.font = ` ${slotDateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        const dateRoleBox = getTextBoxCenter(slotDateRole);
+        ctx.fillText(displayText, dateRoleBox.x, dateRoleBox.y);
       });
       
       ctx.fillStyle = '#2c3e50';
@@ -536,7 +590,8 @@ export const useCardMaker = () => {
     getCurrentTemplate,
     imageDatas,
     imageOffsets,
-    sharedFormData
+    sharedFormData,
+    titleImageData
   ]);
 
   // Debounced wrapper around renderCanvas.
@@ -566,6 +621,7 @@ export const useCardMaker = () => {
     updateFormData,
     updateDayDetail,
     handleImageUpload,
+    handleTitleImageUpload,
     getCurrentTemplate,
     renderCanvas: debouncedRenderCanvas, // Return debounced version.
     setDayCount,

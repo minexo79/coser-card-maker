@@ -59,9 +59,11 @@ describe('CardMaker - DIY View UI', () => {
       isLoading: false,
       showModal: false,
       canvasRef: { current: null },
+      getCurrentDateString: () => '2026-04-25',
       updateFormData: vi.fn(),
       updateDayDetail: vi.fn(),
       handleImageUpload: vi.fn(),
+      handleTitleImageUpload: vi.fn(),
       getCurrentTemplate: () => ({
         imageSlots: [
           { key: 'd1', label: '第一天' },
@@ -90,6 +92,9 @@ describe('CardMaker - DIY View UI', () => {
 
     const { rerender } = render(<CardMaker />);
 
+    const scheduleTab = screen.getByRole('tab', { name: '預定資訊' });
+    fireEvent.click(scheduleTab);
+
     expect(screen.queryByRole('tab', { name: '第二天 DAY 2' })).toBeNull();
 
     const select = screen.getByRole('combobox');
@@ -114,6 +119,9 @@ describe('CardMaker - DIY View UI', () => {
     );
 
     render(<CardMaker />);
+
+  const scheduleTab = screen.getByRole('tab', { name: '預定資訊' });
+  fireEvent.click(scheduleTab);
 
     const uploadD1 = screen.getByRole('button', { name: 'upload 上傳圖片 (第一天 DAY 1)' });
     fireEvent.click(uploadD1);
