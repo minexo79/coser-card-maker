@@ -10,11 +10,11 @@ const Copyright = () => {
         <p className="text-xs mb-1">Figure Vectors by Vecteezy.</p>
         {/* GitHub 連結 */}
         <a href="https://github.com/minexo79/coser-card-maker" target="_blank" rel="noopener noreferrer">
-          <img src="/github.svg" alt="GitHub" className="inline-block w-6 h-6" />
+          <img src="./github.svg" alt="GitHub" className="inline-block w-6 h-6" />
         </a>
         {/* Kofi 連結 */}
         <a href="https://ko-fi.com/tsaixoblackcat" target="_blank" rel="noopener noreferrer" className="ml-4">
-          <img src="/kofi.svg" alt="Ko-fi" className="inline-block w-6 h-6" />
+          <img src="./kofi.svg" alt="Ko-fi" className="inline-block w-6 h-6" />
         </a>
       </div>
     </div>
