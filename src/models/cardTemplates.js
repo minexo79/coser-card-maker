@@ -6,7 +6,7 @@
 export const CARD_TEMPLATES = {
   '1p': {
     // 底圖來源
-    baseImagePath: '/img/card_base_1p.png',
+    baseImagePath: './img/card_base_1p.png',
     // 畫布配置
     canvas: {
       width: 1220,
@@ -78,7 +78,7 @@ export const CARD_TEMPLATES = {
   },
   '2p': {
     // 底圖來源
-    baseImagePath: '/img/card_base_2p.png',
+    baseImagePath: './img/card_base_2p.png',
     // 畫布配置
     canvas: {
       width: 1700,
@@ -165,7 +165,7 @@ export const CARD_TEMPLATES = {
   },
   '3p': {
     // 底圖來源
-    baseImagePath: '/img/card_base_3p.png',
+    baseImagePath: './img/card_base_3p.png',
     // 畫布配置
     canvas: {
       width: 1470,
@@ -267,7 +267,7 @@ export const CARD_TEMPLATES = {
   },
   '4p': {
     // 底圖來源
-    baseImagePath: '/img/card_base_4p.png',
+    baseImagePath: './img/card_base_4p.png',
     // 畫布配置
     canvas: {
       width: 1690,

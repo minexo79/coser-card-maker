@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
+import { useParams } from "react-router-dom";
 import { useCardMaker } from '../hooks/useCardMaker';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
@@ -11,6 +12,17 @@ const getDayNumberFromKey = (dayKey) => {
   const match = /^d(\d+)$/i.exec(dayKey || '');
   if (!match) return '?';
   return match[1];
+};
+
+// 活動配置
+// TODO: 暫時的，後續要改成後端上傳
+const EVENT_PRESETS = {
+  fgzc01: {
+    dayCount: 2,
+    startDate: "2026-05-23",
+    baseImagePath: "./img/card_base_2p_fgz.png",
+    lockTitleImage: true
+  }
 };
 
 const CardMaker = () => {
@@ -32,7 +44,8 @@ const CardMaker = () => {
     getCurrentTemplate,
     renderCanvas,
     setDayCount,
-    setShowModal
+    setShowModal,
+    setBaseImageOverride
   } = useCardMaker();
 
   const template = getCurrentTemplate();
@@ -42,6 +55,10 @@ const CardMaker = () => {
   const [activeSettingsTab, setActiveSettingsTab] = useState('basic');
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
+
+  const { eventName } = useParams();
+  const preset = EVENT_PRESETS[eventName];  
+  const isPresetActive = !!preset;          // only set true if found preset
 
   const renderDaySlot = (slot) => {
     const dayKey = slot.key;
@@ -105,6 +122,26 @@ const CardMaker = () => {
     updateFormData('websiteUrl', window.location.href);
   }, [updateFormData]);
 
+  // 當發現有preset時，根據預設設定相關資料
+  useEffect(() => {
+    if (!preset) return;
+
+    // 設定天數
+    if (preset.dayCount) {
+      setDayCount(preset.dayCount);
+    }
+
+    // 設定起始日期（只改 d1）
+    if (preset.startDate) {
+      updateDayDetail('d1', 'date', preset.startDate);
+    }
+
+    // 設定活動圖片
+    if (preset.baseImagePath) {
+      setBaseImageOverride(preset.baseImagePath);
+    }
+  }, [preset, setDayCount, updateDayDetail, updateFormData, setBaseImageOverride]);
+
   // 當資料變化時重新渲染
   useEffect(() => {
     // 預設開啟 QR Code 顯示
@@ -130,7 +167,7 @@ const CardMaker = () => {
       <nav class="flex items-center justify-between p-4 text-white">
         {/* <!-- Left Side: Logo From favicon.ico --> */}
         <div class="flex items-center gap-2">
-          <img src="/favicon.ico" alt="Logo" class="w-8 h-8" />
+          <img src="./favicon.ico" alt="Logo" class="w-8 h-8" />
           <span class="text-lg text-gray-800">場次預定製作工具</span>
         </div>
       </nav>
@@ -174,10 +211,12 @@ const CardMaker = () => {
               <>
                 {/* 活動標題圖上傳 */}
                 <div className="mb-4">
-                  <ImageUpload
-                    label="活動圖片"
-                    onImageUpload={handleTitleImageUpload}
-                  />
+                  {!preset?.lockTitleImage && (
+                    <ImageUpload
+                      label="活動圖片"
+                      onImageUpload={handleTitleImageUpload}
+                    />
+                  )}
                 </div>
 
                 {/* 暱稱輸入 */}
@@ -241,6 +280,7 @@ const CardMaker = () => {
                     <input
                       type="date"
                       value={dayDetails.d1?.date || new Date().toISOString().split('T')[0]} // 預設為今天
+                      disabled={isPresetActive}
                       onChange={(e) => updateDayDetail('d1', 'date', e.target.value)}
                       min="2001-01-01"
                       max="2099-12-31"
@@ -254,6 +294,7 @@ const CardMaker = () => {
                     <select
                       value={dayCount}
                       onChange={(e) => setDayCount(parseInt(e.target.value, 10))}
+                      disabled={isPresetActive}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
                       style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
                       

@@ -55,6 +55,9 @@ const createStateByDayKeys = (dayKeys, valueFactory) => {
 };
 
 export const useCardMaker = () => {
+  // for specific event update and preset-based base image override
+  const [baseImageOverride, setBaseImageOverride] = useState(null);
+  
   // Build template config once and reuse it across renders.
   const templateConfig = useMemo(() => buildTemplateConfig(), []);
   const defaultDayCount = templateConfig.supportedDayCounts[0] || 1;
@@ -137,11 +140,19 @@ export const useCardMaker = () => {
   const isRenderingRef = useRef(false);
 
   const getCurrentTemplate = useCallback(() => {
-    // Resolve template by day count. Fall back safely to default then 1p.
-    return templateConfig.templateByDayCount[dayCount]
+    const baseTemplate =
+      templateConfig.templateByDayCount[dayCount]
       || templateConfig.templateByDayCount[defaultDayCount]
       || CARD_TEMPLATES['1p'];
-  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount]);
+
+    // if no base image override, return the template directly
+    if (!baseImageOverride) return baseTemplate;
+
+    return {
+      ...baseTemplate,
+      baseImagePath: baseImageOverride
+    };
+  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount, baseImageOverride]);
 
   const addDaysToDate = useCallback((dateValue, days) => {
     if (!dateValue) return '';
@@ -625,6 +636,7 @@ export const useCardMaker = () => {
     getCurrentTemplate,
     renderCanvas: debouncedRenderCanvas, // Return debounced version.
     setDayCount,
-    setShowModal
+    setShowModal,
+    setBaseImageOverride
   };
 };
