@@ -6,49 +6,49 @@
 
 - [X] 多天數模板切換
 - [X] 分別上傳圖片與調整水平偏移
-- [ ] 社群連結 (以QRCode) 顯示
-- [ ] 支援客製化預定底圖 (超連結方式與後端存取)
+- [X] 支援客製化預定底圖 (超連結方式)
+- [ ] 後端存取
 
 ## 技術棧
 - React + Vite
 - Vitest
-- qrcode 1.5
 
 ## 專案架構
 
 ```text
 card-maker-react/
 ├── public/
-│   ├── fonts/                    # 字型資源
-│   └── img/                      # 卡片底圖資源（1p/2p/3p）
+│   ├── fonts/                        # 字型資源
+│   └── img/                          # 卡片底圖（1p/2p/3p）
 ├── src/
-│   ├── App.jsx                   # 根元件
-│   ├── main.jsx                  # 入口
-│   ├── index.css                 # 全域樣式
+│   ├── main.jsx                      # 應用入口
+│   ├── App.jsx                       # 根元件
+│   ├── index.css                     # 全域樣式
 │   ├── components/
-│   │   ├── CardMaker.jsx         # 主頁容器（表單與預覽佈局）
-│   │   ├── CardPreview.jsx       # Canvas 預覽展示
-│   │   ├── ImageUpload.jsx       # 圖片上傳元件
-│   │   ├── Copyright.jsx         # 版權聲明
-│   │   └── PreviewModal.jsx      # 放大預覽與下載
+│   │   ├── CardMaker.jsx             # 主容器（表單 + 預覽）
+│   │   ├── CardPreview.jsx           # Canvas 預覽展示
+│   │   ├── ImageUpload.jsx           # 圖片上傳元件
+│   │   ├── Copyright.jsx             # 版權聲明
+│   │   └── PreviewModal.jsx          # 放大預覽與下載
 │   ├── hooks/
-│   │   ├── useCardMaker.js       # 核心狀態與 Canvas 繪製流程
-│   │   └── useQRCode.js          # QR Code 產生封裝
+│   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
+│   │   ├── useImageLayerRenderer.js  # 角色圖片狀態 + Canvas 繪製
+│   │   ├── useTools.js               # 共用庫
 │   ├── models/
-│   │   └── cardTemplates.js      # 1p/2p/3p 模板設定（畫布/圖槽/文字）
+│   │   └── cardTemplates.js          # 1p/2p/3p 模板設定
+│   │   └── oemCardTemplates.js       # 客製化模板
 │   └── __tests__/
 │       ├── components/
 │       ├── hooks/
 │       └── models/
 ├── doc/
-│   ├── architecture.md
-│   └── plan.md
-└── package.json
+│   ├── architecture.md               # 本文件
+├── index.html
+├── vite.config.js
+├── tailwind.config.js
+├── postcss.config.js
+└── eslint.config.js
 ```
-
-## 架構與流程文件
-
-分層說明、資料流、開發流程已移至完整文件：`doc/architecture.md`。
 
 ## 擴充指引
 
@@ -59,6 +59,19 @@ card-maker-react/
 3. 確認 `imageSlots` 的 `key` 命名延續 `d1`, `d2`...。
 4. 啟動專案驗證天數切換、圖片上傳與文字位置。
 
+### 新增客製化模板
+1. 在 `src/models/oemCardTemplates.js` 新增如下的模板定義。
+```
+aabbcc: {
+    dayCount: 2,
+    startDate: "2026-05-23",
+    baseImagePath: "./img/card_base_2p_aabbcc.png",
+    lockTitleImage: true
+}
+```
+2. 放入對應底圖到 `public/img/`。
+4. 啟動專案，開啟瀏覽器，在網址後面加入`/aabbcc`，驗證圖片是否有更改。
+
 ### 新增表單欄位
 
 1. 在 `useCardMaker.js` 的狀態中加入欄位。
@@ -68,3 +81,6 @@ card-maker-react/
 
 ## 文件
 - 架構與流程詳解：`doc/architecture.md`
+
+## 參考
+- [雲緣起活動網站前端 - YAF_web](https://github.com/YunlinAnimeFestival/YAF_web)

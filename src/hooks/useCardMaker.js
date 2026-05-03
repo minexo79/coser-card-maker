@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
-import { useQRCode } from './useQRCode';
+import { getCurrentDateString, getDayIndexFromKey } from './useTools.js';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
+<<<<<<< HEAD
 
 // return YYYY-MM-DD format string for today, used as default date value in date input.
 const getCurrentDateString = () => {
@@ -17,6 +18,9 @@ const getDayIndexFromKey = (dayKey) => {
   if (!match) return Number.POSITIVE_INFINITY;
   return Number.parseInt(match[1], 10);
 };
+=======
+import { createImageLayerRenderer } from './useImageLayerRenderer.js';
+>>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 
 // Build template lookup by day count so future templates can plug in directly.
 const buildTemplateConfig = () => {
@@ -83,12 +87,9 @@ export const useCardMaker = () => {
   const supportedDayCounts = templateConfig.supportedDayCounts;
 
   const [sharedFormData, setSharedFormData] = useState({
-    title: '',
     nickname: '',
     message: '',
-    category: 'COSER',
-    showQRCode: false,
-    websiteUrl: ''
+    category: 'COSER'
   });
 
   const [titleImageData, setTitleImageData] = useState(null);
@@ -131,13 +132,27 @@ export const useCardMaker = () => {
   
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const { generateQRCodeCanvas } = useQRCode();
   const canvasRef = useRef(null);
   
   // Refs for render debouncing and render lock.
-  const renderTimeoutRef = useRef(null);
+  const renderTimeoutRef  = useRef(null);
   const lastRenderDataRef = useRef(null);
+<<<<<<< HEAD
   const isRenderingRef = useRef(false);
+=======
+  const isRenderingRef    = useRef(false);
+  const imageLayerRef     = useRef(null);
+  
+  const baseImageCacheRef = useRef({
+    src: null,
+    image: null
+  });
+>>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
+
+  const titleImageCacheRef = useRef({
+    src: null,
+    image: null
+  });
 
   const getCurrentTemplate = useCallback(() => {
     const baseTemplate =
@@ -204,8 +219,6 @@ export const useCardMaker = () => {
       nickname: sharedFormData.nickname || '',
       message: sharedFormData.message || '',
       category: sharedFormData.category || '',
-      showQRCode: sharedFormData.showQRCode,
-      websiteUrl: sharedFormData.websiteUrl || '',
       dayCount,
       dayDetails,
       imageDatas,
@@ -218,12 +231,13 @@ export const useCardMaker = () => {
     // Keep old access paths: formData.date and formData.cosrole.
     return {
       ...sharedFormData,
-      titleImageData,
-      date: dayDetails.d1?.date || '',
-      cosrole: dayDetails.d1?.cosrole || '',
-      imageOffsetX: imageOffsets.d1 ?? 0
+      titleImageData
     };
-  }, [sharedFormData, titleImageData, dayDetails, imageOffsets]);
+  }, [sharedFormData, titleImageData]);
+
+  const imageLayerRenderer = useMemo(() => {
+    return createImageLayerRenderer();
+  }, []);
 
   const updateFormData = useCallback((field, value) => {
     if (field === 'date' || field === 'cosrole') {
@@ -307,6 +321,17 @@ export const useCardMaker = () => {
     return `${month}-${day}`;
   }, []);
 
+  const getTextBoxCenter = (box) => {
+    const width = box?.width ?? 0;
+    const height = box?.height ?? 0;
+    return {
+      x: (box?.x ?? 0) + (width / 2),
+      y: (box?.y ?? 0) + (height / 2),
+      width,
+      height
+    };
+  };
+
   // Render canvas with lock and cache checks to avoid duplicate work.
   const renderCanvas = useCallback(async () => {
     if (!canvasRef.current) return null;
@@ -345,6 +370,7 @@ export const useCardMaker = () => {
       canvas.width = renderTemplate.canvas.width;
       canvas.height = renderTemplate.canvas.height;
       
+<<<<<<< HEAD
       // Load base image.
       const baseImg = new Image();
       baseImg.crossOrigin = 'anonymous';
@@ -354,17 +380,51 @@ export const useCardMaker = () => {
         baseImg.onerror = () => {
           console.error('Base image failed to load. Check image asset path.');
           reject(new Error('Failed to load base image. Please try again later.'));
+=======
+      const baseImageSrc = renderTemplate.baseImagePath || '/img/card_base.png';
+
+      let baseImg = baseImageCacheRef.current.image;
+      let titleImage = titleImageCacheRef.current.image;
+
+      // 👉 如果圖片沒變，直接用 cache
+      if (baseImageCacheRef.current.src === baseImageSrc && baseImg) {
+        // skip loading
+      } else {
+        baseImg = new Image();
+        baseImg.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          baseImg.onload = resolve;
+          baseImg.onerror = () => {
+            console.error('> Base image failed to load.');
+            reject(new Error('Failed to load base image.'));
+          };
+          baseImg.src = baseImageSrc;
+        });
+
+        // 👉 更新 cache
+        baseImageCacheRef.current = {
+          src: baseImageSrc,
+          image: baseImg
+>>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
         };
         // Base image path is template-driven for extensibility.
         baseImg.src = renderTemplate.baseImagePath || '/img/card_base.png';
       });
 
+<<<<<<< HEAD
       console.log('Base image loaded.');
+=======
+        console.log('> Base image changed');
+      }
+>>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
       
       // Draw base image.
       ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
       
+
       // Draw all user image slots based on current template.
+<<<<<<< HEAD
       for (const imageSlot of imageSlots) {
         const dayKey = imageSlot?.key;
         const currentImageData = dayKey ? imageDatas[dayKey] : null;
@@ -447,29 +507,45 @@ export const useCardMaker = () => {
         } catch (qrError) {
           console.error('Failed to draw QR code:', qrError);
         }
+=======
+      await imageLayerRenderer.render({
+        canvas: imageLayerRef.current,
+        renderTemplate,
+        imageDatas,
+        imageOffsets
+      });
+    
+      if (imageLayerRef.current) {
+        ctx.drawImage(imageLayerRef.current, 0, 0);
+>>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
       }
 
-      // Draw text.
-      ctx.fillStyle = '#303030';
-
-      const getTextBoxCenter = (box) => {
-        const width = box?.width ?? 0;
-        const height = box?.height ?? 0;
-        return {
-          x: (box?.x ?? 0) + (width / 2),
-          y: (box?.y ?? 0) + (height / 2),
-          width,
-          height
-        };
-      };
-      
+      // Title Image 也跟 Base Image 一樣有 cache 機制，避免不必要的重複載入和渲染。
       if (titleImageData) {
-        const titleImage = new Image();
-        await new Promise((resolve) => {
-          titleImage.onload = resolve;
-          titleImage.onerror = resolve;
-          titleImage.src = titleImageData;
-        });
+        // Load title image with cache check.
+        if (titleImageCacheRef.current.src === titleImageData && titleImage) {
+          // skip loading
+        } else {
+          titleImage = new Image();
+          titleImage.crossOrigin = 'anonymous';
+
+          await new Promise((resolve, reject) => {
+            titleImage.onload = resolve;
+            titleImage.onerror = () => {
+              console.error('> Title image failed to load.');
+              reject(new Error('Failed to load title image.'));
+            };
+            titleImage.src = titleImageData;
+          });
+
+          // 👉 更新 cache
+          titleImageCacheRef.current = {
+            src: titleImageData,
+            image: titleImage
+          };
+
+          console.log('> Title image changed');
+        }
 
         if (titleImage.complete && titleImage.naturalWidth > 0 && titleImage.naturalHeight > 0) {
           const titleArea = renderTemplate.titleImage;
@@ -494,6 +570,9 @@ export const useCardMaker = () => {
         }
       }
 
+      // Draw text.
+      ctx.fillStyle = '#303030';
+      
       // 暱稱
       if (sharedFormData.nickname) {
         ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
@@ -579,13 +658,8 @@ export const useCardMaker = () => {
         const dateRoleBox = getTextBoxCenter(slotDateRole);
         ctx.fillText(displayText, dateRoleBox.x, dateRoleBox.y);
       });
-      
-      ctx.fillStyle = '#2c3e50';
-
-      return canvas.toDataURL();
-      
     } catch (error) {
-      console.error('Canvas render failed:', error);
+      console.error('> Canvas render failed:', error);
       alert(error.message || 'Rendering failed. Please try again later.');
       return null;
     } finally {
@@ -596,13 +670,13 @@ export const useCardMaker = () => {
   }, [
     dayDetails,
     formDataString,
-    generateQRCodeCanvas,
     formatDateToMMDD,
     getCurrentTemplate,
     imageDatas,
     imageOffsets,
     sharedFormData,
-    titleImageData
+    titleImageData,
+    imageLayerRenderer
   ]);
 
   // Debounced wrapper around renderCanvas.
@@ -615,7 +689,7 @@ export const useCardMaker = () => {
     // Schedule delayed render.
     renderTimeoutRef.current = setTimeout(() => {
       renderCanvas();
-    }, 300); // 300ms delay
+    }, 100); // 300ms delay
   }, [renderCanvas]);
 
   return {
@@ -628,6 +702,7 @@ export const useCardMaker = () => {
     isLoading,
     showModal,
     canvasRef,
+    imageLayerRef,
     getCurrentDateString,
     updateFormData,
     updateDayDetail,

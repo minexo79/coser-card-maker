@@ -11,7 +11,7 @@ function App() {
     <div className="min-h-screen bg-gray-200">
       <BrowserRouter>
         <Routes>
-          {/* 蜂格子 */}
+          {/* 客製化模板 */}
           <Route path="/:eventName" element={<CardMaker />} />
           {/* 預設 */}
           <Route index element={<CardMaker />} />
