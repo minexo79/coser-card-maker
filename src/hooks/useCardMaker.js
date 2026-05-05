@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { useQRCode } from './useQRCode';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
-
 // return YYYY-MM-DD format string for today, used as default date value in date input.
 const getCurrentDateString = () => {
   const today = new Date();
@@ -133,6 +132,11 @@ export const useCardMaker = () => {
   const renderTimeoutRef = useRef(null);
   const lastRenderDataRef = useRef(null);
   const isRenderingRef = useRef(false);
+  
+  const baseImageCacheRef = useRef({
+    src: null,
+    image: null
+  });
 
   const getCurrentTemplate = useCallback(() => {
     // Resolve template by day count. Fall back safely to default then 1p.
@@ -304,26 +308,42 @@ export const useCardMaker = () => {
       canvas.width = renderTemplate.canvas.width;
       canvas.height = renderTemplate.canvas.height;
       
-      // Load base image.
-      const baseImg = new Image();
-      baseImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        baseImg.onload = resolve;
-        baseImg.onerror = () => {
-          console.error('Base image failed to load. Check image asset path.');
-          reject(new Error('Failed to load base image. Please try again later.'));
-        };
-        // Base image path is template-driven for extensibility.
-        baseImg.src = renderTemplate.baseImagePath || '/img/card_base.png';
-      });
+      const baseImageSrc = renderTemplate.baseImagePath || '/img/card_base.png';
 
-      console.log('Base image loaded.');
+      let baseImg = baseImageCacheRef.current.image;
+
+      // 👉 如果圖片沒變，直接用 cache
+      if (baseImageCacheRef.current.src === baseImageSrc && baseImg) {
+        // skip loading
+      } else {
+        baseImg = new Image();
+        baseImg.crossOrigin = 'anonymous';
+
+        await new Promise((resolve, reject) => {
+          baseImg.onload = resolve;
+          baseImg.onerror = () => {
+            console.error('Base image failed to load.');
+            reject(new Error('Failed to load base image.'));
+          };
+          baseImg.src = baseImageSrc;
+        });
+
+        // 👉 更新 cache
+        baseImageCacheRef.current = {
+          src: baseImageSrc,
+          image: baseImg
+        };
+
+        console.log('Base image changed');
+      }
+
+      // console.log('Base image ready (cached or loaded)');
       
       // Draw base image.
       ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
       
       // Draw all user image slots based on current template.
+      // TODO: 改用cache避免浪費流量
       for (const imageSlot of imageSlots) {
         const dayKey = imageSlot?.key;
         const currentImageData = dayKey ? imageDatas[dayKey] : null;
@@ -545,12 +565,16 @@ export const useCardMaker = () => {
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
     }
-    
+
     // Schedule delayed render.
     renderTimeoutRef.current = setTimeout(() => {
       renderCanvas();
     }, 300); // 300ms delay
   }, [renderCanvas]);
+
+  // useEffect(() => {
+  //   debouncedRenderCanvas();
+  // }, [formDataString, debouncedRenderCanvas]);
 
   return {
     formData,

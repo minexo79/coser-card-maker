@@ -4,9 +4,11 @@ import react from '@vitejs/plugin-react'
 // Vite 配置文件: https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  base:'/front-dev/',
   server: {
+    host: '0.0.0.0',
     allowedHosts: true,
-    port: 8080
+    port: 5173
   },
   test: {
     environment: 'jsdom',
