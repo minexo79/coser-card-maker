@@ -1,17 +1,22 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { useCardMaker } from '../hooks/useCardMaker';
+import { OEM_CARD_TEMPLATES } from '../models/oemCardTemplates.js';
+import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
 import PreviewModal from './PreviewModal';
 import Copyright from './Copyright';
 
+<<<<<<< HEAD
 const getDayNumberFromKey = (dayKey) => {
   const match = /^d(\d+)$/i.exec(dayKey || '');
   if (!match) return '?';
   return match[1];
 };
 
+=======
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 const CardMaker = () => {
   const {
     formData,
@@ -30,7 +35,13 @@ const CardMaker = () => {
     getCurrentTemplate,
     renderCanvas,
     setDayCount,
+<<<<<<< HEAD
     setShowModal
+=======
+    setShowModal,
+    setBaseImageOverride,
+    imageLayerRef
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
   } = useCardMaker();
 
   const template = getCurrentTemplate();
@@ -41,6 +52,12 @@ const CardMaker = () => {
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
 
+<<<<<<< HEAD
+=======
+  const { eventName } = useParams();
+  const preset = OEM_CARD_TEMPLATES[eventName];  
+
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
   const renderDaySlot = (slot) => {
     const dayKey = slot.key;
     const dayNumber = getDayNumberFromKey(dayKey);
@@ -89,11 +106,7 @@ const CardMaker = () => {
               value={imageOffset}
               onChange={(e) => {
                 const value = parseInt(e.target.value, 10);
-                if (dayKey === 'd1') {
-                  updateFormData('imageOffsetX', value);
-                } else {
-                  updateDayDetail(dayKey, 'imageOffsetX', value);
-                }
+                updateDayDetail(dayKey, 'imageOffsetX', value);
               }}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider"
             />
@@ -109,6 +122,7 @@ const CardMaker = () => {
     );
   };
 
+<<<<<<< HEAD
   const resetToCurrentUrl = useCallback(() => {
     updateFormData('websiteUrl', window.location.href);
   }, [updateFormData]);
@@ -125,12 +139,36 @@ const CardMaker = () => {
       resetToCurrentUrl();
     }
 
+=======
+  // 當發現有preset時，根據預設設定相關資料
+  useEffect(() => {
+    if (!preset) return;
+
+    // 設定天數
+    if (preset.dayCount) {
+      setDayCount(preset.dayCount);
+    }
+
+    // 設定起始日期（只改 d1）
+    if (preset.startDate) {
+      updateDayDetail('d1', 'date', preset.startDate);
+    }
+
+    // 設定活動圖片
+    if (preset.baseImagePath) {
+      setBaseImageOverride(preset.baseImagePath);
+    }
+  }, [preset, setDayCount, updateDayDetail, setBaseImageOverride]);
+
+  // 當資料變化時重新渲染
+  useEffect(() => {
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
     const timer = setTimeout(() => {
       renderCanvas();
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [dayCount, dayDetails, formData, imageDatas, imageOffsets, renderCanvas, resetToCurrentUrl, updateFormData]);
+  }, [dayCount, dayDetails, formData, imageDatas, imageOffsets, renderCanvas]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -260,6 +298,7 @@ const CardMaker = () => {
 
             {activeSettingsTab === 'schedule' && (
               <>
+<<<<<<< HEAD
                 {/* 日期設定（連續天數只需設定一次） */}
                 <div className="mb-4">
                   <label className="block text-sm text-gray-700 mb-2">起始日期</label>
@@ -272,6 +311,39 @@ const CardMaker = () => {
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200 text-base"
                     style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
                   />
+=======
+                {/* 日期設定 & 天數切換 */}
+                <div className="mb-4 grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">起始日期</label>
+                    <input
+                      type="date"
+                      value={dayDetails.d1?.date || new Date().toISOString().split('T')[0]} // 預設為今天
+                      disabled={!!preset}
+                      onChange={(e) => updateDayDetail('d1', 'date', e.target.value)}
+                      min="2001-01-01"
+                      max="2099-12-31"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200 text-base"
+                      style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">天數</label>
+                    <select
+                      value={dayCount}
+                      onChange={(e) => setDayCount(parseInt(e.target.value, 10))}
+                      disabled={!!preset}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg input-focus transition-all duration-200"
+                      style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                      
+                    >
+                      {supportedDayCounts.map((count) => (
+                        <option key={count} value={count}>{count}天</option>
+                      ))}
+                    </select>
+                  </div>
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
                 </div>
 
                 {/* 天數切換 */}
@@ -339,6 +411,7 @@ const CardMaker = () => {
 
             <CardPreview
               canvasRef={canvasRef}
+              imageLayerRef={imageLayerRef}
               isLoading={isLoading}
               onPreviewClick={() => setShowModal(true)}
             />

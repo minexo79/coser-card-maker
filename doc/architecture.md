@@ -15,7 +15,6 @@ Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製
 | 建置工具 | Vite 8 |
 | 樣式 | Tailwind CSS 3 |
 | 圖片合成 | HTML5 Canvas API |
-| QR Code | qrcode 1.5 |
 | 圖示 | lucide-react |
 | 測試 | Vitest + Testing Library |
 
@@ -39,9 +38,11 @@ card-maker-react/
 │   │   └── PreviewModal.jsx          # 放大預覽與下載
 │   ├── hooks/
 │   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
-│   │   └── useQRCode.js              # QR Code 生成
+│   │   ├── useImageLayerRenderer.js  # 角色圖片狀態 + Canvas 繪製
+│   │   ├── useTools.js               # 共用庫
 │   ├── models/
 │   │   └── cardTemplates.js          # 1p/2p/3p 模板設定
+│   │   └── oemCardTemplates.js       # 客製化模板
 │   └── __tests__/
 │       ├── components/
 │       ├── hooks/
@@ -131,11 +132,6 @@ card-maker-react/
 5) 依模板 textPositions 繪製 title / nickname / category / message
 6) 逐日繪製 date + cosrole（MM-DD 轉換）
 ```
-
-#### useQRCode.js
-
-- 封裝 qrcode 套件。
-- 提供 DataURL 與 Canvas 兩種輸出，主流程使用 Canvas 版本合成。
 
 ### 3.3 Models 層（src/models）
 

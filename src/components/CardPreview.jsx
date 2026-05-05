@@ -1,6 +1,4 @@
-import { ZoomIn } from 'lucide-react';
-
-const CardPreview = ({ canvasRef, isLoading, onPreviewClick }) => {
+const CardPreview = ({ canvasRef, imageLayerRef, isLoading, onPreviewClick }) => {
   return (
     <div className="flex flex-col items-center justify-center">
       {/* 預覽區容器，直接把圖片放大到跟Container一樣大 (max-w-md -> max-w-max) */}
@@ -18,14 +16,13 @@ const CardPreview = ({ canvasRef, isLoading, onPreviewClick }) => {
           ref={canvasRef}
           onClick={onPreviewClick}
           className="w-full h-auto rounded-lg shadow-lg cursor-pointer hover:shadow-xl transition-shadow duration-200 bg-white"
-          style={{ maxWidth: '100%', height: 'auto' }}
+        />
+
+        <canvas
+          ref={imageLayerRef}
+          style={{ display: 'none' }}
         />
         
-        {!isLoading && (
-          <div className="absolute top-6 right-6 bg-black bg-opacity-50 text-white p-2 rounded-full opacity-0 hover:opacity-100 transition-opacity duration-200">
-            <ZoomIn className="w-4 h-4" />
-          </div>
-        )}
       </div>
       
       <p className="text-sm text-gray-500 mt-4 text-center">
