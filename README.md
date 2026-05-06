@@ -4,6 +4,24 @@
 
 ## 主要功能
 
+<<<<<<< HEAD
+- 支援多天數模板切換
+- 每天可分別上傳圖片與調整水平偏移
+- 以起始日期自動推算後續天數日期
+- 即時 Canvas 合成預覽（含文字排版與裁切）
+- 可選擇是否顯示 QR Code，並輸入自訂網址
+- 點擊預覽可開啟 Modal 放大並下載 PNG
+
+## 技術棧
+
+- React 19
+- Vite 8
+- Tailwind CSS 3
+- HTML5 Canvas API
+- qrcode 1.5
+- lucide-react
+- Vitest + Testing Library
+=======
 - [X] 多天數模板切換
 - [X] 分別上傳圖片與調整水平偏移
 - [X] 支援客製化預定底圖 (超連結方式)
@@ -12,6 +30,7 @@
 ## 技術棧
 - React + Vite
 - Vitest
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 
 ## 專案架構
 
@@ -25,11 +44,18 @@ card-maker-react/
 │   ├── App.jsx                       # 根元件
 │   ├── index.css                     # 全域樣式
 │   ├── components/
+<<<<<<< HEAD
+│   │   ├── CardMaker.jsx         # 主頁容器（表單與預覽佈局）
+│   │   ├── CardPreview.jsx       # Canvas 預覽展示
+│   │   ├── ImageUpload.jsx       # 圖片上傳元件
+│   │   └── PreviewModal.jsx      # 放大預覽與下載
+=======
 │   │   ├── CardMaker.jsx             # 主容器（表單 + 預覽）
 │   │   ├── CardPreview.jsx           # Canvas 預覽展示
 │   │   ├── ImageUpload.jsx           # 圖片上傳元件
 │   │   ├── Copyright.jsx             # 版權聲明
 │   │   └── PreviewModal.jsx          # 放大預覽與下載
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 │   ├── hooks/
 │   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
 │   │   ├── useImageLayerRenderer.js  # 角色圖片狀態 + Canvas 繪製
@@ -81,6 +107,10 @@ aabbcc: {
 
 ## 文件
 - 架構與流程詳解：`doc/architecture.md`
+<<<<<<< HEAD
+- 開發規劃：`doc/plan.md`
+=======
 
 ## 參考
 - [雲緣起活動網站前端 - YAF_web](https://github.com/YunlinAnimeFestival/YAF_web)
+>>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
