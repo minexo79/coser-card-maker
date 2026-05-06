@@ -70,13 +70,7 @@ export const useCardMaker = () => {
   const [sharedFormData, setSharedFormData] = useState({
     nickname: '',
     message: '',
-<<<<<<< HEAD
-    category: 'COSER',
-    showQRCode: true,
-    websiteUrl: ''
-=======
     category: 'COSER'
->>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
   });
 
   const [titleImageData, setTitleImageData] = useState(null);
@@ -214,13 +208,6 @@ export const useCardMaker = () => {
     // Keep old access paths: formData.date and formData.cosrole.
     return {
       ...sharedFormData,
-<<<<<<< HEAD
-      date: dayDetails.d1?.date || '',
-      cosrole: dayDetails.d1?.cosrole || '',
-      imageOffsetX: imageOffsets.d1 ?? 0
-    };
-  }, [sharedFormData, dayDetails, imageOffsets]);
-=======
       titleImageData
     };
   }, [sharedFormData, titleImageData]);
@@ -228,7 +215,6 @@ export const useCardMaker = () => {
   const imageLayerRenderer = useMemo(() => {
     return createImageLayerRenderer();
   }, []);
->>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 
   const updateFormData = useCallback((field, value) => {
     if (field === 'date' || field === 'cosrole') {
@@ -407,30 +393,6 @@ export const useCardMaker = () => {
         ctx.drawImage(imageLayerRef.current, 0, 0);
       }
 
-<<<<<<< HEAD
-      // Draw text.
-      ctx.fillStyle = '#303030';
-      
-      // 暱稱
-      if (sharedFormData.nickname) {
-        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const nicknameBox = getTextBoxCenter(renderTemplate.textPositions.nickname);
-        ctx.fillText(sharedFormData.nickname, nicknameBox.x, nicknameBox.y);
-      }
-      
-      // 身分
-      if (sharedFormData.category) {
-        ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const categoryBox = getTextBoxCenter(renderTemplate.textPositions.category);
-        ctx.fillText(sharedFormData.category, categoryBox.x, categoryBox.y);
-      }
-
-      // Message: split by spaces/newlines and vertically center all lines.
-=======
       // Title Image 也跟 Base Image 一樣有 cache 機制，避免不必要的重複載入和渲染。
       if (titleImageData) {
         // Load title image with cache check.
@@ -503,7 +465,6 @@ export const useCardMaker = () => {
       }
 
       // 備註
->>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
       if (sharedFormData.message) {
         ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
@@ -583,13 +544,9 @@ export const useCardMaker = () => {
     getCurrentTemplate,
     imageDatas,
     imageOffsets,
-<<<<<<< HEAD
-    sharedFormData
-=======
     sharedFormData,
     titleImageData,
     imageLayerRenderer
->>>>>>> c861ee7 (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
   ]);
 
   // Debounced wrapper around renderCanvas.

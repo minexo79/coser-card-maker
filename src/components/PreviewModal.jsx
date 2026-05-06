@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { X, Download } from 'lucide-react';
+import { FacebookShareButton, FacebookIcon } from "react-share";
 
 const PreviewModal = ({ show, canvasRef, onClose }) => {
   const previewImageRef = useRef(null);
@@ -29,12 +30,22 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
     }
   }, [show, canvasRef]);
 
-  const handleDownload = () => {
+  const createImageDownload = () => {
     if (canvasRef.current) {
       const link = document.createElement('a');
       link.download = `card-preview-${Date.now()}.png`;
       link.href = canvasRef.current.toDataURL('image/png', 1.0);
-      link.click();
+
+      return link;
+    }
+    return null;
+  }
+
+  const handleDownload = () => {
+    let imageLink = createImageDownload();
+
+    if (imageLink) {
+      imageLink.click();
     }
   };
 
@@ -73,7 +84,7 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
             style={{ cursor: 'pointer' }}
           />
         </div>
-        
+
         <div className="p-4 text-center border-t border-gray-200">
           <p className="text-sm text-gray-500">
             點擊圖片或關閉按鈕關閉預覽
