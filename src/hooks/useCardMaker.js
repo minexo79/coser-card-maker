@@ -344,6 +344,8 @@ export const useCardMaker = () => {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       
+      console.log(renderTemplate);
+
       canvas.width = renderTemplate.canvas.width;
       canvas.height = renderTemplate.canvas.height;
       
@@ -521,11 +523,10 @@ export const useCardMaker = () => {
           return;
         }
 
-        const useTemplateSinglePosition = imageSlots.length === 1;
-        const fallbackX = slot.x + slot.width / 2;
-        const fallbackY = slot.y + slot.height + renderTemplate.textPositions.dateRole.fontSize;
-        const textX = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.x : fallbackX;
-        const textY = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.y : fallbackY;
+        const textX = slot.dateRole.x + (slot.dateRole.width / 2);
+        const textY = slot.dateRole.y + (slot.dateRole.height / 2);
+
+        ctx.font = ` ${slot.dateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.fillText(displayText, textX, textY);
       });
     } catch (error) {
