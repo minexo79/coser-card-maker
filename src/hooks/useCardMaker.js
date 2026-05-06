@@ -1,26 +1,7 @@
 import { useState, useCallback, useRef, useMemo } from 'react';
 import { getCurrentDateString, getDayIndexFromKey } from './useTools.js';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
-<<<<<<< HEAD
-
-// return YYYY-MM-DD format string for today, used as default date value in date input.
-const getCurrentDateString = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
-
-// Parse day keys (for example d1, d2, d10) into numeric indexes.
-const getDayIndexFromKey = (dayKey) => {
-  const match = /^d(\d+)$/i.exec(dayKey || '');
-  if (!match) return Number.POSITIVE_INFINITY;
-  return Number.parseInt(match[1], 10);
-};
-=======
 import { createImageLayerRenderer } from './useImageLayerRenderer.js';
->>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 
 // Build template lookup by day count so future templates can plug in directly.
 const buildTemplateConfig = () => {
@@ -137,9 +118,6 @@ export const useCardMaker = () => {
   // Refs for render debouncing and render lock.
   const renderTimeoutRef  = useRef(null);
   const lastRenderDataRef = useRef(null);
-<<<<<<< HEAD
-  const isRenderingRef = useRef(false);
-=======
   const isRenderingRef    = useRef(false);
   const imageLayerRef     = useRef(null);
   
@@ -147,7 +125,6 @@ export const useCardMaker = () => {
     src: null,
     image: null
   });
->>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
 
   const titleImageCacheRef = useRef({
     src: null,
@@ -370,17 +347,6 @@ export const useCardMaker = () => {
       canvas.width = renderTemplate.canvas.width;
       canvas.height = renderTemplate.canvas.height;
       
-<<<<<<< HEAD
-      // Load base image.
-      const baseImg = new Image();
-      baseImg.crossOrigin = 'anonymous';
-      
-      await new Promise((resolve, reject) => {
-        baseImg.onload = resolve;
-        baseImg.onerror = () => {
-          console.error('Base image failed to load. Check image asset path.');
-          reject(new Error('Failed to load base image. Please try again later.'));
-=======
       const baseImageSrc = renderTemplate.baseImagePath || '/img/card_base.png';
 
       let baseImg = baseImageCacheRef.current.image;
@@ -406,108 +372,16 @@ export const useCardMaker = () => {
         baseImageCacheRef.current = {
           src: baseImageSrc,
           image: baseImg
->>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
         };
-        // Base image path is template-driven for extensibility.
-        baseImg.src = renderTemplate.baseImagePath || '/img/card_base.png';
-      });
 
-<<<<<<< HEAD
-      console.log('Base image loaded.');
-=======
         console.log('> Base image changed');
       }
->>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
       
       // Draw base image.
       ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
       
 
       // Draw all user image slots based on current template.
-<<<<<<< HEAD
-      for (const imageSlot of imageSlots) {
-        const dayKey = imageSlot?.key;
-        const currentImageData = dayKey ? imageDatas[dayKey] : null;
-        const currentImageOffset = dayKey ? (imageOffsets[dayKey] ?? 0) : 0;
-
-        if (!currentImageData) {
-          continue;
-        }
-
-        const userImg = new Image();
-        await new Promise((resolve) => {
-          userImg.onload = resolve;
-          userImg.onerror = resolve;
-          userImg.src = currentImageData;
-        });
-        
-        if (userImg.complete && userImg.naturalWidth > 0) {
-          const imgAspect = userImg.naturalWidth / userImg.naturalHeight;
-          const areaAspect = imageSlot.width / imageSlot.height;
-          
-          let drawWidth, drawHeight, drawX, drawY;
-          
-          if (imgAspect > areaAspect) {
-            drawHeight = imageSlot.height;
-            drawWidth = drawHeight * imgAspect;
-            const offsetPixels = (drawWidth - imageSlot.width) * currentImageOffset / 100;
-            drawX = imageSlot.x - (drawWidth - imageSlot.width) / 2 + offsetPixels;
-            drawY = imageSlot.y;
-          } else {
-            drawWidth = imageSlot.width;
-            drawHeight = drawWidth / imgAspect;
-            drawX = imageSlot.x;
-            drawY = imageSlot.y - (drawHeight - imageSlot.height) / 2;
-          }
-          
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(imageSlot.x, imageSlot.y, imageSlot.width, imageSlot.height);
-          ctx.clip();
-          
-          ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
-          ctx.restore();
-        }
-      }
-      
-      // 繪製QR Code
-      if (sharedFormData.showQRCode && sharedFormData.websiteUrl) {
-        try {
-          const qrCanvas = await generateQRCodeCanvas(sharedFormData.websiteUrl, {
-            width: renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding,
-            margin: 0,
-            color: {
-              dark: '#000000',
-              light: '#FFFFFF'
-            }
-          });
-          
-          if (qrCanvas) {
-            const qrSize = renderTemplate.qrCode.size - renderTemplate.qrCode.contentPadding;
-            const qrX = renderTemplate.canvas.width - qrSize;
-            const qrY = renderTemplate.canvas.height - qrSize;
-            
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
-            ctx.fillRect(
-              qrX - renderTemplate.qrCode.backgroundPadding,
-              qrY - renderTemplate.qrCode.backgroundPadding,
-              qrSize,
-              qrSize
-            );
-          
-            
-            ctx.drawImage(
-              qrCanvas,
-              qrX,
-              qrY,
-              qrSize - renderTemplate.qrCode.contentPadding,
-              qrSize - renderTemplate.qrCode.contentPadding
-            );
-          }
-        } catch (qrError) {
-          console.error('Failed to draw QR code:', qrError);
-        }
-=======
       await imageLayerRenderer.render({
         canvas: imageLayerRef.current,
         renderTemplate,
@@ -517,7 +391,6 @@ export const useCardMaker = () => {
     
       if (imageLayerRef.current) {
         ctx.drawImage(imageLayerRef.current, 0, 0);
->>>>>>> 3a2eaab (移除QRCode程式碼，調整圖片繪製邏輯減少流量耗損，整理沒用的程式碼)
       }
 
       // Title Image 也跟 Base Image 一樣有 cache 機制，避免不必要的重複載入和渲染。
@@ -648,15 +521,12 @@ export const useCardMaker = () => {
           return;
         }
 
-        // Get dateRole config from the image slot
-        const slotDateRole = slot?.dateRole;
-        if (!slotDateRole) {
-          return;
-        }
-
-        ctx.font = ` ${slotDateRole.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
-        const dateRoleBox = getTextBoxCenter(slotDateRole);
-        ctx.fillText(displayText, dateRoleBox.x, dateRoleBox.y);
+        const useTemplateSinglePosition = imageSlots.length === 1;
+        const fallbackX = slot.x + slot.width / 2;
+        const fallbackY = slot.y + slot.height + renderTemplate.textPositions.dateRole.fontSize;
+        const textX = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.x : fallbackX;
+        const textY = useTemplateSinglePosition ? renderTemplate.textPositions.dateRole.y : fallbackY;
+        ctx.fillText(displayText, textX, textY);
       });
     } catch (error) {
       console.error('> Canvas render failed:', error);
@@ -685,7 +555,7 @@ export const useCardMaker = () => {
     if (renderTimeoutRef.current) {
       clearTimeout(renderTimeoutRef.current);
     }
-    
+
     // Schedule delayed render.
     renderTimeoutRef.current = setTimeout(() => {
       renderCanvas();
