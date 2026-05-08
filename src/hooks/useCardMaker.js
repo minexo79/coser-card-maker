@@ -460,7 +460,7 @@ export const useCardMaker = () => {
       }
       
       // 身分
-      if (sharedFormData.category) {
+      if (sharedFormData.category && renderTemplate.textPositions.category) {
         ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
@@ -504,6 +504,9 @@ export const useCardMaker = () => {
       imageSlots.forEach((slot) => {
         const dayKey = slot?.key;
         const currentDayDetail = dayKey ? (dayDetails[dayKey] || { date: '', cosrole: '' }) : { date: '', cosrole: '' };
+
+        if (!slot.dateRole)
+          return;
 
         if (!currentDayDetail.date && !currentDayDetail.cosrole) {
           return;

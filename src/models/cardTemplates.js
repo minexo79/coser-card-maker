@@ -18,12 +18,6 @@ export const CARD_TEMPLATES = {
         upload: {
             maxFileSizeBytes: 5 * 1024 * 1024
         },
-        // QR 碼配置
-        qrCode: {
-            size: 152,
-            contentPadding: 10,
-            backgroundPadding: 5
-        },
         // 圖片槽定義（1p 只有一個）
         imageSlots: [
             {
@@ -89,12 +83,6 @@ export const CARD_TEMPLATES = {
         // 圖片上傳限制
         upload: {
             maxFileSizeBytes: 5 * 1024 * 1024
-        },
-        // QR 碼配置
-        qrCode: {
-            size: 152,
-            contentPadding: 10,
-            backgroundPadding: 5
         },
         // 圖片槽定義（2p 有兩個）
         imageSlots: [
@@ -176,12 +164,6 @@ export const CARD_TEMPLATES = {
         // 圖片上傳限制
         upload: {
             maxFileSizeBytes: 5 * 1024 * 1024
-        },
-        // QR 碼配置
-        qrCode: {
-            size: 152,
-            contentPadding: 10,
-            backgroundPadding: 5
         },
         // 圖片槽定義
         imageSlots: [
@@ -278,12 +260,6 @@ export const CARD_TEMPLATES = {
         // 圖片上傳限制
         upload: {
             maxFileSizeBytes: 5 * 1024 * 1024
-        },
-        // QR 碼配置
-        qrCode: {
-            size: 152,
-            contentPadding: 10,
-            backgroundPadding: 5
         },
         // 圖片槽定義
         imageSlots: [

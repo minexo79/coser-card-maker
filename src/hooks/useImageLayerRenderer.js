@@ -76,6 +76,16 @@ export const createImageLayerRenderer = () => {
 
       ctx.save();
       ctx.beginPath();
+
+      if (imageSlot.radius)
+        ctx.roundRect(
+          imageSlot.x, 
+          imageSlot.y, 
+          imageSlot.width, 
+          imageSlot.height, 
+          imageSlot.radius
+        ); // Create the rounded shape
+
       ctx.rect(
         imageSlot.x,
         imageSlot.y,
