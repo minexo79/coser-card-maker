@@ -30,7 +30,7 @@ const CardMaker = () => {
     renderCanvas,
     setDayCount,
     setShowModal,
-    setBaseImageOverride,
+    setBaseCanvasOverride,
     imageLayerRef
   } = useCardMaker();
 
@@ -113,11 +113,11 @@ const CardMaker = () => {
       updateDayDetail('d1', 'date', preset.startDate);
     }
 
-    // 設定活動圖片
-    if (preset.baseImagePath) {
-      setBaseImageOverride(preset.baseImagePath);
+    // 設定畫布複寫
+    if (preset.overWriteCanvas) {
+      setBaseCanvasOverride(preset.overWriteCanvas);
     }
-  }, [preset, setDayCount, updateDayDetail, setBaseImageOverride]);
+  }, [preset, setDayCount, updateDayDetail, setBaseCanvasOverride]);
 
   // 當資料變化時重新渲染
   useEffect(() => {
@@ -175,9 +175,9 @@ const CardMaker = () => {
 
             {activeSettingsTab === 'basic' && (
               <>
-                {/* 活動標題圖上傳 */}
+                {/* 活動標題圖上傳，若有preset則不顯示 */}
                 <div className="mb-4">
-                  {!preset?.lockTitleImage && (
+                  {!preset?.overWriteCanvas && (
                     <ImageUpload
                       label="活動圖片"
                       onImageUpload={handleTitleImageUpload}
