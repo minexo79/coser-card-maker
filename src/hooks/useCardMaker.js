@@ -138,8 +138,17 @@ export const useCardMaker = () => {
       || templateConfig.templateByDayCount[defaultDayCount]
       || CARD_TEMPLATES['1p'];
 
-    return baseTemplate;
-  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount]);
+    // 沒有 override 時直接回傳
+    if (!baseCanvasOverride) {
+      return baseTemplate;
+    }
+    
+    // 回傳被 override 的模板，override 的內容會覆蓋 base template 的同名欄位
+    return {
+      ...baseTemplate,
+      ...baseCanvasOverride
+    };
+  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount, baseCanvasOverride]);
 
   const addDaysToDate = useCallback((dateValue, days) => {
     if (!dateValue) return '';
@@ -448,7 +457,10 @@ export const useCardMaker = () => {
       }
 
       // Draw text.
-      ctx.fillStyle = '#303030';
+      if (renderTemplate.fontColor)
+        ctx.fillStyle = renderTemplate.fontColor;
+      else
+        ctx.fillStyle = '#303030';
       
       // 暱稱
       if (sharedFormData.nickname) {
@@ -459,13 +471,32 @@ export const useCardMaker = () => {
         ctx.fillText(sharedFormData.nickname, nicknameBox.x, nicknameBox.y);
       }
       
-      // 身分
+      // 身分: 文字輸入版本
       if (sharedFormData.category && renderTemplate.textPositions.category) {
         ctx.font = ` ${renderTemplate.textPositions.category.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         const categoryBox = getTextBoxCenter(renderTemplate.textPositions.category);
         ctx.fillText(sharedFormData.category, categoryBox.x, categoryBox.y);
+      }
+
+      // 身分: 圈選版本 (用方框框起來)
+      if (sharedFormData.category && renderTemplate.categorySelection) {
+        const category = sharedFormData.category;
+        const categoryConfig = renderTemplate.categorySelection[category];
+
+        if (categoryConfig) {
+          ctx.lineWidth = 4;
+          ctx.strokeStyle = '#ff0000';
+          ctx.roundRect(
+            categoryConfig.x,
+            categoryConfig.y,
+            categoryConfig.width,
+            categoryConfig.height,
+            5
+          );
+          ctx.stroke();
+        }
       }
 
       // 備註
@@ -552,7 +583,8 @@ export const useCardMaker = () => {
     imageOffsets,
     sharedFormData,
     titleImageData,
-    imageLayerRenderer
+    imageLayerRenderer,
+    baseCanvasOverride
   ]);
 
   // Debounced wrapper around renderCanvas.

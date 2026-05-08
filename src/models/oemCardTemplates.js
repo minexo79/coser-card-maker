@@ -90,9 +90,10 @@ export const OEM_CARD_TEMPLATES = {
     },
     acgkfest: {
         dayCount: 2,
-        startDate: "2026-05-23",
+        startDate: "2026-05-30",
         overWriteCanvas: {
             baseImagePath: "./img/card_base_2p_acgkfest.jpg",
+            fontColor: '#000000',
             // 畫布配置
             canvas: {
                 width: 960,
@@ -109,11 +110,11 @@ export const OEM_CARD_TEMPLATES = {
                 {
                     key: 'd1',
                     label: '第一天',
-                    x: 306.7,
+                    x: 306.1,
                     y: 20.2,
                     width: 284.2,
                     height: 416.2,
-                    radius: 10
+                    radius: 45
                 },
                 {
                     key: 'd2',
@@ -122,7 +123,7 @@ export const OEM_CARD_TEMPLATES = {
                     y: 20.2,
                     width: 284.2,
                     height: 416.2,
-                    radius: 10
+                    radius: 45
                 }
             ],
             titleImage: {
@@ -144,11 +145,32 @@ export const OEM_CARD_TEMPLATES = {
                 },
                 message: {
                     fontSize: 30,
-                    x: 46.5,
-                    y: 355.8,
-                    width: 215.9,
-                    height: 154.6,
-                    lineHeight: 36
+                    x: 22.6,
+                    y: 315.4,
+                    width: 258.2,
+                    height: 216.2,
+                    lineHeight: 40
+                }
+            },
+            // 身分選擇位置
+            categorySelection: {
+                'COSER': {
+                    x: 42.4,
+                    y: 142.8,
+                    width: 71.2,
+                    height: 40.2,
+                },
+                '攝影': {
+                    x: 121.4,
+                    y: 142.8,
+                    width: 71.2,
+                    height: 40.2,
+                },
+                '路人': {
+                    x: 188.4,
+                    y: 142.8,
+                    width: 71.2,
+                    height: 40.2,
                 }
             }
         }

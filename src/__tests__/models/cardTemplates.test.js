@@ -24,7 +24,6 @@ describe('卡片模板', () => {
     it('應該擁有所有必需欄位', () => {
       expect(template1p).toHaveProperty('canvas');
       expect(template1p).toHaveProperty('upload');
-      expect(template1p).toHaveProperty('qrCode');
       expect(template1p).toHaveProperty('imageSlots');
       expect(template1p).toHaveProperty('textPositions');
     });
@@ -66,13 +65,12 @@ describe('卡片模板', () => {
 
     it('textPositions 應該擁有必需欄位', () => {
       expect(template1p.textPositions).toHaveProperty('fontFamily');
-      expect(template1p.textPositions).toHaveProperty('title');
       expect(template1p.textPositions).toHaveProperty('nickname');
       expect(template1p.textPositions).toHaveProperty('category');
       expect(template1p.textPositions).toHaveProperty('message');
       expect(template1p.textPositions).toHaveProperty('dateRole');
 
-      ['title', 'nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+      ['nickname', 'category', 'message', 'dateRole'].forEach((key) => {
         expect(template1p.textPositions[key]).toHaveProperty('x');
         expect(template1p.textPositions[key]).toHaveProperty('y');
         expect(template1p.textPositions[key]).toHaveProperty('width');
@@ -87,7 +85,6 @@ describe('卡片模板', () => {
     it('應該擁有所有必需欄位', () => {
       expect(template2p).toHaveProperty('canvas');
       expect(template2p).toHaveProperty('upload');
-      expect(template2p).toHaveProperty('qrCode');
       expect(template2p).toHaveProperty('imageSlots');
       expect(template2p).toHaveProperty('textPositions');
     });
@@ -114,13 +111,12 @@ describe('卡片模板', () => {
 
     it('textPositions 應該擁有必需欄位', () => {
       expect(template2p.textPositions).toHaveProperty('fontFamily');
-      expect(template2p.textPositions).toHaveProperty('title');
       expect(template2p.textPositions).toHaveProperty('nickname');
       expect(template2p.textPositions).toHaveProperty('category');
       expect(template2p.textPositions).toHaveProperty('message');
       expect(template2p.textPositions).toHaveProperty('dateRole');
 
-      ['title', 'nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+      ['nickname', 'category', 'message', 'dateRole'].forEach((key) => {
         expect(template2p.textPositions[key]).toHaveProperty('x');
         expect(template2p.textPositions[key]).toHaveProperty('y');
         expect(template2p.textPositions[key]).toHaveProperty('width');

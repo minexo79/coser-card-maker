@@ -55,7 +55,7 @@ const CardMaker = () => {
     return (
       <div key={dayKey} className="mb-6 rounded-lg border border-gray-200 p-4">
 
-        {preset?.overWriteCanvas.imageSlots.dateRole && (
+        {slot.dateRole && (
           <div className="mb-2 gap-3">
             <div>
               <label className="block text-xs text-gray-700 mb-2">{detail?.date || getCurrentDateString()} 角色名稱</label>
@@ -203,28 +203,26 @@ const CardMaker = () => {
                 </div>
 
                 {/* 身分選擇 */}
-                {preset?.overWriteCanvas.textPositions.category && (
-                  <div className="mb-6">
-                    <label className="block text-xs text-gray-700 mb-3">
-                      身分
-                    </label>
-                    <div className="grid grid-cols-4 gap-3">
-                      {['COSER', '攝影', '路人'].map((category) => (
-                        <button
-                          key={category}
-                          onClick={() => updateFormData('category', category)}
-                          className={`p-3 rounded-lg border-2 transition-all duration-200 font-medium text-sm ${
-                            formData.category === category
-                              ? 'border-blue-600 bg-blue-50 text-blue-700'
-                              : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-gray-50'
-                          }`}
-                        >
-                          {category}
-                        </button>
-                      ))}
-                    </div>
+                <div className="mb-6">
+                  <label className="block text-xs text-gray-700 mb-3">
+                    身分
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {['COSER', '攝影', '路人'].map((category) => (
+                      <button
+                        key={category}
+                        onClick={() => updateFormData('category', category)}
+                        className={`p-3 rounded-lg border-2 transition-all duration-200 font-medium text-sm ${
+                          formData.category === category
+                            ? 'border-blue-600 bg-blue-50 text-blue-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-gray-50'
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    ))}
                   </div>
-                )}
+                </div>
 
                 {/* 留言內容 */}
                 <div className="mb-4">

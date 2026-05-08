@@ -85,13 +85,14 @@ export const createImageLayerRenderer = () => {
           imageSlot.height, 
           imageSlot.radius
         ); // Create the rounded shape
-
-      ctx.rect(
-        imageSlot.x,
-        imageSlot.y,
-        imageSlot.width,
-        imageSlot.height
-      );
+      else 
+        ctx.rect(
+          imageSlot.x,
+          imageSlot.y,
+          imageSlot.width,
+          imageSlot.height
+        );
+        
       ctx.clip();
 
       ctx.drawImage(userImg, drawX, drawY, drawWidth, drawHeight);
