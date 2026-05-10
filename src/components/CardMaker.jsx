@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
+import { Menu as MenuIcon } from 'lucide-react';
 import { useParams } from "react-router-dom";
 import { useCardMaker } from '../hooks/useCardMaker';
 import { OEM_CARD_TEMPLATES } from '../models/oemCardTemplates.js';
@@ -134,10 +135,26 @@ const CardMaker = () => {
   return (
     <div className="container mx-auto px-4 py-2">
       <nav class="flex items-center justify-between p-4 text-white">
-        {/* <!-- Left Side: Logo From favicon.ico --> */}
+        {/* Left Side: Logo From favicon.ico */}
         <div class="flex items-center gap-2">
           <img src="./favicon.ico" alt="Logo" class="w-8 h-8" />
           <span class="text-lg text-gray-800">場次預定製作工具</span>
+        </div>
+        { /* right side: dropdown menu => change event, only shows if button clicked */}
+        <div class="relative">
+          <button class="p-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400" aria-haspopup="true">
+            <MenuIcon className="w-6 h-6 text-gray-800" />
+          </button>
+          {/* Dropdown Menu */}
+          <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden group-focus:block">
+            {Object.entries(OEM_CARD_TEMPLATES).map(([key, template]) => (
+              <button key={key}
+                      onClick={() => window.location.href = `/${key}`}
+                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                {template.displayName || key}
+              </button>
+            ))}
+          </div>
         </div>
       </nav>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

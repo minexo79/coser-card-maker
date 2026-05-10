@@ -5,6 +5,7 @@
 
 export const OEM_CARD_TEMPLATES = {
     fgzc01: {
+        displayName: "蜂格子 Cosplay 同樂會 Vol.1",
         dayCount: 2,
         startDate: "2026-05-23",
         overWriteCanvas: {
@@ -89,6 +90,7 @@ export const OEM_CARD_TEMPLATES = {
         }
     },
     acgkfest: {
+        displayName: "動漫紀元 次元巡航祭",
         dayCount: 2,
         startDate: "2026-05-30",
         overWriteCanvas: {
