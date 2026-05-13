@@ -1,7 +1,6 @@
 # 專案架構與開發流程說明
 
 ## 1. 專案概覽
-
 Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製作工具。
 使用者在左側表單填入活動資訊、設定天數、上傳每日圖片，右側即時預覽合成後的卡片，最後可下載 PNG。
 
@@ -21,7 +20,6 @@ Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預定圖製
 ---
 
 ## 2. 目錄結構
-
 ```text
 card-maker-react/
 ├── public/
@@ -36,6 +34,7 @@ card-maker-react/
 │   │   ├── CardPreview.jsx           # Canvas 預覽展示
 │   │   ├── ImageUpload.jsx           # 圖片上傳元件
 │   │   ├── Copyright.jsx             # 版權聲明
+│   │   ├── DropdownMenu.jsx          # 活動切換選單
 │   │   └── PreviewModal.jsx          # 放大預覽與下載
 │   ├── hooks/
 │   │   ├── useCardMaker.js           # 核心狀態 + Canvas 繪製
@@ -50,6 +49,8 @@ card-maker-react/
 │       └── models/
 ├── doc/
 │   ├── architecture.md               # 本文件
+│   ├── oem-card-format.md            # OEM預定圖格式說明
+│   └── card-format.md                # 基本預定圖格式說明
 ├── index.html
 ├── vite.config.js
 ├── tailwind.config.js
@@ -211,10 +212,9 @@ npm run preview
 
 ### 6.1 新增模板（例如 4p）
 
-1. 在 src/models/cardTemplates.js 新增模板物件。
-2. 新增對應底圖到 public/img。
-3. 設定 imageSlots（d1, d2, d3, d4）與 textPositions。
-4. 驗證 dayCount 切換、每日上傳、文字位置與下載結果。
+1. 在 `src/models/cardTemplates.js` 新增模板定義 (可參考[card-format.md](./card-format.md))。
+2. 放入對應底圖到 `public/img/`。
+3. 驗證 dayCount 切換、每日上傳、文字位置與下載結果。
 
 ### 6.2 新增表單欄位
 

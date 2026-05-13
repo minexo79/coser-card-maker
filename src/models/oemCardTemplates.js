@@ -54,13 +54,6 @@ export const OEM_CARD_TEMPLATES = {
                     }
                 }
             ],
-            titleImage: {
-                fontSize: 36,
-                x: 33.6,
-                y: 31,
-                width: 324.4,
-                height: 204.5,
-            },
             // 文字位置配置
             textPositions: {
                 fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',
@@ -128,13 +121,6 @@ export const OEM_CARD_TEMPLATES = {
                     radius: 45
                 }
             ],
-            titleImage: {
-                fontSize: 30,
-                x: 33.6,
-                y: 31,
-                width: 324.4,
-                height: 204.5,
-            },
             // 文字位置配置
             textPositions: {
                 fontFamily: 'LINESeedTW, Arial, Helvetica, sans-serif',

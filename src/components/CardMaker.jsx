@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
 import { Menu as MenuIcon } from 'lucide-react';
+import { House as HomeIcon } from 'lucide-react';
 import { useParams } from "react-router-dom";
 import { useCardMaker } from '../hooks/useCardMaker';
 import { OEM_CARD_TEMPLATES } from '../models/oemCardTemplates.js';
@@ -9,6 +10,7 @@ import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
 import PreviewModal from './PreviewModal';
+import DropdownMenu from "./DropdownMenu";
 import Copyright from './Copyright';
 
 const CardMaker = () => {
@@ -142,19 +144,7 @@ const CardMaker = () => {
         </div>
         { /* right side: dropdown menu => change event, only shows if button clicked */}
         <div class="relative">
-          <button class="p-2 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400" aria-haspopup="true">
-            <MenuIcon className="w-6 h-6 text-gray-800" />
-          </button>
-          {/* Dropdown Menu */}
-          <div class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 hidden group-focus:block">
-            {Object.entries(OEM_CARD_TEMPLATES).map(([key, template]) => (
-              <button key={key}
-                      onClick={() => window.location.href = `/${key}`}
-                      class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                {template.displayName || key}
-              </button>
-            ))}
-          </div>
+          <DropdownMenu templates={OEM_CARD_TEMPLATES} />
         </div>
       </nav>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
