@@ -2,23 +2,13 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useCardMaker } from '../../hooks/useCardMaker';
 import { CARD_TEMPLATES } from '../../models/cardTemplates';
+import { uploadImage } from '../../services/api';
 
-class MockFileReader {
-  constructor() {
-    this.onload = null;
-    this.onerror = null;
-  }
-
-  readAsDataURL() {
-    if (this.onload) {
-      this.onload({
-        target: {
-          result: 'data:image/png;base64,mock-d1'
-        }
-      });
-    }
-  }
-}
+vi.mock('../../services/api', () => ({
+  uploadImage: vi.fn(),
+  saveCard: vi.fn(),
+  loadCard: vi.fn()
+}));
 
 class MockImage {
   constructor() {
@@ -48,12 +38,17 @@ const createMockCanvasContext = () => ({
   save: vi.fn(),
   beginPath: vi.fn(),
   rect: vi.fn(),
+  roundRect: vi.fn(),
   clip: vi.fn(),
   restore: vi.fn(),
+  clearRect: vi.fn(),
   fillText: vi.fn(),
   fillRect: vi.fn(),
+  stroke: vi.fn(),
   measureText: vi.fn((text) => ({ width: String(text).length * 10 })),
   fillStyle: '',
+  strokeStyle: '',
+  lineWidth: 0,
   font: '',
   textAlign: 'left',
   textBaseline: 'alphabetic'
@@ -62,7 +57,7 @@ const createMockCanvasContext = () => ({
 describe('useCardMaker - Phase 2', () => {
   beforeEach(() => {
     vi.stubGlobal('alert', vi.fn());
-    vi.stubGlobal('FileReader', MockFileReader);
+    uploadImage.mockResolvedValue('/uploads/mock-image.png');
   });
 
   afterEach(() => {
@@ -88,12 +83,12 @@ describe('useCardMaker - Phase 2', () => {
     const { result } = renderHook(() => useCardMaker());
     const file = new File(['x'], 'demo.png', { type: 'image/png' });
 
-    act(() => {
+    await act(async () => {
       result.current.handleImageUpload(file, 'd1');
     });
 
     await waitFor(() => {
-      expect(result.current.imageDatas.d1).toBe('data:image/png;base64,mock-d1');
+      expect(result.current.imageDatas.d1).toBe('/uploads/mock-image.png');
     });
 
     expect(result.current.imageDatas.d2).toBeNull();
@@ -115,8 +110,8 @@ describe('天數切換', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.stubGlobal('alert', vi.fn());
-    vi.stubGlobal('FileReader', MockFileReader);
     vi.stubGlobal('Image', MockImage);
+    uploadImage.mockResolvedValue('/uploads/mock-image.png');
   });
 
   afterEach(() => {
@@ -135,13 +130,20 @@ describe('天數切換', () => {
       getContext: vi.fn(() => ctx),
       toDataURL: vi.fn(() => 'data:image/png;base64,mock')
     };
+    const layerCtx = createMockCanvasContext();
+    const layerCanvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => layerCtx)
+    };
 
     act(() => {
       result.current.canvasRef.current = canvas;
+      result.current.imageLayerRef.current = layerCanvas;
     });
 
     const file = new File(['x'], 'demo.png', { type: 'image/png' });
-    act(() => {
+    await act(async () => {
       result.current.handleImageUpload(file, 'd1');
     });
 
@@ -154,7 +156,7 @@ describe('天數切換', () => {
       await Promise.resolve();
     });
 
-    const userImageCalls = ctx.drawImage.mock.calls.filter((args) => args[0]?.__imageKind === 'user');
+    const userImageCalls = layerCtx.drawImage.mock.calls.filter((args) => args[0]?.__imageKind === 'user');
     expect(userImageCalls).toHaveLength(1);
   });
 
@@ -167,14 +169,21 @@ describe('天數切換', () => {
       getContext: vi.fn(() => ctx),
       toDataURL: vi.fn(() => 'data:image/png;base64,mock')
     };
+    const layerCtx = createMockCanvasContext();
+    const layerCanvas = {
+      width: 0,
+      height: 0,
+      getContext: vi.fn(() => layerCtx)
+    };
 
     act(() => {
       result.current.canvasRef.current = canvas;
+      result.current.imageLayerRef.current = layerCanvas;
       result.current.setDayCount(2);
     });
 
     const file = new File(['x'], 'demo.png', { type: 'image/png' });
-    act(() => {
+    await act(async () => {
       result.current.handleImageUpload(file, 'd1');
       result.current.handleImageUpload(file, 'd2');
     });
@@ -189,7 +198,7 @@ describe('天數切換', () => {
       await Promise.resolve();
     });
 
-    const userImageCalls = ctx.drawImage.mock.calls.filter((args) => args[0]?.__imageKind === 'user');
+    const userImageCalls = layerCtx.drawImage.mock.calls.filter((args) => args[0]?.__imageKind === 'user');
     expect(userImageCalls).toHaveLength(2);
   });
 });

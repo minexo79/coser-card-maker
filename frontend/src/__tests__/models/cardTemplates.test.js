@@ -42,10 +42,11 @@ describe('卡片模板', () => {
       expect(template1p.upload.maxFileSizeBytes).toBeGreaterThan(0);
     });
 
-    it('qrCode 應該擁有必需的屬性', () => {
-      expect(template1p.qrCode).toHaveProperty('size');
-      expect(template1p.qrCode).toHaveProperty('contentPadding');
-      expect(template1p.qrCode).toHaveProperty('backgroundPadding');
+    it('titleImage 應該擁有必需的屬性', () => {
+      expect(template1p.titleImage).toHaveProperty('x');
+      expect(template1p.titleImage).toHaveProperty('y');
+      expect(template1p.titleImage).toHaveProperty('width');
+      expect(template1p.titleImage).toHaveProperty('height');
     });
 
     it('應該恰好包含 1 個圖片槽', () => {
@@ -63,14 +64,22 @@ describe('卡片模板', () => {
       expect(slot.key).toBe('d1');
     });
 
+    it('圖片槽的 dateRole 應該擁有必需欄位', () => {
+      template1p.imageSlots.forEach((slot) => {
+        expect(slot.dateRole).toBeDefined();
+        ['fontSize', 'x', 'y', 'width', 'height'].forEach((key) => {
+          expect(slot.dateRole).toHaveProperty(key);
+        });
+      });
+    });
+
     it('textPositions 應該擁有必需欄位', () => {
       expect(template1p.textPositions).toHaveProperty('fontFamily');
       expect(template1p.textPositions).toHaveProperty('nickname');
       expect(template1p.textPositions).toHaveProperty('category');
       expect(template1p.textPositions).toHaveProperty('message');
-      expect(template1p.textPositions).toHaveProperty('dateRole');
 
-      ['nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+      ['nickname', 'category', 'message'].forEach((key) => {
         expect(template1p.textPositions[key]).toHaveProperty('x');
         expect(template1p.textPositions[key]).toHaveProperty('y');
         expect(template1p.textPositions[key]).toHaveProperty('width');
@@ -106,6 +115,10 @@ describe('卡片模板', () => {
         expect(slot).toHaveProperty('y');
         expect(slot).toHaveProperty('width');
         expect(slot).toHaveProperty('height');
+        expect(slot.dateRole).toBeDefined();
+        ['fontSize', 'x', 'y', 'width', 'height'].forEach((key) => {
+          expect(slot.dateRole).toHaveProperty(key);
+        });
       });
     });
 
@@ -114,9 +127,8 @@ describe('卡片模板', () => {
       expect(template2p.textPositions).toHaveProperty('nickname');
       expect(template2p.textPositions).toHaveProperty('category');
       expect(template2p.textPositions).toHaveProperty('message');
-      expect(template2p.textPositions).toHaveProperty('dateRole');
 
-      ['nickname', 'category', 'message', 'dateRole'].forEach((key) => {
+      ['nickname', 'category', 'message'].forEach((key) => {
         expect(template2p.textPositions[key]).toHaveProperty('x');
         expect(template2p.textPositions[key]).toHaveProperty('y');
         expect(template2p.textPositions[key]).toHaveProperty('width');

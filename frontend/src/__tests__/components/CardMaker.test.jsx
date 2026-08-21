@@ -2,10 +2,10 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CardMaker from '../../components/CardMaker';
 
-const mockUseCardMaker = vi.fn();
+const mockUseCardMakerContext = vi.fn();
 
-vi.mock('../../hooks/useCardMaker', () => ({
-  useCardMaker: () => mockUseCardMaker()
+vi.mock('../../contexts/useCardMakerContext', () => ({
+  useCardMakerContext: () => mockUseCardMakerContext()
 }));
 
 vi.mock('../../components/ImageUpload', () => ({
@@ -71,6 +71,7 @@ describe('CardMaker - DIY View UI', () => {
         ]
       }),
       renderCanvas: vi.fn(),
+      loadCard: vi.fn(),
       setDayCount: vi.fn(),
       setShowModal: vi.fn(),
       ...overrides
@@ -82,7 +83,7 @@ describe('CardMaker - DIY View UI', () => {
   it('切換為 2 天時顯示 Day2 Tab，切回 1 天時隱藏', () => {
     let currentDayCount = 1;
 
-    mockUseCardMaker.mockImplementation(() =>
+    mockUseCardMakerContext.mockImplementation(() =>
       buildHookState(currentDayCount, {
         setDayCount: vi.fn((value) => {
           currentDayCount = value;
@@ -112,7 +113,7 @@ describe('CardMaker - DIY View UI', () => {
   it('D1 / D2 上傳應傳入正確 dayKey', () => {
     const handleImageUpload = vi.fn();
 
-    mockUseCardMaker.mockReturnValue(
+    mockUseCardMakerContext.mockReturnValue(
       buildHookState(2, {
         handleImageUpload
       })

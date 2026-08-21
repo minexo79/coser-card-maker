@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
 import { useParams } from "react-router-dom";
-import { useCardMaker } from '../hooks/useCardMaker';
+import { useCardMakerContext } from '../contexts/useCardMakerContext';
 import { OEM_CARD_TEMPLATES } from '../models/oemCardTemplates.js';
 import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
@@ -11,6 +11,7 @@ import PreviewModal from './PreviewModal';
 import Copyright from './Copyright';
 
 const CardMaker = () => {
+  const params = useParams();
   const {
     formData,
     imageDatas,
@@ -28,11 +29,12 @@ const CardMaker = () => {
     handleTitleImageUpload,
     getCurrentTemplate,
     renderCanvas,
+    loadCard,
     setDayCount,
     setShowModal,
     setBaseCanvasOverride,
     imageLayerRef
-  } = useCardMaker();
+  } = useCardMakerContext();
 
   const template = getCurrentTemplate();
   const daySlots = template.imageSlots;
@@ -42,8 +44,17 @@ const CardMaker = () => {
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
 
-  const { eventName } = useParams();
-  const preset = OEM_CARD_TEMPLATES[eventName];  
+  const { eventName } = params;
+  const preset = OEM_CARD_TEMPLATES[eventName];
+
+  // /card/:cardId 路由進入時自動載入
+  useEffect(() => {
+    if (!params.cardId) return;
+    const timer = setTimeout(() => {
+      loadCard(params.cardId);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderDaySlot = (slot) => {
     const dayKey = slot.key;
@@ -132,14 +143,7 @@ const CardMaker = () => {
   }, [dayCount, dayDetails, formData, imageDatas, imageOffsets, renderCanvas]);
 
   return (
-    <div className="container mx-auto px-4 py-2">
-      <nav class="flex items-center justify-between p-4 text-white">
-        {/* <!-- Left Side: Logo From favicon.ico --> */}
-        <div class="flex items-center gap-2">
-          <img src="./favicon.ico" alt="Logo" class="w-8 h-8" />
-          <span class="text-lg text-gray-800">場次預定製作工具</span>
-        </div>
-      </nav>
+    <div className="container mx-auto px-4 py-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">

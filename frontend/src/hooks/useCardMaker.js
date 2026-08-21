@@ -2,6 +2,8 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import { getCurrentDateString, getDayIndexFromKey } from './useTools.js';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 import { createImageLayerRenderer } from './useImageLayerRenderer.js';
+import * as api from '../services/api.js';
+import { buildCardPayload, applyCardPayload } from '../utils/cardPayload.js';
 
 // Build template lookup by day count so future templates can plug in directly.
 const buildTemplateConfig = () => {
@@ -39,7 +41,7 @@ const createStateByDayKeys = (dayKeys, valueFactory) => {
   }, {});
 };
 
-export const useCardMaker = () => {
+export const useCardMaker = ({ eventName = null } = {}) => {
   // Build template config once and reuse it across renders.
   const templateConfig = useMemo(() => buildTemplateConfig(), []);
   const defaultDayCount = templateConfig.supportedDayCounts[0] || 1;
@@ -240,37 +242,20 @@ export const useCardMaker = () => {
     }));
   }, [updateDayDetail]);
 
-  const handleImageUpload = useCallback((file, dayKey = 'd1') => {
-    if (file) {
-      const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
-      if (file.size > maxSize) {
-        alert('Image is too large. Please upload a file smaller than 5MB.');
-        return;
-      }
-      const reader = new FileReader();
-      
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImageDatas((prev) => ({
-            ...prev,
-            [dayKey]: e.target.result
-          }));
-        }
-      };
-      
-      reader.onerror = (error) => {
-        console.error('Failed to read uploaded file:', error);
-        alert('Failed to read image file. Please try again.');
-      };
-      
-      reader.readAsDataURL(file);
+  const ensureApiToken = useCallback(() => {
+    if (api.getToken()) return true;
+    const token = window.prompt('請輸入後端 API Token：');
+    if (!token) {
+      alert('未設定 API Token，無法執行儲存操作。');
+      return false;
     }
-  }, [getCurrentTemplate]);
+    api.setToken(token);
+    return true;
+  }, []);
 
-  const handleTitleImageUpload = useCallback((file) => {
-    if (!file) {
-      return;
-    }
+  // Upload the file to the backend and keep the returned URL in state.
+  const handleImageUpload = useCallback((file, dayKey = 'd1') => {
+    if (!file) return;
 
     const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
     if (file.size > maxSize) {
@@ -278,20 +263,38 @@ export const useCardMaker = () => {
       return;
     }
 
-    const reader = new FileReader();
+    api.uploadImage(file)
+      .then((url) => {
+        setImageDatas((prev) => ({
+          ...prev,
+          [dayKey]: url
+        }));
+      })
+      .catch((error) => {
+        console.error('Failed to upload image:', error);
+        alert(error.status === 401
+          ? 'API Token 驗證失敗，請重新儲存。'
+          : 'Image upload failed. Please try again.');
+      });
+  }, [getCurrentTemplate]);
 
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setTitleImageData(e.target.result);
-      }
-    };
+  const handleTitleImageUpload = useCallback((file) => {
+    if (!file) return;
 
-    reader.onerror = (error) => {
-      console.error('Failed to read title image file:', error);
-      alert('Failed to read image file. Please try again.');
-    };
+    const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
+    if (file.size > maxSize) {
+      alert('Image is too large. Please upload a file smaller than 5MB.');
+      return;
+    }
 
-    reader.readAsDataURL(file);
+    api.uploadImage(file)
+      .then((url) => setTitleImageData(url))
+      .catch((error) => {
+        console.error('Failed to upload title image:', error);
+        alert(error.status === 401
+          ? 'API Token 驗證失敗，請重新儲存。'
+          : 'Image upload failed. Please try again.');
+      });
   }, [getCurrentTemplate]);
 
   const formatDateToMMDD = useCallback((dateValue) => {
@@ -587,6 +590,66 @@ export const useCardMaker = () => {
     baseCanvasOverride
   ]);
 
+  // Persist current card to the backend; resolves with the new card id.
+  const saveCard = useCallback(async () => {
+    if (!ensureApiToken()) return null;
+
+    try {
+      const payload = buildCardPayload({
+        dayCount,
+        eventName,
+        sharedFormData,
+        dayDetails,
+        imageDatas,
+        imageOffsets,
+        titleImageData
+      });
+      const { id } = await api.saveCard(payload);
+      return id;
+    } catch (error) {
+      console.error('Failed to save card:', error);
+      alert(error.status === 401
+        ? 'API Token 驗證失敗，請確認後重試。'
+        : '儲存失敗，請稍後再試。');
+      return null;
+    }
+  }, [ensureApiToken, eventName, dayCount, sharedFormData, dayDetails, imageDatas, imageOffsets, titleImageData]);
+
+  // Restore UI state from a stored card. Resolves true on success.
+  const loadCard = useCallback(async (cardId) => {
+    try {
+      const record = await api.loadCard(cardId);
+      const restored = applyCardPayload(record?.payload);
+
+      setSharedFormData((prev) => ({
+        ...prev,
+        ...(restored.sharedFormData || {})
+      }));
+      setDayDetails((prev) => ({
+        ...prev,
+        ...restored.dayDetails
+      }));
+      setImageDatas((prev) => ({
+        ...prev,
+        ...restored.imageDatas
+      }));
+      setImageOffsets((prev) => ({
+        ...prev,
+        ...restored.imageOffsets
+      }));
+      setTitleImageData(restored.titleImageData);
+
+      if (restored.dayCount) {
+        setDayCountState(normalizeDayCount(restored.dayCount));
+      }
+      return true;
+    } catch (error) {
+      console.error('Failed to load card:', error);
+      alert(error.status === 404 ? '找不到指定的卡片 ID。' : '載入失敗，請稍後再試。');
+      return false;
+    }
+  }, [normalizeDayCount]);
+
   // Debounced wrapper around renderCanvas.
   const debouncedRenderCanvas = useCallback(() => {
     // Clear previous timer.
@@ -618,6 +681,8 @@ export const useCardMaker = () => {
     handleTitleImageUpload,
     getCurrentTemplate,
     renderCanvas: debouncedRenderCanvas, // Return debounced version.
+    saveCard,
+    loadCard,
     setDayCount,
     setShowModal,
     setBaseCanvasOverride
