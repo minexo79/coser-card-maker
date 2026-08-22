@@ -367,8 +367,6 @@ export const useCardMaker = ({ eventName = null } = {}) => {
 
       let baseImg = baseImageCacheRef.current.image;
 
-      console.log(baseImageCacheRef);
-
       // 👉 如果圖片沒變，直接用 cache
       if (baseImageCacheRef.current.src === baseImageSrc && baseImg) {
         // skip loading
