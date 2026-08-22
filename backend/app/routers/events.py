@@ -67,10 +67,10 @@ class BoxConfig(_ExtraAllowed):
 
 
 class TextPositionsConfig(_ExtraAllowed):
-    fontFamily: str
-    nickname: BoxConfig
+    fontFamily: str = ""
+    nickname: BoxConfig | None = None
     category: BoxConfig | None = None
-    message: BoxConfig
+    message: BoxConfig | None = None
 
 
 class OverWriteCanvasConfig(_ExtraAllowed):
@@ -78,9 +78,9 @@ class OverWriteCanvasConfig(_ExtraAllowed):
     fontColor: str | None = None
     canvas: CanvasConfig
     upload: UploadConfig | None = None
-    imageSlots: list[ImageSlotConfig]
+    imageSlots: list[ImageSlotConfig] = []
     titleImage: BoxConfig | None = None
-    textPositions: TextPositionsConfig
+    textPositions: TextPositionsConfig | None = None
     categorySelection: dict[str, BoxConfig] | None = None
 
 

@@ -13,6 +13,7 @@ export const createImageLayerRenderer = () => {
       }
 
       const img = new Image();
+      img.crossOrigin = 'anonymous';
 
       img.onload = () => {
         imageCache.set(src, img);
@@ -28,7 +29,9 @@ export const createImageLayerRenderer = () => {
     canvas,
     renderTemplate,
     imageDatas,
-    imageOffsets
+    imageOffsets,
+    // undefined = 沿用模板的 imageSlot.radius；數字 = 強制覆寫所有圖片的圓角半徑
+    radius
   }) => {
     if (!canvas) return;
 
@@ -48,7 +51,7 @@ export const createImageLayerRenderer = () => {
 
       if (!currentImageData) continue;
 
-      // imageDatas 存相對路徑（/uploads/...），載入時補上 BASE_URL。
+      // 每日照片為本機 blob URL；若為後端資源（相對路徑 /uploads/...）則補上 BASE_URL。
       const userImg = await loadImage(resolveAssetUrl(currentImageData));
 
       if (!userImg || userImg.naturalWidth === 0) continue;
@@ -80,13 +83,15 @@ export const createImageLayerRenderer = () => {
       ctx.save();
       ctx.beginPath();
 
-      if (imageSlot.radius)
+      const slotRadius = typeof radius === 'number' ? radius : imageSlot.radius;
+
+      if (slotRadius)
         ctx.roundRect(
           imageSlot.x, 
           imageSlot.y, 
           imageSlot.width, 
           imageSlot.height, 
-          imageSlot.radius
+          slotRadius
         ); // Create the rounded shape
       else 
         ctx.rect(

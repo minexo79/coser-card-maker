@@ -96,6 +96,9 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const canvasRef = useRef(null);
+
+  // 每日照片是否使用圓角（0 = 停用，>0 = 半徑）
+  const [roundedCorners, setRoundedCorners] = useState(false);
   
   // Refs for render debouncing and render lock.
   const renderTimeoutRef  = useRef(null);
@@ -211,9 +214,10 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       dayCount,
       dayDetails,
       imageDatas,
-      imageOffsets
+      imageOffsets,
+      roundedCorners
     });
-  }, [sharedFormData, baseImageData, dayCount, dayDetails, imageDatas, imageOffsets]);
+  }, [sharedFormData, baseImageData, dayCount, dayDetails, imageDatas, imageOffsets, roundedCorners]);
 
   // Backward-compatible flat form data for legacy UI consumers.
   const formData = useMemo(() => {
@@ -259,7 +263,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     return true;
   }, []);
 
-  // Upload the file to the backend and keep the returned URL in state.
+  // 每日照片僅用於本機畫布顯示，不上傳後端，直接以 object URL 呈現。
   const handleImageUpload = useCallback((file, dayKey = 'd1') => {
     if (!file) return;
 
@@ -269,19 +273,16 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       return;
     }
 
-    api.uploadImage(file)
-      .then((url) => {
-        setImageDatas((prev) => ({
-          ...prev,
-          [dayKey]: url
-        }));
-      })
-      .catch((error) => {
-        console.error('Failed to upload image:', error);
-        alert(error.status === 401
-          ? 'API Token 驗證失敗，請重新儲存。'
-          : 'Image upload failed. Please try again.');
-      });
+    setImageDatas((prev) => {
+      const oldUrl = prev?.[dayKey];
+      if (oldUrl && oldUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(oldUrl);
+      }
+      return {
+        ...prev,
+        [dayKey]: URL.createObjectURL(file)
+      };
+    });
   }, [getCurrentTemplate]);
 
   const handleBaseImageUpload = useCallback((file) => {
@@ -338,7 +339,9 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       console.log('Canvas is already rendering. Skip this request.');
       return null;
     }
-    
+        
+    console.log(template);
+
     // Build snapshot for lightweight render dedupe.
     const currentDataSnapshot = formDataString;
     
@@ -417,7 +420,9 @@ export const useCardMaker = ({ eventName = null } = {}) => {
         canvas: imageLayerRef.current,
         renderTemplate,
         imageDatas,
-        imageOffsets
+        imageOffsets,
+        // 使用者可切換每日照片是否使用圓角
+        radius: roundedCorners ? 32 : 0
       });
     
       if (imageLayerRef.current) {
@@ -496,7 +501,11 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     
 
       // 出角資訊
-      ctx.fillStyle = 'white';
+      if (renderTemplate.fontColor)
+        ctx.fillStyle = renderTemplate.fontColor;
+      else
+        ctx.fillStyle = '#303030';
+
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
 
@@ -511,17 +520,21 @@ export const useCardMaker = ({ eventName = null } = {}) => {
           return;
         }
 
-        const dateText = currentDayDetail.date ? formatDateToMMDD(currentDayDetail.date) : '';
-        const roleText = currentDayDetail.cosrole || '';
-        let displayText = '';
+        // TODO: 目前只顯示 cosrole，暫時不顯示日期，因為會和模板內建的日期有衝突。
+        // const dateText = currentDayDetail.date ? formatDateToMMDD(currentDayDetail.date) : '';
+        // const roleText = currentDayDetail.cosrole || '';
+        // let displayText = '';
 
-        if (dateText && roleText) {
-          displayText = `${dateText} ${roleText}`;
-        } else if (dateText) {
-          displayText = dateText;
-        } else if (roleText) {
-          displayText = roleText;
-        }
+        // if (dateText && roleText) {
+        //   displayText = `${dateText} ${roleText}`;
+        // } else if (dateText) {
+        //   displayText = dateText;
+        // } else if (roleText) {
+        //   displayText = roleText;
+        // }
+
+        const roleText = currentDayDetail.cosrole || '';
+        let displayText = roleText;
 
         if (!displayText) {
           return;
@@ -551,7 +564,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     imageDatas,
     imageOffsets,
     sharedFormData,
-    imageLayerRenderer
+    imageLayerRenderer,
+    roundedCorners
   ]);
 
   // Persist current card to the backend; resolves with the new card id.
@@ -633,6 +647,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     loadCard,
     setDayCount,
     setShowModal,
-    setBaseCanvasOverride
+    setBaseCanvasOverride,
+    roundedCorners,
+    setRoundedCorners
   };
 };

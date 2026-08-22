@@ -33,9 +33,10 @@ const CardMaker = () => {
     setDayCount,
     setShowModal,
     setBaseCanvasOverride,
-    imageLayerRef
+    imageLayerRef,
+    roundedCorners,
+    setRoundedCorners
   } = useCardMakerContext();
-
   const template = getCurrentTemplate();
   const daySlots = template.imageSlots;
   const visibleDaySlots = daySlots.slice(0, dayCount);
@@ -330,6 +331,29 @@ const CardMaker = () => {
                 )}
 
                 {activeSlot && renderDaySlot(activeSlot)}
+
+                {/* 每日照片圓角設定 */}
+                <div className="mt-4 flex items-center justify-between rounded-lg border border-gray-200 p-4">
+                  <div>
+                    <p className="text-sm text-gray-700">照片圓角</p>
+                    <p className="text-xs text-gray-400">為每日照片套用圓角外框</p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={roundedCorners}
+                    onClick={() => setRoundedCorners(!roundedCorners)}
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${
+                      roundedCorners ? 'bg-blue-600' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span
+                      className={`absolute left-1 top-1 h-5 w-5 rounded-full bg-white shadow transition-transform duration-200 ${
+                        roundedCorners ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
               </>
             )}
 

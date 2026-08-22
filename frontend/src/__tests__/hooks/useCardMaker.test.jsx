@@ -82,7 +82,7 @@ describe('useCardMaker - Phase 2', () => {
     expect(result.current.getCurrentTemplate()).toBe(CARD_TEMPLATES['2p']);
   });
 
-  it('handleImageUpload(d1) 只更新 imageDatas.d1', async () => {
+  it('handleImageUpload(d1) 只更新 imageDatas.d1，且不上傳後端', async () => {
     const { result } = renderHook(() => useCardMaker());
     const file = new File(['x'], 'demo.png', { type: 'image/png' });
 
@@ -91,10 +91,12 @@ describe('useCardMaker - Phase 2', () => {
     });
 
     await waitFor(() => {
-      expect(result.current.imageDatas.d1).toBe('/uploads/mock-image.png');
+      expect(result.current.imageDatas.d1).toMatch(/^blob:/);
     });
 
     expect(result.current.imageDatas.d2).toBeNull();
+    // 每日照片不應上傳後端
+    expect(uploadImage).not.toHaveBeenCalled();
   });
 
   it('updateDayDetail(d2, date, value) 應更新正確欄位', () => {
@@ -106,6 +108,17 @@ describe('useCardMaker - Phase 2', () => {
 
     expect(result.current.dayDetails.d2.date).toBe('2026-04-01');
     expect(result.current.dayDetails.d1.date).toBe('');
+  });
+
+  it('roundedCorners 預設為 false，且可切換', () => {
+    const { result } = renderHook(() => useCardMaker());
+
+    expect(result.current.roundedCorners).toBe(false);
+
+    act(() => {
+      result.current.setRoundedCorners(true);
+    });
+    expect(result.current.roundedCorners).toBe(true);
   });
 
   it('handleBaseImageUpload 後 getCurrentTemplate 應以上傳底圖覆蓋 baseImagePath', async () => {
