@@ -3,6 +3,7 @@ import { getCurrentDateString, getDayIndexFromKey } from './useTools.js';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 import { createImageLayerRenderer } from './useImageLayerRenderer.js';
 import * as api from '../services/api.js';
+import { resolveAssetUrl } from '../services/api.js';
 import { buildCardPayload, applyCardPayload } from '../utils/cardPayload.js';
 
 // Build template lookup by day count so future templates can plug in directly.
@@ -75,7 +76,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   // for specific event update and preset-based base image override
   const [baseCanvasOverride, setBaseCanvasOverride] = useState(null);
 
-  const [titleImageData, setTitleImageData] = useState(null);
+  // 活動底圖（使用者上傳，涵蓋完整活動資訊，直接作為整張卡片的底圖）
+  const [baseImageData, setBaseImageData] = useState(null);
 
   const [dayDetails, setDayDetails] = useState(() =>
     createStateByDayKeys(allDayKeys, () => ({ date: '', cosrole: '' }))
@@ -102,11 +104,6 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   const imageLayerRef     = useRef(null);
   
   const baseImageCacheRef = useRef({
-    src: null,
-    image: null
-  });
-
-  const titleImageCacheRef = useRef({
     src: null,
     image: null
   });
@@ -140,17 +137,26 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       || templateConfig.templateByDayCount[defaultDayCount]
       || CARD_TEMPLATES['1p'];
 
-    // 沒有 override 時直接回傳
-    if (!baseCanvasOverride) {
-      return baseTemplate;
-    }
-    
     // 回傳被 override 的模板，override 的內容會覆蓋 base template 的同名欄位
-    return {
-      ...baseTemplate,
-      ...baseCanvasOverride
-    };
-  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount, baseCanvasOverride]);
+    let merged = baseTemplate;
+    if (baseCanvasOverride) {
+      merged = {
+        ...merged,
+        ...baseCanvasOverride
+      };
+    }
+
+    // 使用者上傳的活動底圖優先：寫入 baseImagePath 讓儲存到伺服器的
+    // overWriteCanvas 快照能還原同一張底圖。
+    if (baseImageData) {
+      merged = {
+        ...merged,
+        baseImagePath: baseImageData
+      };
+    }
+
+    return merged;
+  }, [dayCount, defaultDayCount, templateConfig.templateByDayCount, baseCanvasOverride, baseImageData]);
 
   const addDaysToDate = useCallback((dateValue, days) => {
     if (!dateValue) return '';
@@ -198,7 +204,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   // Stable serialized snapshot for render change detection.
   const formDataString = useMemo(() => {
     return JSON.stringify({
-      titleImageData: titleImageData || '',
+      baseImageData: baseImageData || '',
       nickname: sharedFormData.nickname || '',
       message: sharedFormData.message || '',
       category: sharedFormData.category || '',
@@ -207,16 +213,16 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       imageDatas,
       imageOffsets
     });
-  }, [sharedFormData, titleImageData, dayCount, dayDetails, imageDatas, imageOffsets]);
+  }, [sharedFormData, baseImageData, dayCount, dayDetails, imageDatas, imageOffsets]);
 
   // Backward-compatible flat form data for legacy UI consumers.
   const formData = useMemo(() => {
     // Keep old access paths: formData.date and formData.cosrole.
     return {
       ...sharedFormData,
-      titleImageData
+      baseImageData
     };
-  }, [sharedFormData, titleImageData]);
+  }, [sharedFormData, baseImageData]);
 
   const imageLayerRenderer = useMemo(() => {
     return createImageLayerRenderer();
@@ -278,7 +284,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       });
   }, [getCurrentTemplate]);
 
-  const handleTitleImageUpload = useCallback((file) => {
+  const handleBaseImageUpload = useCallback((file) => {
     if (!file) return;
 
     const maxSize = getCurrentTemplate().upload.maxFileSizeBytes;
@@ -288,9 +294,9 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     }
 
     api.uploadImage(file)
-      .then((url) => setTitleImageData(url))
+      .then((url) => setBaseImageData(url))
       .catch((error) => {
-        console.error('Failed to upload title image:', error);
+        console.error('Failed to upload base image:', error);
         alert(error.status === 401
           ? 'API Token 驗證失敗，請重新儲存。'
           : 'Image upload failed. Please try again.');
@@ -320,16 +326,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   const renderCanvas = useCallback(async () => {
     if (!canvasRef.current) return null;
 
-    // If canvas config is incomplete, fall back to 1p to avoid render failure.
-    // 2026.5.8 blackcat: use override if get the custom preset by oem. otherwise use default preset.
-    var template = null;
-
-    if (baseCanvasOverride)
-    {
-      template = baseCanvasOverride;
-    }
-    else
-      template = getCurrentTemplate();
+    // getCurrentTemplate 已含 baseCanvasOverride（OEM 模板或載入卡片的版面快照）合併結果
+    const template = getCurrentTemplate();
 
     const hasCanvasConfig = Number.isFinite(template?.canvas?.width) && Number.isFinite(template?.canvas?.height);
     const renderTemplate = hasCanvasConfig ? template : CARD_TEMPLATES['1p'];
@@ -363,10 +361,13 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       canvas.width = renderTemplate.canvas.width;
       canvas.height = renderTemplate.canvas.height;
       
-      const baseImageSrc = renderTemplate.baseImagePath || '/img/card_base.png';
+      // 使用者上傳的活動底圖優先；否則使用模板內建底圖。
+      // 相對路徑（/uploads/...）在此補上 BASE_URL，模板內建 ./img/... 維持原樣。
+      const baseImageSrc = resolveAssetUrl(baseImageData || renderTemplate.baseImagePath || '/img/card_base.png');
 
       let baseImg = baseImageCacheRef.current.image;
-      let titleImage = titleImageCacheRef.current.image;
+
+      console.log(baseImageCacheRef);
 
       // 👉 如果圖片沒變，直接用 cache
       if (baseImageCacheRef.current.src === baseImageSrc && baseImg) {
@@ -392,9 +393,25 @@ export const useCardMaker = ({ eventName = null } = {}) => {
 
         console.log('> Base image changed');
       }
-      
-      // Draw base image.
-      ctx.drawImage(baseImg, 0, 0, renderTemplate.canvas.width, renderTemplate.canvas.height);
+
+      // 繪製底圖：上傳的活動底圖以等比 cover 方式鋪滿畫布；
+      // 模板底圖則依原尺寸設定拉伸繪製。
+      if (baseImageData) {
+        const naturalWidth = baseImg.naturalWidth || 1;
+        const naturalHeight = baseImg.naturalHeight || 1;
+        const scale = Math.max(canvas.width / naturalWidth, canvas.height / naturalHeight);
+        const drawWidth = naturalWidth * scale;
+        const drawHeight = naturalHeight * scale;
+        ctx.drawImage(
+          baseImg,
+          (canvas.width - drawWidth) / 2,
+          (canvas.height - drawHeight) / 2,
+          drawWidth,
+          drawHeight
+        );
+      } else {
+        ctx.drawImage(baseImg, 0, 0, canvas.width, canvas.height);
+      }
       
 
       // Draw all user image slots based on current template.
@@ -407,56 +424,6 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     
       if (imageLayerRef.current) {
         ctx.drawImage(imageLayerRef.current, 0, 0);
-      }
-
-      // Title Image 也跟 Base Image 一樣有 cache 機制，避免不必要的重複載入和渲染。
-      if (titleImageData) {
-        // Load title image with cache check.
-        if (titleImageCacheRef.current.src === titleImageData && titleImage) {
-          // skip loading
-        } else {
-          titleImage = new Image();
-          titleImage.crossOrigin = 'anonymous';
-
-          await new Promise((resolve, reject) => {
-            titleImage.onload = resolve;
-            titleImage.onerror = () => {
-              console.error('> Title image failed to load.');
-              reject(new Error('Failed to load title image.'));
-            };
-            titleImage.src = titleImageData;
-          });
-
-          // 👉 更新 cache
-          titleImageCacheRef.current = {
-            src: titleImageData,
-            image: titleImage
-          };
-
-          console.log('> Title image changed');
-        }
-
-        if (titleImage.complete && titleImage.naturalWidth > 0 && titleImage.naturalHeight > 0) {
-          const titleArea = renderTemplate.titleImage;
-          const titleAspect = titleImage.naturalWidth / titleImage.naturalHeight;
-          const areaAspect = titleArea.width / titleArea.height;
-
-          let drawWidth = titleArea.width;
-          let drawHeight = titleArea.height;
-          let drawX = titleArea.x;
-          let drawY = titleArea.y;
-
-          // Keep the full title image visible and center it in the reserved box.
-          if (titleAspect > areaAspect) {
-            drawHeight = titleArea.width / titleAspect;
-            drawY = titleArea.y + (titleArea.height - drawHeight) / 2;
-          } else {
-            drawWidth = titleArea.height * titleAspect;
-            drawX = titleArea.x + (titleArea.width - drawWidth) / 2;
-          }
-
-          ctx.drawImage(titleImage, drawX, drawY, drawWidth, drawHeight);
-        }
       }
 
       // Draw text.
@@ -578,6 +545,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       isRenderingRef.current = false;
     }
   }, [
+    baseImageData,
     dayDetails,
     formDataString,
     formatDateToMMDD,
@@ -585,9 +553,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     imageDatas,
     imageOffsets,
     sharedFormData,
-    titleImageData,
-    imageLayerRenderer,
-    baseCanvasOverride
+    imageLayerRenderer
   ]);
 
   // Persist current card to the backend; resolves with the new card id.
@@ -598,11 +564,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       const payload = buildCardPayload({
         dayCount,
         eventName,
-        sharedFormData,
         dayDetails,
-        imageDatas,
-        imageOffsets,
-        titleImageData
+        overWriteCanvas: getCurrentTemplate()
       });
       const { id } = await api.saveCard(payload);
       return id;
@@ -613,31 +576,18 @@ export const useCardMaker = ({ eventName = null } = {}) => {
         : '儲存失敗，請稍後再試。');
       return null;
     }
-  }, [ensureApiToken, eventName, dayCount, sharedFormData, dayDetails, imageDatas, imageOffsets, titleImageData]);
+  }, [ensureApiToken, getCurrentTemplate, eventName, dayCount, dayDetails]);
 
   // Restore UI state from a stored card. Resolves true on success.
+  // payload 僅含版面快照（dayCount / startDate / overWriteCanvas / eventName），
+  // 不還原使用者內容。
   const loadCard = useCallback(async (cardId) => {
     try {
       const record = await api.loadCard(cardId);
       const restored = applyCardPayload(record?.payload);
 
-      setSharedFormData((prev) => ({
-        ...prev,
-        ...(restored.sharedFormData || {})
-      }));
-      setDayDetails((prev) => ({
-        ...prev,
-        ...restored.dayDetails
-      }));
-      setImageDatas((prev) => ({
-        ...prev,
-        ...restored.imageDatas
-      }));
-      setImageOffsets((prev) => ({
-        ...prev,
-        ...restored.imageOffsets
-      }));
-      setTitleImageData(restored.titleImageData);
+      // 還原卡片自帶的畫布覆寫設定（OEM 模板或儲存時的版面快照）
+      setBaseCanvasOverride(restored.overWriteCanvas || null);
 
       if (restored.dayCount) {
         setDayCountState(normalizeDayCount(restored.dayCount));
@@ -678,7 +628,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     updateFormData,
     updateDayDetail,
     handleImageUpload,
-    handleTitleImageUpload,
+    handleBaseImageUpload,
     getCurrentTemplate,
     renderCanvas: debouncedRenderCanvas, // Return debounced version.
     saveCard,

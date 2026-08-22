@@ -1,3 +1,5 @@
+import { resolveAssetUrl } from '../services/api.js';
+
 export const createImageLayerRenderer = () => {
   const imageCache = new Map(); // optional cache（之後可以用）
 
@@ -46,7 +48,8 @@ export const createImageLayerRenderer = () => {
 
       if (!currentImageData) continue;
 
-      const userImg = await loadImage(currentImageData);
+      // imageDatas 存相對路徑（/uploads/...），載入時補上 BASE_URL。
+      const userImg = await loadImage(resolveAssetUrl(currentImageData));
 
       if (!userImg || userImg.naturalWidth === 0) continue;
 

@@ -3,7 +3,7 @@ import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
 import { useParams } from "react-router-dom";
 import { useCardMakerContext } from '../contexts/useCardMakerContext';
-import { OEM_CARD_TEMPLATES } from '../models/oemCardTemplates.js';
+import * as api from '../services/api.js';
 import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
@@ -26,7 +26,7 @@ const CardMaker = () => {
     updateFormData,
     updateDayDetail,
     handleImageUpload,
-    handleTitleImageUpload,
+    handleBaseImageUpload,
     getCurrentTemplate,
     renderCanvas,
     loadCard,
@@ -44,8 +44,31 @@ const CardMaker = () => {
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
 
-  const { eventName } = params;
-  const preset = OEM_CARD_TEMPLATES[eventName];
+  // 路由 /:eventId（OEM）或 /:eventName 皆對應活動模板 key
+  const eventName = params.eventName || params.eventId;
+
+  // 從後端取得
+  const [preset, setPreset] = useState(null);
+
+  useEffect(() => {
+    if (!eventName) return;
+
+    let cancelled = false;
+
+    api.getEventTemplate(eventName)
+      .then((template) => {
+        if (!cancelled && template?.overWriteCanvas) {
+          setPreset(template);
+        }
+      })
+      .catch(() => {
+        // 後端取得失敗時保留本地 fallback，不中斷使用者操作
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [eventName]);
 
   // /card/:cardId 路由進入時自動載入
   useEffect(() => {
@@ -182,12 +205,12 @@ const CardMaker = () => {
 
             {activeSettingsTab === 'basic' && (
               <>
-                {/* 活動標題圖上傳，若有preset則不顯示 */}
+                {/* 活動底圖上傳，若活動模板已內建底圖則不顯示 */}
                 <div className="mb-4">
                   {!preset?.overWriteCanvas && (
                     <ImageUpload
                       label="活動圖片"
-                      onImageUpload={handleTitleImageUpload}
+                      onImageUpload={handleBaseImageUpload}
                     />
                   )}
                 </div>

@@ -63,7 +63,7 @@ describe('CardMaker - DIY View UI', () => {
       updateFormData: vi.fn(),
       updateDayDetail: vi.fn(),
       handleImageUpload: vi.fn(),
-      handleTitleImageUpload: vi.fn(),
+      handleBaseImageUpload: vi.fn(),
       getCurrentTemplate: () => ({
         imageSlots: [
           { key: 'd1', label: '第一天' },

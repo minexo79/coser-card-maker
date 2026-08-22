@@ -52,3 +52,5 @@ __pycache__/
 !.env.example
 backend/data/
 backend/uploads/
+
+event/

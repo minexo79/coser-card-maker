@@ -134,7 +134,10 @@ ccm/
 
 - BASE_URL 取自 `import.meta.env.VITE_API_BASE_URL`（分離部署直連，不走 proxy）。
 - request() 統一附加 `x-api-token` header（存在時），非 2xx 拋出帶 status 的錯誤。
-- 提供 ping / saveCard / loadCard / uploadImage 與 getToken/setToken/clearToken。
+- uploadImage() 回傳相對路徑（`/uploads/...`）；卡片/事件模板僅儲存相對路徑，
+  顯示時由 `resolveAssetUrl()` 組合 BASE_URL（後端搬家不需改歷史資料；
+  `./img/...` 屬前端模板資源，不補 BASE_URL；完整網址原樣使用以相容舊資料）。
+- 提供 ping / saveCard / loadCard / uploadImage / resolveAssetUrl 與 getToken/setToken/clearToken。
 
 #### utils/cardPayload.js
 

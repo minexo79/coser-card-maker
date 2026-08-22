@@ -13,15 +13,18 @@ router = APIRouter(prefix="/api/cards", tags=["cards"])
 
 
 class CardPayload(BaseModel):
-    """Whitelist of persistable card fields; unknown fields are stripped."""
+    """Whitelist of persistable card fields; unknown fields are stripped.
+
+    Payload mirrors the oemCardTemplates.js event entry shape — each stored
+    card is a self-describing layout snapshot:
+    ``{dayCount, startDate, overWriteCanvas, eventName}``.
+    User-generated content (form data / image URLs) is intentionally not persisted.
+    """
 
     dayCount: int | None = None
+    startDate: str | None = None
+    overWriteCanvas: dict = {}
     eventName: str | None = None
-    sharedFormData: dict = {}
-    dayDetails: dict = {}
-    imageDatas: dict = {}
-    imageOffsets: dict = {}
-    BaseImageData: str | None = None
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

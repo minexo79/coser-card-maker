@@ -11,9 +11,7 @@ router = APIRouter(prefix="/api/uploads", tags=["uploads"])
 
 CONTENT_TYPE_EXT = {
     "image/png": ".png",
-    "image/jpeg": ".jpg",
-    "image/webp": ".webp",
-    "image/gif": ".gif",
+    "image/jpeg": ".jpg"
 }
 
 

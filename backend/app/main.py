@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import get_settings
-from app.routers import cards, ping, uploads
+from app.routers import cards, events, ping, uploads
 
 settings = get_settings()
 settings.data_dir.mkdir(parents=True, exist_ok=True)
@@ -23,6 +23,7 @@ app.add_middleware(
 
 app.include_router(ping.router)
 app.include_router(cards.router)
+app.include_router(events.router)
 app.include_router(uploads.router)
 
 app.mount("/uploads", StaticFiles(directory=str(settings.uploads_dir)), name="uploads")

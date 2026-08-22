@@ -2,12 +2,15 @@ import { renderHook, act, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { useCardMaker } from '../../hooks/useCardMaker';
 import { CARD_TEMPLATES } from '../../models/cardTemplates';
-import { uploadImage } from '../../services/api';
+import { uploadImage, saveCard } from '../../services/api';
 
 vi.mock('../../services/api', () => ({
   uploadImage: vi.fn(),
   saveCard: vi.fn(),
-  loadCard: vi.fn()
+  loadCard: vi.fn(),
+  getToken: vi.fn(() => 'test-token'),
+  setToken: vi.fn(),
+  resolveAssetUrl: vi.fn((path) => path)
 }));
 
 class MockImage {
@@ -103,6 +106,41 @@ describe('useCardMaker - Phase 2', () => {
 
     expect(result.current.dayDetails.d2.date).toBe('2026-04-01');
     expect(result.current.dayDetails.d1.date).toBe('');
+  });
+
+  it('handleBaseImageUpload 後 getCurrentTemplate 應以上傳底圖覆蓋 baseImagePath', async () => {
+    const { result } = renderHook(() => useCardMaker());
+    const file = new File(['x'], 'base.png', { type: 'image/png' });
+
+    await act(async () => {
+      result.current.handleBaseImageUpload(file);
+    });
+
+    await waitFor(() => {
+      expect(result.current.getCurrentTemplate()).toMatchObject({
+        baseImagePath: '/uploads/mock-image.png'
+      });
+    });
+  });
+
+  it('上傳活動底圖後儲存，payload.overWriteCanvas.baseImagePath 應為上傳的圖片 URL', async () => {
+    vi.stubGlobal('prompt', vi.fn(() => 'test-token'));
+    saveCard.mockResolvedValue({ id: 'card-1' });
+
+    const { result } = renderHook(() => useCardMaker());
+    const file = new File(['x'], 'base.png', { type: 'image/png' });
+
+    await act(async () => {
+      result.current.handleBaseImageUpload(file);
+    });
+
+    await act(async () => {
+      await result.current.saveCard();
+    });
+
+    expect(saveCard).toHaveBeenCalledTimes(1);
+    const payload = saveCard.mock.calls[0][0];
+    expect(payload.overWriteCanvas.baseImagePath).toBe('/uploads/mock-image.png');
   });
 });
 

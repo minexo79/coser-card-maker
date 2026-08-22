@@ -34,12 +34,12 @@ describe('UploadPage 元件', () => {
         { key: 'd2', label: '第二天' }
       ]
     }),
-    handleTitleImageUpload: vi.fn(),
+    handleBaseImageUpload: vi.fn(),
     handleImageUpload: vi.fn(),
     saveCard: vi.fn().mockResolvedValue('card-123'),
     loadCard: vi.fn().mockResolvedValue(true),
     updateDayDetail: vi.fn(),
-    titleImageData: null,
+    baseImageData: null,
     ...overrides
   });
 

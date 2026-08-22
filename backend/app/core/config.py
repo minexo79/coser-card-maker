@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     uploads_dir: Path = BASE_DIR / "uploads"
     max_upload_bytes: int = 5 * 1024 * 1024
     max_card_payload_bytes: int = 5 * 1024 * 1024
+    max_event_template_bytes: int = 512 * 1024
 
     @property
     def cors_origins(self) -> list[str]:

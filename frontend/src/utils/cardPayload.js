@@ -1,32 +1,28 @@
 // Serializable card payload helpers shared between the UI state and the backend API.
 // Kept framework-free so they are trivial to unit test.
+//
+// Payload shape mirrors oemCardTemplates.js event entries — each card stores only its
+// own layout snapshot: { dayCount, startDate, overWriteCanvas, eventName }.
+// User-generated content (form data / image URLs) is intentionally not persisted.
 
-const cloneByDayKey = (obj) => {
-  const out = {};
-  Object.entries(obj || {}).forEach(([key, value]) => {
-    out[key] = value && typeof value === 'object' ? { ...value } : value;
-  });
-  return out;
+const cloneJsonOrNull = (value) => {
+  if (!value || typeof value !== 'object') return null;
+  return JSON.parse(JSON.stringify(value));
 };
 
 // Build the JSON body expected by POST /api/cards.
 export function buildCardPayload({
   dayCount,
   eventName = null,
-  sharedFormData,
   dayDetails,
-  imageDatas,
-  imageOffsets,
-  titleImageData
+  overWriteCanvas
 }) {
   return {
     dayCount: dayCount ?? null,
-    eventName: eventName ?? null,
-    sharedFormData: { ...(sharedFormData || {}) },
-    dayDetails: cloneByDayKey(dayDetails),
-    imageDatas: cloneByDayKey(imageDatas),
-    imageOffsets: cloneByDayKey(imageOffsets),
-    titleImageData: titleImageData ?? null
+    // 對齊 oemCardTemplates.js：起始日期取自 d1（未填寫時為空字串）
+    startDate: dayDetails?.d1?.date ?? '',
+    overWriteCanvas: cloneJsonOrNull(overWriteCanvas),
+    eventName: eventName ?? null
   };
 }
 
@@ -38,11 +34,8 @@ export function applyCardPayload(payload) {
 
   return {
     dayCount: payload.dayCount ?? null,
-    eventName: payload.eventName ?? null,
-    sharedFormData: { ...(payload.sharedFormData || {}) },
-    dayDetails: cloneByDayKey(payload.dayDetails),
-    imageDatas: cloneByDayKey(payload.imageDatas),
-    imageOffsets: cloneByDayKey(payload.imageOffsets),
-    titleImageData: payload.titleImageData ?? null
+    startDate: payload.startDate ?? '',
+    overWriteCanvas: cloneJsonOrNull(payload.overWriteCanvas),
+    eventName: payload.eventName ?? null
   };
 }

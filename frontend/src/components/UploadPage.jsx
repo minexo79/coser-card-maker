@@ -6,7 +6,7 @@ import Copyright from './Copyright';
 
 const UploadPage = () => {
   const {
-    handleTitleImageUpload,
+    handleBaseImageUpload,
     saveCard,
     loadCard
   } = useCardMakerContext();
@@ -41,8 +41,7 @@ const UploadPage = () => {
             </h3>
             <div className="mb-4">
               <ImageUpload
-                label="活動圖片"
-                onImageUpload={handleTitleImageUpload}
+                onImageUpload={handleBaseImageUpload}
               />
             </div>
           </div>
