@@ -1,22 +1,15 @@
 """Application settings loaded from environment variables / .env."""
-
+import os
 from functools import lru_cache
 from pathlib import Path
-
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parents[2]
+load_dotenv()
 
-
-class Settings(BaseSettings):
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore",
-    )
-
-    api_token: str = "dev-token"
-    allowed_origins: str = "*"
+class Settings():
+    api_token: str = os.getenv("API_TOKEN", "dev-token")
+    allowed_origins: list[str] = os.getenv("ALLOWED_ORIGINS", ["http://localhost:5173"]).split(",")
     data_dir: Path = BASE_DIR / "data"
     uploads_dir: Path = BASE_DIR / "uploads"
     max_upload_bytes: int = 5 * 1024 * 1024

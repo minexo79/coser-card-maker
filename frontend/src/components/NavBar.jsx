@@ -31,7 +31,7 @@ const NavBar = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="./favicon.ico" alt="Logo" className="w-8 h-8" />
-          <span className="text-lg font-semibold text-gray-800">場次預定製作工具</span>
+          <span className="text-lg text-gray-800">場次預定製作工具</span>
         </div>
         <ul className="flex items-center gap-2">
           {navItems.map((item) => {

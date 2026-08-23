@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, FolderOpen, ImagePlus, UploadCloud } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, FolderOpen, ImagePlus, Share2, UploadCloud } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import * as api from '../../services/api.js';
 import { serializeDraft } from '../../utils/templateDraft.js';
+import { copyToClipboard } from '../../utils/clipboard.js';
 import { useTemplateDraft } from './useTemplateDraft.js';
 import TemplateCanvas from './TemplateCanvas.jsx';
 import ElementList from './ElementList.jsx';
@@ -250,7 +251,18 @@ const TemplateEditor = () => {
       await api.saveEventTemplate(id, finalPayload);
       localStorage.setItem(SAVED_EVENT_KEY, id);
       setEventId(id);
-      showToast(`儲存成功：${id}`);
+      const shareUrl = `${window.location.origin}/${id}`;
+      console.log('分享連結：', shareUrl);
+      try {
+        const copied = await copyToClipboard(shareUrl);
+        showToast(
+          copied
+            ? `儲存成功：${id}，分享連結已複製到剪貼簿`
+            : `儲存成功：${id}（請手動複製：${shareUrl}）`
+        );
+      } catch {
+        showToast(`儲存成功：${id}（請手動複製：${shareUrl}）`);
+      }
     } catch (error) {
       console.error('儲存失敗：', error);
       showToast(error?.message || '儲存失敗，請檢查 token 後重試', 'error');
@@ -288,7 +300,7 @@ const TemplateEditor = () => {
       <div className="mx-auto max-w-[1700px] p-4">
         <div className="mb-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-gray-800">卡片版面編輯器</h1>
+            <h1 className="text-xl text-gray-800">卡片版面編輯器</h1>
             <span
               className={`rounded-full px-3 py-1 text-xs ${
                 isLoadedTemplate ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'

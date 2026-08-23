@@ -339,8 +339,6 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       console.log('Canvas is already rendering. Skip this request.');
       return null;
     }
-        
-    console.log(template);
 
     // Build snapshot for lightweight render dedupe.
     const currentDataSnapshot = formDataString;

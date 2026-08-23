@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, FolderOpen, Loader2, Pencil, RefreshCw, Trash2, X } from 'lucide-react';
+import { AlertTriangle, FolderOpen, Loader2, Pencil, RefreshCw, Share2, Trash2, X } from 'lucide-react';
 import { resolveAssetUrl } from '../../services/api.js';
 import * as api from '../../services/api.js';
+import { copyToClipboard } from '../../utils/clipboard.js';
 
 const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   const [templates, setTemplates] = useState([]);
@@ -9,6 +10,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [toastMessage, setToastMessage] = useState('');
 
   const handleReload = () => {
     setLoading(true);
@@ -60,6 +62,17 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
     }
   };
 
+  const handleShare = async (id) => {
+    const shareUrl = `${window.location.origin}/${id}`;
+    try {
+      const copied = await copyToClipboard(shareUrl);
+      setToastMessage(copied ? `分享連結已複製：${shareUrl}` : `請手動複製：${shareUrl}`);
+    } catch {
+      setToastMessage(`請手動複製：${shareUrl}`);
+    }
+    setTimeout(() => setToastMessage(''), 3000);
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
@@ -98,6 +111,13 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
           <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             {error}
+          </div>
+        )}
+
+        {toastMessage && (
+          <div className="mx-6 mt-4 flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
+            <Share2 className="h-4 w-4 shrink-0" />
+            {toastMessage}
           </div>
         )}
 
@@ -153,6 +173,15 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
                       <Pencil className="h-3.5 w-3.5" />
                     )}
                     編輯
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleShare(template.id)}
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50 disabled:opacity-50"
+                    title="複製分享連結"
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    分享
                   </button>
                   <button
                     type="button"
