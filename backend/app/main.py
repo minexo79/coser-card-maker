@@ -6,6 +6,7 @@ from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.cors import CORSMiddleware as StarletteCORSMiddleware
 
 from app.core.config import get_settings
 from app.routers import auth, cards, events, ping, uploads
@@ -59,4 +60,14 @@ app.include_router(events.router)
 app.include_router(uploads.router)
 app.include_router(auth.router)
 
-app.mount("/uploads", StaticFiles(directory=str(settings.uploads_dir)), name="uploads")
+uploads_app = StaticFiles(directory=str(settings.uploads_dir))
+app.mount(
+    "/uploads",
+    StarletteCORSMiddleware(
+        uploads_app,
+        allow_origins=settings.allowed_origins,
+        allow_methods=["GET", "HEAD", "OPTIONS"],
+        allow_headers=["*"],
+    ),
+    name="uploads",
+)
