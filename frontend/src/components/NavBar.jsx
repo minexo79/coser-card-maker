@@ -1,29 +1,19 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Upload, Activity, LayoutDashboard } from 'lucide-react';
+import { useAuth } from '../contexts/useAuth';
+import { Home, Activity, Shield, LogIn, LogOut } from 'lucide-react';
 
 const NavBar = () => {
-  const { pathname, search } = useLocation();
-  const isAssetsTab = pathname === '/template-editor' && search.includes('tab=assets');
+  const { pathname } = useLocation();
+  const { isAuthenticated, logout } = useAuth();
 
   const navItems = [
-    { 
-      to: '/', label: 
-      '首頁', 
-      icon: Home, 
-      active: pathname === '/' 
-    },
-    {
-      to: '/template-editor',
-      label: '模版編輯',
-      icon: LayoutDashboard,
-      active: pathname === '/template-editor' && !isAssetsTab,
-    },
-    { 
-      to: '/heartbeat', 
-      label: '後端狀態', 
-      icon: Activity, 
-      active: pathname === '/heartbeat' 
-    },
+    { to: '/', label: '首頁', icon: Home, active: pathname === '/' },
+    ...(isAuthenticated
+      ? [
+          { to: '/admin', label: '管理', icon: Shield, active: pathname === '/admin' || pathname === '/template-editor' },
+        ]
+      : []),
+    { to: '/heartbeat', label: '後端狀態', icon: Activity, active: pathname === '/heartbeat' },
   ];
 
   return (
@@ -53,6 +43,31 @@ const NavBar = () => {
               </li>
             );
           })}
+          {isAuthenticated ? (
+            <li>
+              <button
+                onClick={logout}
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-200"
+              >
+                <LogOut className="w-4 h-4" />
+                登出
+              </button>
+            </li>
+          ) : (
+            <li>
+              <Link
+                to="/login"
+                className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+                  pathname === '/login'
+                    ? 'bg-orange-600 text-white'
+                    : 'text-gray-800 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                <LogIn className="w-4 h-4" />
+                登入
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
     </nav>

@@ -15,6 +15,7 @@ if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 TEST_TOKEN = "test-token"
+TEST_JWT_SECRET = "test-jwt-secret-for-testing-only"
 
 
 @pytest.fixture(scope="session")
@@ -27,6 +28,9 @@ def api(tmp_path_factory):
     os.environ["DATA_DIR"] = str(data_dir)
     os.environ["UPLOADS_DIR"] = str(uploads_dir)
     os.environ["ALLOWED_ORIGINS"] = "*"
+    os.environ["JWT_SECRET"] = TEST_JWT_SECRET
+    os.environ["ADMIN_USERNAME"] = "admin"
+    os.environ["ADMIN_PASSWORD"] = "changeme"  # skipped by startup (P-001)
 
     from fastapi.testclient import TestClient
 

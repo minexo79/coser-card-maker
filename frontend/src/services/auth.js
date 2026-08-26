@@ -1,0 +1,111 @@
+// Auth API client — JWT-based authentication.
+// Uses the same BASE_URL as api.js but sends Bearer tokens instead of x-api-token.
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const JWT_STORAGE_KEY = 'ccm_jwt';
+const USER_STORAGE_KEY = 'ccm_user';
+
+export function getToken() {
+  try {
+    return localStorage.getItem(JWT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token) {
+  localStorage.setItem(JWT_STORAGE_KEY, token);
+}
+
+export function clearToken() {
+  localStorage.removeItem(JWT_STORAGE_KEY);
+  localStorage.removeItem(USER_STORAGE_KEY);
+}
+
+export function getStoredUser() {
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function setStoredUser(user) {
+  localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+}
+
+async function authRequest(path, options = {}) {
+  const headers = new Headers(options.headers || {});
+  const token = getToken();
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+  if (options.body && typeof options.body === 'string' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  const response = await fetch(`${BASE_URL}${path}`, {
+    ...options,
+    method: options.method || 'GET',
+    headers,
+  });
+
+  if (!response.ok) {
+    const error = new Error(`Auth request failed with status ${response.status}`);
+    error.status = response.status;
+    try {
+      error.detail = (await response.json()).detail;
+    } catch { /* ignore */ }
+    throw error;
+  }
+
+  const text = await response.text();
+  if (!text) return null;
+  return JSON.parse(text);
+}
+
+export async function login(username, password) {
+  const data = await authRequest('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  });
+  setToken(data.token);
+  setStoredUser(data.user);
+  return data;
+}
+
+export async function getMe() {
+  return authRequest('/api/auth/me');
+}
+
+export async function changePassword(oldPassword, newPassword) {
+  return authRequest('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ oldPassword, newPassword }),
+  });
+}
+
+export async function listUsers() {
+  return authRequest('/api/auth/users');
+}
+
+export async function createUser(username, password, role = 'user') {
+  return authRequest('/api/auth/users', {
+    method: 'POST',
+    body: JSON.stringify({ username, password, role }),
+  });
+}
+
+export async function deleteUser(username) {
+  return authRequest(`/api/auth/users/${encodeURIComponent(username)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function resetUserPassword(username, newPassword) {
+  return authRequest(`/api/auth/users/${encodeURIComponent(username)}/password`, {
+    method: 'PUT',
+    body: JSON.stringify({ newPassword }),
+  });
+}

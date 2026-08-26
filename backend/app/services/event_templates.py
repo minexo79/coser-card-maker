@@ -49,9 +49,23 @@ def _write_events(events: dict) -> None:
             os.remove(tmp_path)
 
 
-def list_event_templates() -> dict:
+def list_event_templates(username: str | None = None) -> dict:
+    """List templates, optionally filtered by createdBy.
+
+    - username=None or role=admin → return all templates
+    - username set → return only templates where createdBy matches or is null/absent
+    """
     with _lock:
-        return _read_events()
+        all_templates = _read_events()
+
+    if username is None:
+        return all_templates
+
+    return {
+        eid: tmpl
+        for eid, tmpl in all_templates.items()
+        if tmpl.get("createdBy") is None or tmpl.get("createdBy") == username
+    }
 
 
 def get_event_template(event_id: str) -> dict | None:

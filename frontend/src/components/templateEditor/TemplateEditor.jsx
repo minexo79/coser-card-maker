@@ -297,132 +297,130 @@ const TemplateEditor = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="mx-auto max-w-[1700px] p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl text-gray-800">卡片版面編輯器</h1>
-            <span
-              className={`rounded-full px-3 py-1 text-xs ${
-                isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
-              }`}
-            >
-              {isLoadedTemplate ? `已載入：${loadedEventId}` : '從空白開始（使用「＋新增」加入元素）'}
-            </span>
-          </div>
+      <div className="mb-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl text-gray-800">卡片版面編輯器</h1>
+          <span
+            className={`rounded-full px-3 py-1 text-xs ${
+              isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
+            }`}
+          >
+            {isLoadedTemplate ? `已載入：${loadedEventId}` : '從空白開始（使用「＋新增」加入元素）'}
+          </span>
         </div>
-
-        {/* 分頁列 */}
-        <div className="mb-4 flex gap-1 border-b border-gray-200">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActiveTab(tab.key)}
-              className={`rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-                activeTab === tab.key
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {activeTab === 'assets' ? (
-        <AssetsPanel
-          baseImagePath={canvas?.baseImagePath || ''}
-          onBaseImageChange={(path) => {
-            updateMeta({ baseImagePath: path });
-            const img = new Image();
-            img.onload = () => {
-              const newWidth = 1220;
-              const newHeight = Math.round(newWidth * (img.naturalHeight / img.naturalWidth));
-              resizeCanvas(newWidth, newHeight);
-            };
-            img.src = path;
-          }}
-            elements={elements}
-            slotImageURLs={slotImageURLs}
-            onSlotImageSelect={handleSelectSlotImage}
-          />
-        ) : (
-          <>
-        <Toolbar
-          onBaseImageClick={() => fileInputRef.current?.click()}
-          onAddTitleImage={() => addElement({ type: 'titleImage' })}
-          onAddTextPosition={(field) => addElement({ type: 'textPosition', field })}
-          onReset={handleClearAll}
-          fontColor={canvas?.fontColor ?? null}
-          onFontColorChange={handleFontColorChange}
-          showLabels={showLabels}
-          onToggleLabels={handleToggleLabels}
-          onSave={handleSave}
-          saving={saving || isLoading}
-          dayCount={dayCount}
-          onDayChange={handleSlotCountChange}
-          dayCountDisabled={isLoadedTemplate}
-          eventId={eventId}
-          onEventIdChange={setEventId}
-          onLoadEvent={handleLoadEvent}
-          onNewCategory={handleAddCategory}
-          startDate={draft?.startDate || ''}
-          onStartDateChange={setStartDate}
-          onShowTemplateList={() => setShowList(true)}
-        />
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleFileChangeForBase}
-        />
-
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <div className="min-w-0 flex-1">
-            <div className="sticky top-2">
-              <TemplateCanvas
-                width={canvas?.canvas?.width || 1220}
-                height={canvas?.canvas?.height || 700}
-                elements={elements}
-                selectedId={selectedId}
-                baseImagePath={baseImageSrc}
-                slotImages={slotImageURLs}
-                onSelect={setSelectedId}
-                onElementChange={(id, box) => updateElement(id, box)}
-                onElementChangeEnd={() => {}}
-                showLabels={showLabels}
-              />
-            </div>
-            <p className="mt-2 text-sm text-gray-500">
-              提示：按著方框拖曳可移動，拖曳四角可縮放；於下方「每日照片預覽」上傳照片可預覽照片顯示效果。
-            </p>
-          </div>
-
-          <div className="w-full shrink-0 space-y-4 lg:w-80">
-            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <ElementList
-                elements={elements}
-                selectedId={selectedId}
-                onSelect={setSelectedId}
-                onAddCategory={handleAddCategory}
-                onRemoveCategory={handleRemoveElement}
-              />
-            </div>
-
-            <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-              <PropertyPanel
-                element={selectedElement}
-                onUpdate={(patch) => selectedId && updateElement(selectedId, patch)}
-                onRemove={() => selectedId && handleRemoveElement(selectedId)}
-              />
-            </div>
-          </div>
-        </div>
-          </>
-        )}
       </div>
+
+      {/* 分頁列 */}
+      <div className="mb-4 flex gap-1 border-b border-gray-200">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setActiveTab(tab.key)}
+            className={`rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
+              activeTab === tab.key
+                ? 'border-blue-600 text-blue-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {activeTab === 'assets' ? (
+      <AssetsPanel
+        baseImagePath={canvas?.baseImagePath || ''}
+        onBaseImageChange={(path) => {
+          updateMeta({ baseImagePath: path });
+          const img = new Image();
+          img.onload = () => {
+            const newWidth = 1220;
+            const newHeight = Math.round(newWidth * (img.naturalHeight / img.naturalWidth));
+            resizeCanvas(newWidth, newHeight);
+          };
+          img.src = path;
+        }}
+          elements={elements}
+          slotImageURLs={slotImageURLs}
+          onSlotImageSelect={handleSelectSlotImage}
+        />
+      ) : (
+        <>
+      <Toolbar
+        onBaseImageClick={() => fileInputRef.current?.click()}
+        onAddTitleImage={() => addElement({ type: 'titleImage' })}
+        onAddTextPosition={(field) => addElement({ type: 'textPosition', field })}
+        onReset={handleClearAll}
+        fontColor={canvas?.fontColor ?? null}
+        onFontColorChange={handleFontColorChange}
+        showLabels={showLabels}
+        onToggleLabels={handleToggleLabels}
+        onSave={handleSave}
+        saving={saving || isLoading}
+        dayCount={dayCount}
+        onDayChange={handleSlotCountChange}
+        dayCountDisabled={isLoadedTemplate}
+        eventId={eventId}
+        onEventIdChange={setEventId}
+        onLoadEvent={handleLoadEvent}
+        onNewCategory={handleAddCategory}
+        startDate={draft?.startDate || ''}
+        onStartDateChange={setStartDate}
+        onShowTemplateList={() => setShowList(true)}
+      />
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileChangeForBase}
+      />
+
+      <div className="flex flex-col gap-4 lg:flex-row">
+        <div className="min-w-0 flex-1">
+          <div className="sticky top-2">
+            <TemplateCanvas
+              width={canvas?.canvas?.width || 1220}
+              height={canvas?.canvas?.height || 700}
+              elements={elements}
+              selectedId={selectedId}
+              baseImagePath={baseImageSrc}
+              slotImages={slotImageURLs}
+              onSelect={setSelectedId}
+              onElementChange={(id, box) => updateElement(id, box)}
+              onElementChangeEnd={() => {}}
+              showLabels={showLabels}
+            />
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            提示：按著方框拖曳可移動，拖曳四角可縮放；於下方「每日照片預覽」上傳照片可預覽照片顯示效果。
+          </p>
+        </div>
+
+        <div className="w-full shrink-0 space-y-4 lg:w-80">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <ElementList
+              elements={elements}
+              selectedId={selectedId}
+              onSelect={setSelectedId}
+              onAddCategory={handleAddCategory}
+              onRemoveCategory={handleRemoveElement}
+            />
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <PropertyPanel
+              element={selectedElement}
+              onUpdate={(patch) => selectedId && updateElement(selectedId, patch)}
+              onRemove={() => selectedId && handleRemoveElement(selectedId)}
+            />
+          </div>
+        </div>
+      </div>
+        </>
+      )}
 
       {toast && <Toast type={toast.type} message={toast.message} />}
 

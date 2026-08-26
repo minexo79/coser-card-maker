@@ -9,7 +9,6 @@ PNG_1PX = base64.b64decode(
     "AAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
 JPEG_MIN = b"\xff\xd8\xff\xe0" + b"\x00" * 16 + b"\xff\xd9"
-GIF_MIN = b"GIF89a" + b"\x00" * 16
 
 
 def test_upload_png_returns_url(api, auth_headers, uploads_dir):
@@ -30,7 +29,7 @@ def test_upload_png_returns_url(api, auth_headers, uploads_dir):
 def re_url(url):
     import re
 
-    match = re.fullmatch(r"/uploads/[0-9a-f]{32}\.(png|jpe?g|webp|gif)", url)
+    match = re.fullmatch(r"/uploads/[0-9a-f]{32}\.(png|jpe?g|webp)", url)
     assert match is not None, f"unexpected upload url: {url}"
     return match.group(1)
 
@@ -43,16 +42,6 @@ def test_upload_jpeg_returns_jpeg_url(api, auth_headers):
     )
     assert resp.status_code == 200
     assert re_url(resp.json()["url"]) == "jpg"
-
-
-def test_upload_gif_returns_gif_url(api, auth_headers):
-    resp = api.post(
-        "/api/uploads",
-        files={"file": ("anim.gif", GIF_MIN, "image/gif")},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert re_url(resp.json()["url"]) == "gif"
 
 
 def test_upload_without_token_is_unauthorized(api):

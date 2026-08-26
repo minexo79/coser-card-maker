@@ -42,8 +42,26 @@ export function clearToken() {
   localStorage.removeItem(TOKEN_STORAGE_KEY);
 }
 
+const JWT_STORAGE_KEY = 'ccm_jwt';
+
+function getJwtToken() {
+  try {
+    return localStorage.getItem(JWT_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
+
+  // JWT auth (user identity)
+  const jwt = getJwtToken();
+  if (jwt) {
+    headers.set('Authorization', `Bearer ${jwt}`);
+  }
+
+  // Legacy shared token (write operations)
   const token = getToken();
   if (token) {
     headers.set('x-api-token', token);
