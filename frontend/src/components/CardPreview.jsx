@@ -6,7 +6,7 @@ const CardPreview = ({ canvasRef, imageLayerRef, isLoading, onPreviewClick }) =>
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10 rounded-xl">
             <div className="flex flex-col items-center gap-3">
-              <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-4 border-orange-600 border-t-transparent rounded-full animate-spin" />
               <p className="text-sm text-gray-600 font-medium">生成中...</p>
             </div>
           </div>

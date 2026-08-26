@@ -16,10 +16,6 @@ class Settings():
     max_card_payload_bytes: int = 5 * 1024 * 1024
     max_event_template_bytes: int = 512 * 1024
 
-    @property
-    def cors_origins(self) -> list[str]:
-        return [origin.strip() for origin in self.allowed_origins.split(",") if origin.strip()]
-
 
 @lru_cache
 def get_settings() -> Settings:

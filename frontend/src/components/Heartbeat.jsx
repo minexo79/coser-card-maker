@@ -63,7 +63,7 @@ const Heartbeat = () => {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="bg-white rounded-2xl shadow-xl card-shadow p-10 w-full max-w-sm text-center">
         <h1 className="text-xl text-gray-800 mb-8 flex items-center justify-center gap-2">
-          <Activity className="w-6 h-6 text-blue-600" />
+          <Activity className="w-6 h-6 text-orange-600" />
           後端伺服器狀態
         </h1>
 

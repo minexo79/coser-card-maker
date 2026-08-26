@@ -22,7 +22,7 @@ const handlePosStyle = (handle) => {
     width: 10,
     height: 10,
     background: '#ffffff',
-    border: '2px solid #3b82f6',
+    border: '2px solid #f97316',
     borderRadius: 2,
     boxSizing: 'border-box',
     zIndex: 10

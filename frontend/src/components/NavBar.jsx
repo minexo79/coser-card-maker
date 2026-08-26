@@ -43,7 +43,7 @@ const NavBar = () => {
                   to={to}
                   className={`flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
                     active
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-orange-600 text-white'
                       : 'text-gray-800 hover:bg-gray-800 hover:text-white'
                   }`}
                 >

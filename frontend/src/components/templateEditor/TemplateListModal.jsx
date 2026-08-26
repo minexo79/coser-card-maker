@@ -85,7 +85,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
         {/* 標題列 */}
         <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
           <div className="flex items-center gap-2">
-            <FolderOpen className="h-5 w-5 text-blue-600" />
+            <FolderOpen className="h-5 w-5 text-orange-600" />
             <h2 className="text-lg font-semibold text-gray-800">已儲存的模板</h2>
           </div>
           <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
                     type="button"
                     onClick={() => handleLoadClick(template.id)}
                     disabled={busyId === template.id}
-                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+                    className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-700 disabled:opacity-50"
                   >
                     {busyId === template.id ? (
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />

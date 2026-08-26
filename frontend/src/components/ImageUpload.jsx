@@ -36,14 +36,14 @@ const ImageUpload = ({ onImageUpload, label = '上傳圖片' }) => {
       
       <div
         onClick={handleClick}
-        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-all duration-200"
+        className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-orange-400 hover:bg-orange-50 transition-all duration-200"
         style={{ 
           WebkitTapHighlightColor: 'transparent',
           touchAction: 'manipulation'
         }}
       >
         <div className="flex flex-col items-center gap-2">
-            <ImageIcon className="w-6 h-6 text-blue-600" />
+            <ImageIcon className="w-6 h-6 text-orange-600" />
             <p className="text-xs font-medium">點擊上傳圖片 (支援 JPG, PNG 格式)</p>
         </div>
       </div>

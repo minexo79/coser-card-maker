@@ -303,7 +303,7 @@ const TemplateEditor = () => {
             <h1 className="text-xl text-gray-800">卡片版面編輯器</h1>
             <span
               className={`rounded-full px-3 py-1 text-xs ${
-                isLoadedTemplate ? 'bg-blue-100 text-blue-700' : 'bg-amber-100 text-amber-700'
+                isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
               }`}
             >
               {isLoadedTemplate ? `已載入：${loadedEventId}` : '從空白開始（使用「＋新增」加入元素）'}
@@ -474,7 +474,7 @@ const AssetsPanel = ({ baseImagePath, onBaseImageChange, elements, slotImageURLs
           <button
             type="button"
             onClick={() => baseInputRef.current?.click()}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
           >
             <UploadCloud className="h-4 w-4" />
             {baseImagePath ? '更換底圖' : '選擇底圖上傳'}

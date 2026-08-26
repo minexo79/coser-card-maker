@@ -15,7 +15,7 @@ export default {
         'spin-slow': 'spin 2s linear infinite',
       },
       colors: {
-        'card-primary': '#3b82f6',
+        'card-primary': '#f97316',
         'card-secondary': '#64748b',
       }
     },

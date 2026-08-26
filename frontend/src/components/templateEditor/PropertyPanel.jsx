@@ -121,7 +121,7 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
         </Hint>
       )}
       {element.group === 'titleImage' && (
-        <Hint className="border-blue-100 bg-blue-50 text-blue-700">
+        <Hint className="border-orange-100 bg-orange-50 text-orange-700">
           標題圖的顯示位置，實際圖案請上傳標題圖片後檢視。
         </Hint>
       )}

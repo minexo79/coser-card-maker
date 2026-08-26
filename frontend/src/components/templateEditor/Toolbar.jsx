@@ -21,7 +21,7 @@ import {
 const styles = {
   btn: 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
   secondary: 'border border-gray-300 text-gray-700 hover:bg-gray-100',
-  primary: 'bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-300',
+  primary: 'bg-orange-600 text-white hover:bg-orange-700 disabled:bg-gray-300',
   icon: 'h-4 w-4'
 };
 

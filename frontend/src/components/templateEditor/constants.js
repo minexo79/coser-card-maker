@@ -12,7 +12,7 @@ export const GROUP_LABELS = {
 // 畫布元素繪製時的外框配色（不含選取態）。
 export const GROUP_COLORS = {
   titleImage: '#8b5cf6',
-  imageSlots: '#3b82f6',
+  imageSlots: '#f97316',
   dateRole: '#ec4899',
   textPositions: '#10b981',
   categorySelection: '#ef4444',

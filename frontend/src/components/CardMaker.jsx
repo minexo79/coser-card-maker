@@ -182,7 +182,7 @@ const CardMaker = () => {
         <div className="lg:col-span-5">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
             <h2 className="text-xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
-              <SettingIcon className="w-6 h-6 text-blue-600" />
+              <SettingIcon className="w-6 h-6 text-orange-600" />
               內容設定
             </h2>
 
@@ -251,8 +251,8 @@ const CardMaker = () => {
                         onClick={() => updateFormData('category', category)}
                         className={`p-3 rounded-lg border-2 transition-all duration-200 font-medium text-sm ${
                           formData.category === category
-                            ? 'border-blue-600 bg-blue-50 text-blue-700'
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-blue-400 hover:bg-gray-50'
+                            ? 'border-orange-600 bg-orange-50 text-orange-700'
+                            : 'border-gray-300 bg-white text-gray-700 hover:border-orange-400 hover:bg-gray-50'
                         }`}
                       >
                         {category}
@@ -353,7 +353,7 @@ const CardMaker = () => {
                     aria-checked={roundedCorners}
                     onClick={() => setRoundedCorners(!roundedCorners)}
                     className={`relative h-7 w-12 shrink-0 rounded-full transition-colors duration-200 ${
-                      roundedCorners ? 'bg-blue-600' : 'bg-gray-300'
+                      roundedCorners ? 'bg-orange-600' : 'bg-gray-300'
                     }`}
                   >
                     <span
@@ -379,7 +379,7 @@ const CardMaker = () => {
         <div className="lg:col-span-7">
           <div className="bg-white rounded-2xl shadow-xl card-shadow p-6 h-full">
             <h2 className="text-xl text-gray-800 text-center mb-6 flex items-center justify-center gap-2">
-              <ImageIcon className="w-6 h-6 text-blue-600" />
+              <ImageIcon className="w-6 h-6 text-orange-600" />
               圖片預覽
             </h2>
 
