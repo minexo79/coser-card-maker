@@ -19,6 +19,7 @@ const CardMaker = () => {
     dayDetails,
     dayCount,
     supportedDayCounts,
+    categories,
     isLoading,
     showModal,
     canvasRef,
@@ -154,8 +155,16 @@ const CardMaker = () => {
     // 設定畫布複寫
     if (preset.overWriteCanvas) {
       setBaseCanvasOverride(preset.overWriteCanvas);
+
+      // 若活動模板含有 categorySelection，自動選取第一個可用身分
+      if (preset.overWriteCanvas.categorySelection) {
+        const keys = Object.keys(preset.overWriteCanvas.categorySelection);
+        if (keys.length > 0) {
+          updateFormData('category', keys[0]);
+        }
+      }
     }
-  }, [preset, setDayCount, updateDayDetail, setBaseCanvasOverride]);
+  }, [preset, setDayCount, updateDayDetail, setBaseCanvasOverride, updateFormData]);
 
   // 當資料變化時重新渲染
   useEffect(() => {
@@ -236,7 +245,7 @@ const CardMaker = () => {
                     身分
                   </label>
                   <div className="grid grid-cols-3 gap-3">
-                    {['COSER', '攝影', '路人'].map((category) => (
+                    {categories.map((category) => (
                       <button
                         key={category}
                         onClick={() => updateFormData('category', category)}

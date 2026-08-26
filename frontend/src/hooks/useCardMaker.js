@@ -6,6 +6,8 @@ import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { buildCardPayload, applyCardPayload } from '../utils/cardPayload.js';
 
+const DEFAULT_CATEGORIES = ['COSER', '攝影', '路人'];
+
 // Build template lookup by day count so future templates can plug in directly.
 const buildTemplateConfig = () => {
   const entries = Object.entries(CARD_TEMPLATES)
@@ -70,11 +72,20 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   const [sharedFormData, setSharedFormData] = useState({
     nickname: '',
     message: '',
-    category: 'COSER'
+    category: DEFAULT_CATEGORIES[0]
   });
 
   // for specific event update and preset-based base image override
   const [baseCanvasOverride, setBaseCanvasOverride] = useState(null);
+
+  // 動態身分列表：從後端活動模板的 categorySelection 取得，否則使用預設值
+  const categories = useMemo(() => {
+    const selection = baseCanvasOverride?.categorySelection;
+    if (selection && typeof selection === 'object' && Object.keys(selection).length > 0) {
+      return Object.keys(selection);
+    }
+    return DEFAULT_CATEGORIES;
+  }, [baseCanvasOverride]);
 
   // 活動底圖（使用者上傳，涵蓋完整活動資訊，直接作為整張卡片的底圖）
   const [baseImageData, setBaseImageData] = useState(null);
@@ -597,7 +608,16 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       const restored = applyCardPayload(record?.payload);
 
       // 還原卡片自帶的畫布覆寫設定（OEM 模板或儲存時的版面快照）
-      setBaseCanvasOverride(restored.overWriteCanvas || null);
+      const newOverride = restored.overWriteCanvas || null;
+      setBaseCanvasOverride(newOverride);
+
+      // 若載入的模板含有 categorySelection，自動選取第一個可用身分
+      if (newOverride?.categorySelection) {
+        const keys = Object.keys(newOverride.categorySelection);
+        if (keys.length > 0) {
+          setSharedFormData((prev) => ({ ...prev, category: keys[0] }));
+        }
+      }
 
       if (restored.dayCount) {
         setDayCountState(normalizeDayCount(restored.dayCount));
@@ -630,6 +650,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     dayDetails,
     dayCount,
     supportedDayCounts,
+    categories,
     isLoading,
     showModal,
     canvasRef,

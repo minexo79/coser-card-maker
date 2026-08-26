@@ -56,6 +56,7 @@ describe('CardMaker - DIY View UI', () => {
       },
       dayCount,
       supportedDayCounts: [1, 2],
+      categories: ['COSER', '攝影', '路人'],
       isLoading: false,
       showModal: false,
       canvasRef: { current: null },
