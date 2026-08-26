@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import {
-  Calendar,
   Eye,
   EyeOff,
   FolderOpen,
@@ -44,14 +43,7 @@ const Toolbar = ({
   saving = false,
   dayCount = 0,
   onDayChange,
-  dayCountDisabled = false,
-  eventId = '',
-  onEventIdChange,
-  onLoadEvent,
-  onNewCategory,
-  startDate = '',
-  onStartDateChange,
-  onShowTemplateList
+  onNewCategory
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -72,16 +64,6 @@ const Toolbar = ({
 
   return (
     <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-      <button
-        type="button"
-        onClick={onShowTemplateList}
-        className={`${styles.btn} ${styles.secondary}`}
-        title="檢視與編輯已儲存的模板"
-      >
-        <FolderOpen className={styles.icon} />
-        模板清單
-      </button>
-
       <button
         type="button"
         onClick={onBaseImageClick}
@@ -209,33 +191,6 @@ const Toolbar = ({
       </label>
 
       <div className="ml-auto flex items-end gap-2">
-        <span className="text-[11px] text-gray-500">起始日期</span>
-        <label className="flex flex-col">
-          <div className="relative">
-            <Calendar className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
-            <input
-              data-testid="template-start-date"
-              type="date"
-              value={startDate}
-              onChange={(e) => onStartDateChange?.(e.target.value)}
-              className="w-50 rounded-md border border-gray-300 px-2 py-1 pl-7"
-              title="活動起始日期"
-            />
-          </div>
-        </label>
-        <span className="text-[11px] text-gray-500">活動 ID</span>
-        <label className="flex flex-col">
-          <input
-            data-testid="template-event-id"
-            type="text"
-            value={eventId}
-            onChange={(e) => onEventIdChange(e.target.value)}
-            onBlur={onLoadEvent}
-            placeholder="event-name"
-            maxLength={64}
-            className="w-32 rounded-md border border-gray-300 px-2 py-1"
-          />
-        </label>
         <button
           type="button"
           onClick={onSave}

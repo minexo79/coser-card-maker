@@ -10,8 +10,8 @@ const isUploadedAsset = (path) => {
 };
 
 const MIN_SIZE = 8;
+const SNAP_THRESHOLD = 5;
 
-// 依縮放手把與拖曳位移，計算新的矩形（邏輯座標）。
 function computeResizeBox(origin, dx, dy, handle) {
   let { x, y, width, height } = origin;
   if (handle.includes('e')) width = origin.width + dx;
@@ -25,6 +25,140 @@ function computeResizeBox(origin, dx, dy, handle) {
     height = origin.height - dy;
   }
   return normalizeRect({ x, y, width, height }).rect;
+}
+
+function getEdges(box) {
+  return {
+    left: box.x,
+    cx: box.x + box.width / 2,
+    right: box.x + box.width,
+    top: box.y,
+    cy: box.y + box.height / 2,
+    bottom: box.y + box.height
+  };
+}
+
+// 回傳吸附後的 box 與 snapLines
+function computeSnap(box, others, mode, handle, canvasW, canvasH) {
+  const snapped = { ...box };
+  const lines = [];
+  const th = SNAP_THRESHOLD;
+
+  const my = getEdges(box);
+
+  // 收集所有參考吸附點
+  const refXs = [];
+  const refYs = [];
+
+  // 畫布邊緣也算
+  refXs.push({ val: 0, label: 'canvas-left' });
+  refXs.push({ val: canvasW / 2, label: 'canvas-cx' });
+  refXs.push({ val: canvasW, label: 'canvas-right' });
+  refYs.push({ val: 0, label: 'canvas-top' });
+  refYs.push({ val: canvasH / 2, label: 'canvas-cy' });
+  refYs.push({ val: canvasH, label: 'canvas-bottom' });
+
+  for (const el of others) {
+    const e = getEdges(el.box);
+    refXs.push({ val: e.left, label: `el-${el.id}-left` });
+    refXs.push({ val: e.cx, label: `el-${el.id}-cx` });
+    refXs.push({ val: e.right, label: `el-${el.id}-right` });
+    refYs.push({ val: e.top, label: `el-${el.id}-top` });
+    refYs.push({ val: e.cy, label: `el-${el.id}-cy` });
+    refYs.push({ val: e.bottom, label: `el-${el.id}-bottom` });
+  }
+
+  // 決定哪些邊需要吸附
+  const checkLeft = mode === 'move' || (mode === 'resize' && handle.includes('w'));
+  const checkCx = mode === 'move';
+  const checkRight = mode === 'move' || (mode === 'resize' && handle.includes('e'));
+  const checkTop = mode === 'move' || (mode === 'resize' && handle.includes('n'));
+  const checkCy = mode === 'move';
+  const checkBottom = mode === 'move' || (mode === 'resize' && handle.includes('s'));
+
+  // X 軸吸附
+  let bestDx = Infinity;
+  let snapX = null;
+  let snapLineX = null;
+
+  if (checkLeft) {
+    for (const ref of refXs) {
+      const d = Math.abs(my.left - ref.val);
+      if (d < th && d < Math.abs(bestDx)) {
+        bestDx = ref.val - my.left;
+        snapX = ref.val;
+        snapLineX = { x: ref.val, type: 'vertical' };
+      }
+    }
+  }
+  if (checkRight) {
+    for (const ref of refXs) {
+      const d = Math.abs(my.right - ref.val);
+      if (d < th && d < Math.abs(bestDx)) {
+        bestDx = ref.val - my.right;
+        snapX = ref.val - box.width;
+        snapLineX = { x: ref.val, type: 'vertical' };
+      }
+    }
+  }
+  if (checkCx) {
+    for (const ref of refXs) {
+      const d = Math.abs(my.cx - ref.val);
+      if (d < th && d < Math.abs(bestDx)) {
+        bestDx = ref.val - my.cx;
+        snapX = ref.val - box.width / 2;
+        snapLineX = { x: ref.val, type: 'vertical' };
+      }
+    }
+  }
+
+  if (snapX !== null) {
+    snapped.x = Math.round(snapX);
+    if (snapLineX) lines.push(snapLineX);
+  }
+
+  // Y 軸吸附
+  let bestDy = Infinity;
+  let snapY = null;
+  let snapLineY = null;
+
+  if (checkTop) {
+    for (const ref of refYs) {
+      const d = Math.abs(my.top - ref.val);
+      if (d < th && d < Math.abs(bestDy)) {
+        bestDy = ref.val - my.top;
+        snapY = ref.val;
+        snapLineY = { y: ref.val, type: 'horizontal' };
+      }
+    }
+  }
+  if (checkBottom) {
+    for (const ref of refYs) {
+      const d = Math.abs(my.bottom - ref.val);
+      if (d < th && d < Math.abs(bestDy)) {
+        bestDy = ref.val - my.bottom;
+        snapY = ref.val - box.height;
+        snapLineY = { y: ref.val, type: 'horizontal' };
+      }
+    }
+  }
+  if (checkCy) {
+    for (const ref of refYs) {
+      const d = Math.abs(my.cy - ref.val);
+      if (d < th && d < Math.abs(bestDy)) {
+        bestDy = ref.val - my.cy;
+        snapY = ref.val - box.height / 2;
+        snapLineY = { y: ref.val, type: 'horizontal' };
+      }
+    }
+  }
+
+  if (snapY !== null) {
+    snapped.y = Math.round(snapY);
+    if (snapLineY) lines.push(snapLineY);
+  }
+
+  return { box: snapped, lines };
 }
 
 const checkerboard = {
@@ -65,6 +199,33 @@ const BaseImage = ({ src }) => {
   );
 };
 
+const SnapLines = ({ lines }) =>
+  lines.map((line, i) =>
+    line.type === 'vertical' ? (
+      <div
+        key={`sv-${i}`}
+        className="pointer-events-none absolute top-0 h-full"
+        style={{
+          left: line.x,
+          width: 1,
+          backgroundColor: '#f43f5e',
+          zIndex: 50
+        }}
+      />
+    ) : (
+      <div
+        key={`sh-${i}`}
+        className="pointer-events-none absolute left-0 w-full"
+        style={{
+          top: line.y,
+          height: 1,
+          backgroundColor: '#f43f5e',
+          zIndex: 50
+        }}
+      />
+    )
+  );
+
 const TemplateCanvas = ({
   width = 1200,
   height = 700,
@@ -80,13 +241,13 @@ const TemplateCanvas = ({
 }) => {
   const wrapRef = useRef(null);
   const [scale, setScale] = useState(1);
+  const [snapLines, setSnapLines] = useState([]);
   const {
     start,
     move: moveInteraction,
     end: endInteraction
   } = usePointerDrag();
 
-  // 依容器寬度算出縮放比（此渲染僅 LOGO/佔位用，繪圖統一用邏輯座標）。
   useLayoutEffect(() => {
     const node = wrapRef.current;
     if (!node) return () => {};
@@ -104,31 +265,46 @@ const TemplateCanvas = ({
     return undefined;
   }, [width]);
 
-  // 由拖曳位移計算下一個方塊（指派 onElementChange）。
   const applyMove = useCallback(
     (result) => {
       if (!result) return;
       const { meta, dx, dy } = result;
       const origin = meta.originBox;
+      const others = elements.filter((el) => el.id !== meta.id);
       let nextBox;
+
       if (meta.mode === 'move') {
-        nextBox = {
+        const candidate = {
           x: clamp(Math.round(origin.x + dx), 0, Math.max(0, width - origin.width)),
           y: clamp(Math.round(origin.y + dy), 0, Math.max(0, height - origin.height)),
           width: origin.width,
           height: origin.height
         };
+        const { box: snapped, lines } = computeSnap(candidate, others, 'move', null, width, height);
+        nextBox = {
+          ...snapped,
+          x: clamp(snapped.x, 0, Math.max(0, width - snapped.width)),
+          y: clamp(snapped.y, 0, Math.max(0, height - snapped.height))
+        };
+        setSnapLines(lines);
       } else {
         const resized = computeResizeBox(origin, dx, dy, meta.handle);
-        nextBox = {
+        const candidate = {
           ...resized,
           width: Math.max(resized.width, MIN_SIZE),
           height: Math.max(resized.height, MIN_SIZE)
         };
+        const { box: snapped, lines } = computeSnap(candidate, others, 'resize', meta.handle, width, height);
+        nextBox = {
+          ...snapped,
+          width: Math.max(snapped.width, MIN_SIZE),
+          height: Math.max(snapped.height, MIN_SIZE)
+        };
+        setSnapLines(lines);
       }
       onElementChange?.(meta.id, nextBox);
     },
-    [height, onElementChange, width]
+    [elements, height, onElementChange, width]
   );
 
   const handlePointerMove = useCallback(
@@ -141,18 +317,16 @@ const TemplateCanvas = ({
   const handlePointerEnd = useCallback(
     (event) => {
       const result = endInteraction(event);
-      // 只在「曾有拖曳」時通知結束，避免多餘的 onElementChangeEnd
+      setSnapLines([]);
       if (result) onElementChangeEnd?.();
     },
     [endInteraction, onElementChangeEnd]
   );
 
-  // 開始拖曳（移動或縮放）。
   const handleStartDrag = useCallback(
     (event, element, mode, handle = null) => {
       if (disabled) return;
       event.preventDefault();
-      // 避免拖曳時選取到文字
       event.stopPropagation();
       start(event, {
         id: element.id,
@@ -184,7 +358,6 @@ const TemplateCanvas = ({
           }
         }}
       >
-        {/* 實際邏輯畫布；外面縮放，內部維持邏輯座標。 */}
         <div
           className="absolute left-0 top-0"
           style={{
@@ -204,6 +377,7 @@ const TemplateCanvas = ({
             disabled={disabled}
             showLabels={showLabels}
             onStartDrag={handleStartDrag}
+            snapLines={snapLines}
           />
         </div>
       </div>
@@ -220,12 +394,12 @@ const CanvasInner = ({
   selectedId,
   disabled,
   showLabels,
-  onStartDrag
+  onStartDrag,
+  snapLines = []
 }) => (
   <div className="relative overflow-hidden bg-white" style={{ width, height }}>
     <BaseImage src={baseImagePath} />
 
-    {/* 每日照片預覽（僅預覽用） */}
     {elements
       .filter((element) => element.group === 'imageSlots' && slotImages[element.id])
       .map((element) => (
@@ -251,7 +425,6 @@ const CanvasInner = ({
         </div>
       ))}
 
-    {/* 可互動元素 */}
     {elements.map((element) => (
       <ElementOverlay
         key={element.id}
@@ -263,6 +436,8 @@ const CanvasInner = ({
         onStartDrag={onStartDrag}
       />
     ))}
+
+    <SnapLines lines={snapLines} />
   </div>
 );
 

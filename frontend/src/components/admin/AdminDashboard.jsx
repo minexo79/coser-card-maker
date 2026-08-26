@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import ChangePassword from './ChangePassword';
 import UserManagement from './UserManagement';
 import TemplateEditor from '../templateEditor/TemplateEditor';
-import Heartbeat from '../Heartbeat';
-import { LayoutDashboard, Users, Activity, Key } from 'lucide-react';
+import TemplateListPage from '../templateEditor/TemplateListPage';
+import { LayoutDashboard, List, Users, Key } from 'lucide-react';
 
 const TABS = [
-  { key: 'templates', label: '模板管理', icon: LayoutDashboard },
+  { key: 'list', label: '模板清單', icon: List },
+  { key: 'templates', label: '模板編輯', icon: LayoutDashboard },
   { key: 'password', label: '密碼修改', icon: Key },
 ];
 
@@ -18,19 +19,51 @@ const ADMIN_TABS = [
 const AdminDashboard = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const allTabs = isAdmin ? [...TABS.slice(0, 1), ...ADMIN_TABS, ...TABS.slice(1)] : TABS;
-  const [activeTab, setActiveTab] = useState(allTabs[0].key);
+  const allTabs = isAdmin ? [...TABS.slice(0, 2), ...ADMIN_TABS, ...TABS.slice(2)] : TABS;
+  const tabParam = searchParams.get('tab');
+  const activeTab = allTabs.some((t) => t.key === tabParam) ? tabParam : allTabs[0].key;
+
+  const switchTab = (key) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', key);
+      return next;
+    });
+  };
 
   return (
-    <div className="mx-auto max-w-[1700px] p-4 flex gap-4 h-[calc(100vh-2rem)]">
-      <div className="flex flex-col w-48 shrink-0 bg-white rounded-lg shadow border border-gray-200 py-2">
+    <div className="container mx-auto p-4 flex flex-col md:flex-row gap-4 h-[calc(100vh-2rem)]">
+      {/* Mobile: horizontal tab bar */}
+      <div className="md:hidden flex overflow-x-auto gap-1 bg-white rounded-2xl shadow border border-gray-200 p-1 shrink-0">
         {allTabs.map((tab) => {
           const Icon = tab.icon;
           return (
             <button
               key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => switchTab(tab.key)}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap rounded-md transition-colors ${
+                activeTab === tab.key
+                  ? 'text-orange-600 bg-orange-50'
+                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Desktop: vertical sidebar */}
+      <div className="hidden md:flex flex-col w-48 shrink-0 bg-white rounded-2xl shadow border border-gray-200 py-2">
+        {allTabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => switchTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 activeTab === tab.key
                   ? 'text-orange-600 bg-orange-50 border-r-2 border-orange-600'
@@ -44,10 +77,10 @@ const AdminDashboard = () => {
         })}
       </div>
 
-      <div className="flex-1 bg-white rounded-lg shadow border border-gray-200 p-4 overflow-auto">
+      <div className="flex-1 bg-white rounded-2xl shadow border border-gray-200 p-4 overflow-auto">
+        {activeTab === 'list' && <TemplateListPage />}
         {activeTab === 'templates' && <TemplateEditor />}
         {activeTab === 'users' && <UserManagement />}
-        {/* {activeTab === 'status' && <Heartbeat />} */}
         {activeTab === 'password' && <ChangePassword />}
       </div>
     </div>

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, CheckCircle2, FolderOpen, ImagePlus, Share2, UploadCloud } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import * as api from '../../services/api.js';
 import { serializeDraft } from '../../utils/templateDraft.js';
@@ -9,7 +9,6 @@ import TemplateCanvas from './TemplateCanvas.jsx';
 import ElementList from './ElementList.jsx';
 import PropertyPanel from './PropertyPanel.jsx';
 import Toolbar from './Toolbar.jsx';
-import TemplateListModal from './TemplateListModal.jsx';
 
 const SAVED_EVENT_KEY = 'ccm_template_editor_last_event';
 const EVENT_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
@@ -34,8 +33,6 @@ const Toast = ({ type, message }) => {
 const TemplateEditor = () => {
   const [searchParams] = useSearchParams();
   const queryEvent = searchParams.get('event');
-  // P1：將 /upload 的上傳功能整併為編輯器的「上傳資產」分頁
-  const [activeTab, setActiveTab] = useState(() => (searchParams.get('tab') === 'upload' ? 'assets' : 'layout'));
 
   const {
     draft,
@@ -67,7 +64,6 @@ const TemplateEditor = () => {
   });
   const [slotImageURLs, setSlotImageURLs] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [showList, setShowList] = useState(false);
 
   const fileInputRef = useRef(null);
   const toastTimer = useRef(null);
@@ -112,32 +108,16 @@ const TemplateEditor = () => {
     [loadFromPayload, showToast]
   );
 
+  useEffect(() => {
+    if (queryEvent && queryEvent !== loadedEventId) {
+      loadTemplateById(queryEvent); // eslint-disable-line react-hooks/set-state-in-effect
+    }
+  }, [queryEvent]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleLoadEvent = useCallback(() => {
     return loadTemplateById(eventId);
   }, [eventId, loadTemplateById]);
 
-  // 從「已儲存的模板」清單載入
-  const handleLoadFromList = useCallback(
-    async (id) => {
-      await loadTemplateById(id);
-    },
-    [loadTemplateById]
-  );
-
-  // 從「已儲存的模板」清單刪除
-  const handleDeleteFromList = useCallback(
-    async (id) => {
-      const trimmed = (id || '').trim();
-      if (!trimmed) return;
-      await api.deleteEventTemplate(trimmed);
-      if ((eventId || '').trim() === trimmed) {
-        setEventId('');
-      }
-    },
-    [eventId]
-  );
-
-  // 從 0 開始：直接設定圖片槽數量（天數連動）
   const handleSlotCountChange = useCallback(
     (count) => {
       setSlotCount(count);
@@ -199,17 +179,17 @@ const TemplateEditor = () => {
     [updateMeta, resizeCanvas]
   );
 
-  const handleSelectSlotImage = useCallback(
-    (elementId) => (event) => {
-      const file = event.target.files?.[0];
-      if (file) {
-        const url = URL.createObjectURL(file);
-        setSlotImageURLs((prev) => ({ ...prev, [elementId]: url }));
-      }
-      event.target.value = '';
-    },
-    []
-  );
+  // const handleSelectSlotImage = useCallback(
+  //   (elementId) => (event) => {
+  //     const file = event.target.files?.[0];
+  //     if (file) {
+  //       const url = URL.createObjectURL(file);
+  //       setSlotImageURLs((prev) => ({ ...prev, [elementId]: url }));
+  //     }
+  //     event.target.value = '';
+  //   },
+  //   []
+  // );
 
   const handleFontColorChange = useCallback(
     (color) => {
@@ -290,63 +270,21 @@ const TemplateEditor = () => {
 
   const isLoadedTemplate = !!loadedEventId;
 
-  const tabs = [
-    { key: 'layout', label: '版面編輯' },
-    { key: 'assets', label: '底圖與資產' }
-  ];
-
   return (
     <div className="min-h-screen">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl text-gray-800">卡片版面編輯器</h1>
+          <h1 className="text-xl text-gray-800">模板編輯器</h1>
           <span
             className={`rounded-full px-3 py-1 text-xs ${
               isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
             }`}
           >
-            {isLoadedTemplate ? `已載入：${loadedEventId}` : '從空白開始（使用「＋新增」加入元素）'}
+            {isLoadedTemplate ? `已載入：${loadedEventId}` : '使用「＋新增」加入元素'}
           </span>
         </div>
       </div>
 
-      {/* 分頁列 */}
-      <div className="mb-4 flex gap-1 border-b border-gray-200">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => setActiveTab(tab.key)}
-            className={`rounded-t-lg border-b-2 px-4 py-2 text-sm font-medium transition-colors ${
-              activeTab === tab.key
-                ? 'border-blue-600 text-blue-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {activeTab === 'assets' ? (
-      <AssetsPanel
-        baseImagePath={canvas?.baseImagePath || ''}
-        onBaseImageChange={(path) => {
-          updateMeta({ baseImagePath: path });
-          const img = new Image();
-          img.onload = () => {
-            const newWidth = 1220;
-            const newHeight = Math.round(newWidth * (img.naturalHeight / img.naturalWidth));
-            resizeCanvas(newWidth, newHeight);
-          };
-          img.src = path;
-        }}
-          elements={elements}
-          slotImageURLs={slotImageURLs}
-          onSlotImageSelect={handleSelectSlotImage}
-        />
-      ) : (
-        <>
       <Toolbar
         onBaseImageClick={() => fileInputRef.current?.click()}
         onAddTitleImage={() => addElement({ type: 'titleImage' })}
@@ -360,14 +298,7 @@ const TemplateEditor = () => {
         saving={saving || isLoading}
         dayCount={dayCount}
         onDayChange={handleSlotCountChange}
-        dayCountDisabled={isLoadedTemplate}
-        eventId={eventId}
-        onEventIdChange={setEventId}
-        onLoadEvent={handleLoadEvent}
         onNewCategory={handleAddCategory}
-        startDate={draft?.startDate || ''}
-        onStartDateChange={setStartDate}
-        onShowTemplateList={() => setShowList(true)}
       />
 
       <input
@@ -394,12 +325,48 @@ const TemplateEditor = () => {
               showLabels={showLabels}
             />
           </div>
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-[11px] text-gray-500">
             提示：按著方框拖曳可移動，拖曳四角可縮放；於下方「每日照片預覽」上傳照片可預覽照片顯示效果。
           </p>
         </div>
 
         <div className="w-full shrink-0 space-y-4 lg:w-80">
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-3 text-sm text-gray-700">活動資訊</h3>
+            <div className="space-y-3">
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500">活動 ID</span>
+                <input
+                  data-testid="template-event-id"
+                  type="text"
+                  value={eventId}
+                  onChange={(e) => setEventId(e.target.value)}
+                  onBlur={handleLoadEvent}
+                  placeholder="event-name"
+                  maxLength={64}
+                  className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500">起始日期</span>
+                <div className="relative">
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <input
+                    data-testid="template-start-date"
+                    type="date"
+                    min="2001-01-01"
+                    max="2099-12-31"
+                    value={draft?.startDate || ''}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 pl-7 text-sm"
+                    style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                    title="活動起始日期"
+                  />
+                </div>
+              </label>
+            </div>
+          </div>
+
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <ElementList
               elements={elements}
@@ -419,18 +386,8 @@ const TemplateEditor = () => {
           </div>
         </div>
       </div>
-        </>
-      )}
 
       {toast && <Toast type={toast.type} message={toast.message} />}
-
-      {showList && (
-        <TemplateListModal
-          onClose={() => setShowList(false)}
-          onLoad={handleLoadFromList}
-          onDelete={handleDeleteFromList}
-        />
-      )}
     </div>
   );
 };
@@ -444,89 +401,5 @@ async function blobUrlToFile(src) {
     type: blob.type || 'image/png'
   });
 }
-
-// P1：整合舊 /upload 的活動底圖＋每日照片上傳（不依賴 useCardMaker，直接操作 overWriteCanvas）
-const AssetsPanel = ({ baseImagePath, onBaseImageChange, elements, slotImageURLs, onSlotImageSelect }) => {
-  const baseInputRef = useRef(null);
-
-  return (
-    <div className="space-y-6">
-      {/* 活動底圖 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-1 text-base font-semibold text-gray-800">活動底圖</h3>
-        <p className="mb-4 text-sm text-gray-500">
-          上傳後會作為卡片的背景底圖。此為模板的唯一底圖，所有天共用。
-        </p>
-        <div className="flex items-start gap-6">
-          <input
-            ref={baseInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              e.target.value = '';
-              if (file) onBaseImageChange(URL.createObjectURL(file));
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => baseInputRef.current?.click()}
-            className="inline-flex shrink-0 items-center gap-2 rounded-lg bg-orange-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
-          >
-            <UploadCloud className="h-4 w-4" />
-            {baseImagePath ? '更換底圖' : '選擇底圖上傳'}
-          </button>
-          {baseImagePath && (
-            <div className="w-48 overflow-hidden rounded-lg border border-gray-200">
-              <img src={baseImagePath} alt="目前底圖" className="aspect-video w-full object-cover" />
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* 每日照片預覽上傳 */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h3 className="mb-1 text-base font-semibold text-gray-800">每日照片預覽</h3>
-        <p className="mb-4 text-sm text-gray-500">
-          上傳測試照片，可即時預覽照片在各天版面中的顯示效果（不會寫入模板，僅供設計時確認）。
-        </p>
-        {elements.length === 0 ? (
-          <p className="text-sm text-gray-400">目前尚無圖片槽，請先回「版面編輯」分頁新增圖片槽。</p>
-        ) : (
-          <div className="flex flex-wrap gap-3">
-            {elements
-              .filter((element) => element.group === 'imageSlots')
-              .map((element) => (
-                <label
-                  key={element.id}
-                  className="flex w-40 cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-gray-300 p-3 text-center text-xs text-gray-600 transition-colors hover:bg-gray-50"
-                >
-                  {slotImageURLs[element.id] ? (
-                    <img
-                      src={slotImageURLs[element.id]}
-                      alt=""
-                      className="h-16 w-full rounded object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-16 w-full items-center justify-center rounded bg-gray-100 text-gray-400">
-                      <ImagePlus className="h-6 w-6" />
-                    </div>
-                  )}
-                  <span>{slotImageURLs[element.id] ? '更換' : '上傳'} {element.label}</span>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={onSlotImageSelect(element.id)}
-                  />
-                </label>
-              ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
 
 export default TemplateEditor;

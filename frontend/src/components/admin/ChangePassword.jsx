@@ -39,7 +39,7 @@ const ChangePassword = () => {
 
   return (
     <div className="max-w-sm">
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">修改密碼</h2>
+      <h2 className="text-lg text-gray-800 mb-4">修改密碼</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">舊密碼</label>

@@ -176,7 +176,7 @@ const CardMaker = () => {
   }, [dayCount, dayDetails, formData, imageDatas, imageOffsets, renderCanvas]);
 
   return (
-    <div className="container mx-auto px-4 py-6">
+    <div className="container mx-auto p-4">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">

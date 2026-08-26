@@ -92,7 +92,7 @@ const UserManagement = () => {
 
   return (
     <div>
-      <h2 className="text-lg font-semibold text-gray-800 mb-4">使用者管理</h2>
+      <h2 className="text-lg text-gray-800 mb-4">使用者管理</h2>
 
       {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
 
@@ -172,17 +172,17 @@ const UserManagement = () => {
 
       {/* Create user form */}
       <div className="border-t border-gray-200 pt-4">
-        <h3 className="text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1">
+        <h3 className="text-sm text-gray-700 mb-2 flex items-center gap-1">
           <UserPlus className="w-4 h-4" /> 新增使用者
         </h3>
-        <form onSubmit={handleCreate} className="flex gap-2 items-end flex-wrap">
+        <form onSubmit={handleCreate} className="flex gap-2 items-end flex-wrap items-center">
           <input
             type="text"
             value={newUsername}
             onChange={(e) => setNewUsername(e.target.value)}
             placeholder="帳號"
             required
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-32"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-36"
           />
           <input
             type="password"
@@ -195,10 +195,10 @@ const UserManagement = () => {
           <select
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            className="px-3 py-2 border border-gray-300 rounded-lg text-xs"
           >
-            <option value="user">user</option>
-            <option value="admin">admin</option>
+            <option value="user">一般使用者</option>
+            {/* <option value="admin">系統管理員</option> */}
           </select>
           <button
             type="submit"

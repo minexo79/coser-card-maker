@@ -6,7 +6,6 @@ const NumberField = ({ label, value, onChange }) => {
   const [text, setText] = useState(() => String(value ?? ''));
   const [prevValue, setPrevValue] = useState(value);
 
-  // 外部 value 改變時同步本地 state（React 官方 render 期間調整 pattern）
   if (prevValue !== value) {
     setPrevValue(value);
     setText(String(value ?? ''));
@@ -84,9 +83,15 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <NumberField label="X" value={box.x} onChange={(v) => onUpdate({ x: v })} />
         <NumberField label="Y" value={box.y} onChange={(v) => onUpdate({ y: v })} />
+        {/* <NumberField label="W" value={box.width} onChange={(v) => onUpdate({ width: v })} />
+        <NumberField label="H" value={box.height} onChange={(v) => onUpdate({ height: v })} /> */}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {/* <NumberField label="X" value={box.x} onChange={(v) => onUpdate({ x: v })} />
+        <NumberField label="Y" value={box.y} onChange={(v) => onUpdate({ y: v })} /> */}
         <NumberField label="W" value={box.width} onChange={(v) => onUpdate({ width: v })} />
         <NumberField label="H" value={box.height} onChange={(v) => onUpdate({ height: v })} />
       </div>

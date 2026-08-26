@@ -81,8 +81,8 @@ const ElementOverlay = ({
       />
       {showLabel && (
         <div
-          className="absolute overflow-hidden truncate whitespace-nowrap px-1 py-0.5 text-[10px] leading-none text-white"
-          style={{ bottom: '100%', left: 0, maxWidth: 150, background: color, zIndex: 30 }}
+          className="absolute overflow-hidden truncate whitespace-nowrap px-1 py-1 text-[12px] leading-none text-white"
+          style={{ bottom: '100%', left: 0, maxWidth: 200, background: color, zIndex: 30 }}
         >
           {element.label}
         </div>
