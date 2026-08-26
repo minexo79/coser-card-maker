@@ -1,7 +1,6 @@
 // Auth API client — JWT-based authentication.
-// Uses the same BASE_URL as api.js but sends Bearer tokens instead of x-api-token.
+// All requests use relative paths; local dev uses Vite proxy, production uses Vercel rewrite.
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const JWT_STORAGE_KEY = 'ccm_jwt';
 const USER_STORAGE_KEY = 'ccm_user';
 
@@ -45,7 +44,7 @@ async function authRequest(path, options = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(`${BASE_URL}${path}`, {
+  const response = await fetch(path, {
     ...options,
     method: options.method || 'GET',
     headers,

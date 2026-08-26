@@ -52,14 +52,14 @@ ccm/
 │   │   │   ├── useImageLayerRenderer.js  # 角色圖片狀態 + Canvas 繪製
 │   │   │   └── useTools.js               # 共用庫
 │   │   ├── services/
-│   │   │   └── api.js                    # API client（VITE_API_BASE_URL + token）
+│   │   │   └── api.js                    # API client（相對路徑 + token）
 │   │   ├── utils/
 │   │   │   └── cardPayload.js            # 卡片 payload 序列化純函式
 │   │   ├── models/
 │   │   │   ├── cardTemplates.js          # 1p~4p 模板設定
 │   │   │   └── oemCardTemplates.js       # 客製化模板
 │   │   └── __tests__/                    # vitest 測試（components/hooks/models/services/utils）
-│   ├── .env.example                      # VITE_API_BASE_URL 範例
+│   ├── .env.example                      # VITE_API_TOKEN 範例
 │   └── （建置設定檔略）
 ├── backend/
 │   ├── app/
@@ -132,7 +132,7 @@ ccm/
 
 #### services/api.js
 
-- BASE_URL 取自 `import.meta.env.VITE_API_BASE_URL`（分離部署直連，不走 proxy）。
+- 所有 API 請求使用相對路徑（/api/...、/uploads/...），本地開發由 Vite proxy 轉發，正式環境由 Vercel rewrite 轉發，無需設定後端網址。
 - request() 統一附加 `x-api-token` header（存在時），非 2xx 拋出帶 status 的錯誤。
 - uploadImage() 回傳相對路徑（`/uploads/...`）；卡片/事件模板僅儲存相對路徑，
   顯示時由 `resolveAssetUrl()` 組合 BASE_URL（後端搬家不需改歷史資料；

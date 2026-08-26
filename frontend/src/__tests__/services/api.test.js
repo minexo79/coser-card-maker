@@ -11,8 +11,6 @@ describe('services/api', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    // 讓各測試不依賴本機 .env 的 VITE_API_BASE_URL，測試內再視需要自行 stub
-    vi.stubEnv('VITE_API_BASE_URL', '');
     // 隔離本機 .env 的預設 token，避免影響 header 相關斷言
     vi.stubEnv('VITE_API_TOKEN', '');
     fetchMock = vi.fn();
@@ -131,36 +129,14 @@ describe('services/api', () => {
     await expect(api.ping()).rejects.toMatchObject({ status: 401 });
   });
 
-  it('VITE_API_BASE_URL 應作為所有請求的前綴', async () => {
-    vi.stubEnv('VITE_API_BASE_URL', 'http://api.test:8000');
-    fetchMock.mockResolvedValue(jsonResponse({ status: 'ok' }));
-    const api = await setupApi();
-
-    await api.ping();
-
-    expect(fetchMock.mock.calls[0][0]).toBe('http://api.test:8000/api/ping');
-
-    fetchMock.mockResolvedValue(jsonResponse({ url: '/uploads/a.png' }));
-    const url = await api.uploadImage(new File(['x'], 'a.png', { type: 'image/png' }));
-    expect(url).toBe('/uploads/a.png');
-  });
-
   describe('resolveAssetUrl', () => {
-    it('以 / 開頭的後端資源應補上 BASE_URL', async () => {
-      vi.stubEnv('VITE_API_BASE_URL', 'http://api.test:8000');
-      const api = await setupApi();
-
-      expect(api.resolveAssetUrl('/uploads/a.png')).toBe('http://api.test:8000/uploads/a.png');
-    });
-
-    it('BASE_URL 未設定時應原樣保留相對路徑', async () => {
+    it('以 / 開頭的後端資源應原樣保留（相對路徑）', async () => {
       const api = await setupApi();
 
       expect(api.resolveAssetUrl('/uploads/a.png')).toBe('/uploads/a.png');
     });
 
-    it('前端模板內建資源（./img/...）不應補 BASE_URL', async () => {
-      vi.stubEnv('VITE_API_BASE_URL', 'http://api.test:8000');
+    it('前端模板內建資源（./img/...）應原樣保留', async () => {
       const api = await setupApi();
 
       expect(api.resolveAssetUrl('./img/card_base_1p.png')).toBe('./img/card_base_1p.png');

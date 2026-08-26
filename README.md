@@ -19,7 +19,7 @@ ccm/
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # 設定 VITE_API_BASE_URL
+cp .env.example .env   # 設定 API_TOKEN 等環境變數
 npm run dev            # http://localhost:5173
 ```
 
