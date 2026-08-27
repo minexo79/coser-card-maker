@@ -7,9 +7,10 @@
 
 ```text
 ccm/
-├── frontend/    # React + Vite 前端（原 CCM 專案）
-├── backend/     # Python FastAPI 後端（卡片儲存、圖片上傳、heartbeat）
-└── PLAN.md      # 重構計畫文件
+├── .kilo/skills    # 所有用到的技術的 Skill 文件
+├── frontend/       # React + Vite 前端（原 CCM 專案）
+├── backend/        # Python FastAPI 後端（卡片儲存、圖片上傳、heartbeat）
+└── README.md       # 專案說明
 ```
 
 ## 快速開始
