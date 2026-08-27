@@ -10,11 +10,10 @@ const ChangePassword = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const strengthChecks = [
-    { label: '至少 8 個字元', test: (p) => p.length >= 8 },
+    { label: '至少 10 個字元', test: (p) => p.length >= 10 },
     { label: '至少一個大寫字母', test: (p) => /[A-Z]/.test(p) },
     { label: '至少一個小寫字母', test: (p) => /[a-z]/.test(p) },
-    { label: '至少一個數字', test: (p) => /[0-9]/.test(p) },
-    { label: '至少一個特殊字元', test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(p) },
+    { label: '至少一個數字', test: (p) => /[0-9]/.test(p) }
   ];
 
   const handleSubmit = async (e) => {

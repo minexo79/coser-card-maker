@@ -13,9 +13,10 @@ describe('components/templateEditor/TemplateEditor', () => {
       );
     });
     expect(screen.getByText(/模板編輯器/)).toBeTruthy();
-    expect(screen.getByTestId('template-day-count')).toBeTruthy();
-    // 應以空白為起點，不是內建模板
-    expect(screen.getByText(/從空白開始/)).toBeTruthy();
+    expect(screen.getByText(/使用「＋新增」加入元素/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: /上傳底圖/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /新增元素/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /儲存/ })).toBeTruthy();
   });
 
   it('應可新增圖片槽（天數連動更新）', async () => {
@@ -26,17 +27,21 @@ describe('components/templateEditor/TemplateEditor', () => {
         </MemoryRouter>
       );
     });
-    const countInput = screen.getByTestId('template-day-count');
 
-    // 從 0 個圖片槽開始
-    const before = Number(countInput.value);
+    // 空白草稿：版面樹仍為空
+    expect(screen.getByText(/尚無任何元素/)).toBeTruthy();
 
     // 點選「＋新增元素」開啟選單
-    fireEvent.click(screen.getByRole('button', { name: /新增元素/ }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /新增元素/ }));
+    });
     // 點「圖片槽（每天一張）」
-    fireEvent.click(screen.getByTestId('add-menu-image-slot'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('add-menu-image-slot'));
+    });
 
-    // 新增後圖片槽數 +1
-    expect(Number(countInput.value)).toBe(before + 1);
+    // 新增後版面樹出現「圖片槽」群組，且第 1 天圖片槽已建立
+    expect(screen.getByText('圖片槽')).toBeTruthy();
+    expect(screen.getAllByText(/第1天/).length).toBeGreaterThan(0);
   });
 });
