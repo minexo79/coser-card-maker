@@ -137,7 +137,7 @@ describe('useCardMaker - Phase 2', () => {
   });
 
   it('上傳活動底圖後儲存，payload.overWriteCanvas.baseImagePath 應為上傳的圖片 URL', async () => {
-    vi.stubGlobal('prompt', vi.fn(() => 'test-token'));
+    localStorage.setItem('ccm_jwt', 'test-jwt-token');
     saveCard.mockResolvedValue({ id: 'card-1' });
 
     const { result } = renderHook(() => useCardMaker());

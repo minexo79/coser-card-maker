@@ -3,7 +3,7 @@
 Stored/returned records use the exact same shape as
 ``frontend/src/models/oemCardTemplates.js`` entries:
 ``{"dayCount": int, "startDate": str, "overWriteCanvas": {...}}``
-GET is public; PUT/DELETE require the shared API token.
+GET is public; PUT/DELETE require JWT authentication.
 """
 
 import json
@@ -15,7 +15,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from app.core.config import get_settings
-from app.core.security import require_token
+from app.core.security import require_jwt_write
+from app.services import audit
 from app.services import event_templates
 from app.services.users import get_user
 
@@ -179,7 +180,7 @@ async def read_event_template(event_id: str) -> dict:
 
 # --- PUT with createdBy auto-write + ownership guard ---
 
-@router.put("/{event_id}", dependencies=[Depends(require_token)])
+@router.put("/{event_id}", dependencies=[Depends(require_jwt_write)])
 async def upsert_event_template(event_id: str, request: Request) -> dict:
     _validate_event_id(event_id)
 
@@ -198,9 +199,9 @@ async def upsert_event_template(event_id: str, request: Request) -> dict:
     except ValidationError:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid event template")
 
-    # Phase 4 ownership guard: a logged-in non-admin may only modify their own
-    # templates or legacy (createdBy null) templates; requests without JWT keep
-    # the legacy shared-token behavior (PLAN: 保留 x-api-token 機制不變).
+    # Ownership guard: a non-admin may only modify their own templates or
+    # legacy (createdBy null) templates. PUT/DELETE require JWT, so the
+    # caller's identity is always available here.
     jwt_username, jwt_role = _parse_jwt_user(request)
     existing = event_templates.get_event_template(event_id)
     existing_owner = existing.get("createdBy") if existing else None
@@ -217,10 +218,18 @@ async def upsert_event_template(event_id: str, request: Request) -> dict:
         else:
             cleaned["createdBy"] = jwt_username
 
-    return event_templates.upsert_event_template(event_id, cleaned)
+    result = event_templates.upsert_event_template(event_id, cleaned)
+
+    audit.log_event(
+        audit.TEMPLATE_UPSERT,
+        actor=jwt_username,
+        target=event_id,
+        ip_address=request.client.host if request.client else None,
+    )
+    return result
 
 
-@router.delete("/{event_id}", dependencies=[Depends(require_token)], status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{event_id}", dependencies=[Depends(require_jwt_write)], status_code=status.HTTP_204_NO_CONTENT)
 async def remove_event_template(event_id: str, request: Request) -> None:
     _validate_event_id(event_id)
 
@@ -234,3 +243,10 @@ async def remove_event_template(event_id: str, request: Request) -> None:
 
     if not event_templates.delete_event_template(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event template not found")
+
+    audit.log_event(
+        audit.TEMPLATE_DELETE,
+        actor=jwt_username,
+        target=event_id,
+        ip_address=request.client.host if request.client else None,
+    )

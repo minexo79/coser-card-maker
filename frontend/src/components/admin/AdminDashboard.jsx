@@ -2,9 +2,10 @@ import { useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/useAuth';
 import ChangePassword from './ChangePassword';
 import UserManagement from './UserManagement';
+import AuditLogList from './AuditLogList';
 import TemplateEditor from '../templateEditor/TemplateEditor';
 import TemplateListPage from '../templateEditor/TemplateListPage';
-import { LayoutDashboard, List, Users, Key } from 'lucide-react';
+import { LayoutDashboard, List, Users, Key, ScrollText } from 'lucide-react';
 
 const TABS = [
   { key: 'list', label: '模板清單', icon: List },
@@ -14,6 +15,7 @@ const TABS = [
 
 const ADMIN_TABS = [
   { key: 'users', label: '使用者管理', icon: Users },
+  { key: 'audit', label: '審計日誌', icon: ScrollText },
 ];
 
 const AdminDashboard = () => {
@@ -82,6 +84,7 @@ const AdminDashboard = () => {
         {activeTab === 'templates' && <TemplateEditor />}
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'password' && <ChangePassword />}
+        {activeTab === 'audit' && <AuditLogList />}
       </div>
     </div>
   );

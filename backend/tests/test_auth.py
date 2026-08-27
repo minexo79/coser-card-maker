@@ -21,7 +21,9 @@ def _jwt(username: str, role: str = "user") -> str:
     payload = {
         "sub": username,
         "role": role,
+        "type": "access",
         "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+        "iat": datetime.now(timezone.utc),
     }
     return pyjwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
@@ -159,3 +161,150 @@ def test_create_user_requires_strong_password(api):
         headers=headers,
     )
     assert weak.status_code == 400
+
+
+# ---------------------------------------------------------------------------
+# Feature 2 — Password strength policy
+# ---------------------------------------------------------------------------
+
+
+def test_password_requires_uppercase(api):
+    users_service.create_user("pw_upper", "lowercase!1", "user")
+    headers = _auth("pw_upper", "user")
+    resp = api.post(
+        "/api/auth/change-password",
+        json={"oldPassword": "lowercase!1", "newPassword": "alllowercase!1"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "大寫" in resp.json()["detail"]
+
+
+def test_password_requires_lowercase(api):
+    users_service.create_user("pw_lower", "ALLUPPER!1", "user")
+    headers = _auth("pw_lower", "user")
+    resp = api.post(
+        "/api/auth/change-password",
+        json={"oldPassword": "ALLUPPER!1", "newPassword": "ALLUPPERCASE!1"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "小寫" in resp.json()["detail"]
+
+
+def test_password_requires_digit(api):
+    users_service.create_user("pw_digit", "NoDigits!a", "user")
+    headers = _auth("pw_digit", "user")
+    resp = api.post(
+        "/api/auth/change-password",
+        json={"oldPassword": "NoDigits!a", "newPassword": "NoDigitsEither!a"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "數字" in resp.json()["detail"]
+
+
+def test_password_requires_special_char(api):
+    users_service.create_user("pw_special", "NoSpecial1a", "user")
+    headers = _auth("pw_special", "user")
+    resp = api.post(
+        "/api/auth/change-password",
+        json={"oldPassword": "NoSpecial1a", "newPassword": "NoSpecialEither1a"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "特殊字元" in resp.json()["detail"]
+
+
+def test_password_cannot_match_username(api):
+    # Use a username that itself meets password complexity requirements
+    users_service.create_user("Pw_Match1!", "Old!Pass123", "user")
+    headers = _auth("Pw_Match1!", "user")
+    resp = api.post(
+        "/api/auth/change-password",
+        json={"oldPassword": "Old!Pass123", "newPassword": "Pw_Match1!"},
+        headers=headers,
+    )
+    assert resp.status_code == 400
+    assert "使用者名稱" in resp.json()["detail"]
+
+
+# ---------------------------------------------------------------------------
+# Feature 3 — Token Refresh
+# ---------------------------------------------------------------------------
+
+
+def test_login_sets_refresh_cookie(api):
+    users_service.create_user("refresh_user", STRONG_PASSWORD, "user")
+    resp = api.post("/api/auth/login", json={
+        "username": "refresh_user", "password": STRONG_PASSWORD
+    })
+    assert resp.status_code == 200
+    assert "refresh_token" in resp.cookies
+
+
+def test_refresh_token_issues_new_access(api):
+    users_service.create_user("refresh_user2", STRONG_PASSWORD, "user")
+    login = api.post("/api/auth/login", json={
+        "username": "refresh_user2", "password": STRONG_PASSWORD
+    })
+    refresh_cookie = login.cookies.get("refresh_token")
+    resp = api.post("/api/auth/refresh", cookies={"refresh_token": refresh_cookie})
+    assert resp.status_code == 200
+    assert "token" in resp.json()
+
+
+def test_refresh_without_cookie_returns_401(api):
+    resp = api.post("/api/auth/refresh")
+    assert resp.status_code == 401
+
+
+def test_logout_clears_refresh_cookie(api):
+    resp = api.post("/api/auth/logout")
+    assert resp.status_code == 200
+    assert resp.json()["success"] is True
+
+
+# ---------------------------------------------------------------------------
+# Feature 5 — Audit logging
+# ---------------------------------------------------------------------------
+
+
+def test_login_failure_logged(api):
+    users_service.create_user("log_test", STRONG_PASSWORD, "user")
+    api.post("/api/auth/login", json={"username": "log_test", "password": "wrong"})
+    from app.services.audit import get_logs, LOGIN_FAILURE
+    logs = get_logs(event_type=LOGIN_FAILURE, actor="log_test")
+    assert len(logs) >= 1
+    assert logs[0]["event"] == LOGIN_FAILURE
+
+
+def test_password_change_logged(api):
+    users_service.create_user("pw_log", "Old!Pass123", "user")
+    headers = _auth("pw_log", "user")
+    api.post("/api/auth/change-password", json={
+        "oldPassword": "Old!Pass123", "newPassword": "New!Pass456"
+    }, headers=headers)
+    from app.services.audit import get_logs, PASSWORD_CHANGE
+    logs = get_logs(event_type=PASSWORD_CHANGE, actor="pw_log")
+    assert len(logs) >= 1
+
+
+def test_admin_reset_password_logged(api):
+    users_service.create_user("admin_log", STRONG_PASSWORD, "admin")
+    users_service.create_user("target_user", "Old!Pass123", "user")
+    headers = _auth("admin_log", "admin")
+    api.put("/api/auth/users/target_user/password", json={
+        "newPassword": "Reset!Pass123"
+    }, headers=headers)
+    from app.services.audit import get_logs, PASSWORD_RESET
+    logs = get_logs(event_type=PASSWORD_RESET, target="target_user")
+    assert len(logs) >= 1
+    assert logs[0]["actor"] == "admin_log"
+
+
+def test_audit_logs_requires_admin(api):
+    users_service.create_user("regular", STRONG_PASSWORD, "user")
+    headers = _auth("regular", "user")
+    resp = api.get("/api/auth/audit-logs", headers=headers)
+    assert resp.status_code == 403

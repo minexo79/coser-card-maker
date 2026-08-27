@@ -44,14 +44,15 @@ settings.uploads_dir.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="CCM Backend", version="1.0.0", lifespan=lifespan)
 
+
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(BodySizeLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["x-api-token", "content-type", "authorization"],
+    allow_headers=["content-type", "authorization"],
 )
 
 app.include_router(ping.router)

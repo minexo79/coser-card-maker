@@ -10,7 +10,6 @@ load_dotenv()
 
 
 class Settings:
-    api_token: str = os.getenv("API_TOKEN", "dev-token")
     allowed_origins: list[str] = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(",")
     data_dir: Path = Path(os.getenv("DATA_DIR", str(BASE_DIR / "data")))
     uploads_dir: Path = Path(os.getenv("UPLOADS_DIR", str(BASE_DIR / "uploads")))
@@ -22,6 +21,7 @@ class Settings:
     # JWT auth
     jwt_secret: str = os.getenv("JWT_SECRET", "")
     jwt_expiry_minutes: int = int(os.getenv("JWT_EXPIRY_MINUTES", "30"))
+    jwt_refresh_expiry_days: int = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "7"))
 
     # Initial admin account
     admin_username: str = os.getenv("ADMIN_USERNAME", "admin")

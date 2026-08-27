@@ -9,7 +9,6 @@ const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = auth.getToken();
     if (!token) {
-      // Token is null — nothing to validate, loading stays false via initial state
       return;
     }
     let cancelled = false;
@@ -20,10 +19,21 @@ const AuthProvider = ({ children }) => {
           auth.setStoredUser(me);
         }
       })
-      .catch(() => {
-        if (!cancelled) {
-          auth.clearToken();
-          setUser(null);
+      .catch(async () => {
+        if (cancelled) return;
+        // Access token expired, try refresh
+        try {
+          await auth.refreshAccessToken();
+          const me = await auth.getMe();
+          if (!cancelled) {
+            setUser(me);
+            auth.setStoredUser(me);
+          }
+        } catch {
+          if (!cancelled) {
+            auth.clearToken();
+            setUser(null);
+          }
         }
       })
       .finally(() => {
@@ -39,7 +49,7 @@ const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(() => {
-    auth.clearToken();
+    auth.logout();
     setUser(null);
   }, []);
 

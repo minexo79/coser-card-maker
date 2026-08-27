@@ -11,8 +11,6 @@ describe('services/api', () => {
 
   beforeEach(() => {
     localStorage.clear();
-    // 隔離本機 .env 的預設 token，避免影響 header 相關斷言
-    vi.stubEnv('VITE_API_TOKEN', '');
     fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
   });
@@ -39,10 +37,10 @@ describe('services/api', () => {
     expect(init.method).toBe('GET');
   });
 
-  it('saveCard() 應以 POST JSON 呼叫 /api/cards，並帶 x-api-token header', async () => {
+  it('saveCard() 應以 POST JSON 呼叫 /api/cards，並帶 Authorization header', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: 'abc123' }, 201));
+    localStorage.setItem('ccm_jwt', 'test-jwt-token');
     const api = await setupApi();
-    api.setToken('secret-token');
 
     const payload = { dayCount: 2 };
     const result = await api.saveCard(payload);
@@ -51,7 +49,7 @@ describe('services/api', () => {
     expect(result).toEqual({ id: 'abc123' });
     expect(url).toBe('/api/cards');
     expect(init.method).toBe('POST');
-    expect(new Headers(init.headers).get('x-api-token')).toBe('secret-token');
+    expect(new Headers(init.headers).get('authorization')).toBe('Bearer test-jwt-token');
     expect(new Headers(init.headers).get('content-type')).toBe('application/json');
     expect(init.body).toBe(JSON.stringify(payload));
   });
@@ -68,6 +66,7 @@ describe('services/api', () => {
 
   it('uploadImage(file) 應以 FormData POST /api/uploads，並回傳相對路徑（不含 BASE_URL）', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ url: '/uploads/abc.png' }));
+    localStorage.setItem('ccm_jwt', 'test-jwt-token');
     const api = await setupApi();
     const file = new File(['x'], 'a.png', { type: 'image/png' });
 
@@ -80,46 +79,14 @@ describe('services/api', () => {
     expect(url).toBe('/uploads/abc.png');
   });
 
-  it('未帶 token 時不應有 x-api-token header', async () => {
+  it('未帶 JWT token 時不應有 Authorization header', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: 'x' }, 201));
     const api = await setupApi();
 
     await api.saveCard({});
 
     const [, init] = fetchMock.mock.calls[0];
-    expect(new Headers(init.headers).get('x-api-token')).toBeNull();
-  });
-
-  it('VITE_API_TOKEN 應作為預設 token（localStorage 無值時）', async () => {
-    vi.stubEnv('VITE_API_TOKEN', 'env-token');
-    fetchMock.mockResolvedValue(jsonResponse({ id: 'x' }, 201));
-    const api = await setupApi();
-
-    expect(api.getToken()).toBe('env-token');
-
-    await api.saveCard({});
-    const [, init] = fetchMock.mock.calls[0];
-    expect(new Headers(init.headers).get('x-api-token')).toBe('env-token');
-  });
-
-  it('VITE_API_TOKEN 存在時應優先於 localStorage 手動輸入的 token', async () => {
-    vi.stubEnv('VITE_API_TOKEN', 'env-token');
-    const api = await setupApi();
-    api.setToken('manual-token');
-
-    expect(api.getToken()).toBe('env-token');
-  });
-
-  it('VITE_API_TOKEN 未設定時應使用 localStorage 手動輸入的 token', async () => {
-    const api = await setupApi();
-    api.setToken('manual-token');
-
-    expect(api.getToken()).toBe('manual-token');
-
-    fetchMock.mockResolvedValue(jsonResponse({ id: 'x' }, 201));
-    await api.saveCard({});
-    const [, init] = fetchMock.mock.calls[0];
-    expect(new Headers(init.headers).get('x-api-token')).toBe('manual-token');
+    expect(new Headers(init.headers).get('authorization')).toBeNull();
   });
 
   it('HTTP 錯誤應拋出帶 status 屬性的錯誤', async () => {
@@ -177,8 +144,8 @@ describe('services/api', () => {
 
   it('saveEventTemplate(id, template) 應以 PUT JSON 呼叫 /api/events/{id}', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ dayCount: 1 }));
+    localStorage.setItem('ccm_jwt', 'test-jwt-token');
     const api = await setupApi();
-    api.setToken('secret-token');
 
     const template = { dayCount: 1, startDate: '2026-05-23', overWriteCanvas: {} };
     await api.saveEventTemplate('demo', template);
@@ -186,7 +153,7 @@ describe('services/api', () => {
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe('/api/events/demo');
     expect(init.method).toBe('PUT');
-    expect(new Headers(init.headers).get('x-api-token')).toBe('secret-token');
+    expect(new Headers(init.headers).get('authorization')).toBe('Bearer test-jwt-token');
     expect(init.body).toBe(JSON.stringify(template));
   });
 

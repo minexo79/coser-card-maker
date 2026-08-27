@@ -1,4 +1,4 @@
-"""POST /api/cards (token) and GET /api/cards/{id} (public)."""
+"""POST /api/cards (JWT) and GET /api/cards/{id} (public)."""
 
 import json
 
@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, ValidationError
 
 from app.core.config import get_settings
-from app.core.security import require_token
+from app.core.security import require_jwt_write
 from app.services import storage
 
 router = APIRouter(prefix="/api/cards", tags=["cards"])
@@ -28,7 +28,7 @@ class CardPayload(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_card(request: Request, _: None = Depends(require_token)) -> dict:
+async def create_card(request: Request, token_payload: dict = Depends(require_jwt_write)) -> dict:
     body = await request.body()
     if len(body) > get_settings().max_card_payload_bytes:
         raise HTTPException(status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE, detail="Payload too large")
@@ -43,7 +43,8 @@ async def create_card(request: Request, _: None = Depends(require_token)) -> dic
     except ValidationError:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload")
 
-    record = storage.save_card(payload.model_dump())
+    username = token_payload.get("sub")
+    record = storage.save_card(payload.model_dump(), created_by=username)
     return {"id": record["id"]}
 
 

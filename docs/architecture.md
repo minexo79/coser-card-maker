@@ -52,21 +52,20 @@ ccm/
 │   │   │   ├── useImageLayerRenderer.js  # 角色圖片狀態 + Canvas 繪製
 │   │   │   └── useTools.js               # 共用庫
 │   │   ├── services/
-│   │   │   └── api.js                    # API client（相對路徑 + token）
+│   │   │   └── api.js                    # API client（相對路徑 + JWT）
 │   │   ├── utils/
 │   │   │   └── cardPayload.js            # 卡片 payload 序列化純函式
 │   │   ├── models/
 │   │   │   ├── cardTemplates.js          # 1p~4p 模板設定
 │   │   │   └── oemCardTemplates.js       # 客製化模板
 │   │   └── __tests__/                    # vitest 測試（components/hooks/models/services/utils）
-│   ├── .env.example                      # VITE_API_TOKEN 範例
 │   └── （建置設定檔略）
 ├── backend/
 │   ├── app/
 │   │   ├── main.py                       # FastAPI 入口 + CORS + StaticFiles
 │   │   ├── core/
 │   │   │   ├── config.py                 # pydantic-settings 環境設定
-│   │   │   └── security.py               # x-api-token 驗證（compare_digest）
+│   │   │   └── security.py               # JWT Bearer 驗證（require_jwt_write）
 │   │   ├── routers/
 │   │   │   ├── ping.py                   # GET /api/ping
 │   │   │   ├── cards.py                  # POST /api/cards、GET /api/cards/{id}
@@ -75,7 +74,7 @@ ccm/
 │   │       └── storage.py                # cards.json 原子讀寫
 │   ├── tests/                            # pytest 測試
 │   ├── requirements.txt
-│   ├── .env.example                      # API_TOKEN、ALLOWED_ORIGINS
+│   ├── .env.example                      # JWT_SECRET、ALLOWED_ORIGINS
 │   ├── data/cards.json                   # 卡片索引（執行期生成）
 │   └── uploads/                          # 上傳圖片（執行期生成）
 ├── README.md                             # monorepo 總覽
@@ -133,11 +132,11 @@ ccm/
 #### services/api.js
 
 - 所有 API 請求使用相對路徑（/api/...、/uploads/...），本地開發由 Vite proxy 轉發，正式環境由 Vercel rewrite 轉發，無需設定後端網址。
-- request() 統一附加 `x-api-token` header（存在時），非 2xx 拋出帶 status 的錯誤。
+- request() 統一附加 `Authorization: Bearer <JWT>` header（存在時），非 2xx 拋出帶 status 的錯誤；收到 401 時自動嘗試以 refresh token 換新 token 後重試。
 - uploadImage() 回傳相對路徑（`/uploads/...`）；卡片/事件模板僅儲存相對路徑，
   顯示時由 `resolveAssetUrl()` 組合 BASE_URL（後端搬家不需改歷史資料；
   `./img/...` 屬前端模板資源，不補 BASE_URL；完整網址原樣使用以相容舊資料）。
-- 提供 ping / saveCard / loadCard / uploadImage / resolveAssetUrl 與 getToken/setToken/clearToken。
+- 提供 ping / saveCard / loadCard / uploadImage / resolveAssetUrl 與 JWT 相關函式（登入、登出、refresh）。
 
 #### utils/cardPayload.js
 
@@ -165,21 +164,21 @@ ccm/
 
 #### routers/cards.py
 
-- `POST /api/cards`（Token）：讀原始 body 做 5MB 上限檢查（413）→ pydantic
+- `POST /api/cards`（JWT）：讀原始 body 做 5MB 上限檢查（413）→ pydantic
   CardPayload 白名單驗證（未知欄位自動剝除）→ storage.save_card() → 回 `{ id }`。
 - `GET /api/cards/{id}`（公開）：回完整紀錄；不存在回 404。
 
 #### routers/uploads.py
 
-- `POST /api/uploads`（Token）：multipart 欄位 `file`；
+- `POST /api/uploads`（JWT）：multipart 欄位 `file`；
   content-type 白名單（png/jpeg/webp/gif，否則 415）；串流上限 5MB（否則 413）；
   以 `uuid4().hex` 生成檔名（不信任原始檔名）→ 回 `{ url:'/uploads/<name>' }`。
 
 #### core/security.py + core/config.py
 
-- require_token相依性：比對 `x-api-token` 與環境變數 API_TOKEN（secrets.compare_digest）。
-- Settings（pydantic-settings）：API_TOKEN、ALLOWED_ORIGINS、DATA_DIR、UPLOADS_DIR、
-  MAX_UPLOAD_BYTES、MAX_CARD_PAYLOAD_BYTES，可由 .env 覆寫。
+- require_jwt_write 相依性：解析 `Authorization: Bearer <JWT>`，驗證簽章與 `type=access`。
+- Settings（環境變數）：JWT_SECRET、ALLOWED_ORIGINS、DATA_DIR、UPLOADS_DIR，
+  可由 .env 覆寫。
 
 #### services/storage.py
 
@@ -199,7 +198,7 @@ ccm/
   → 伺服器驗 MIME/大小、生成 UUID 檔名 → 回傳 /uploads/<uuid>.<ext>
   → URL 寫入 imageDatas / BaseImageData → 觸發重繪
 
-【儲存】儲存按鈕 → buildCardPayload() → POST /api/cards（x-api-token）
+【儲存】儲存按鈕 → buildCardPayload() → POST /api/cards（JWT）
   → cards.json 原子寫入 → 回 { id } → 顯示分享連結 /card/:id
 
 【載入】開啟 /card/:id 或輸入 ID → GET /api/cards/:id
@@ -282,7 +281,7 @@ python -m pytest tests -v
 
 | 環境變數 | 預設 | 說明 |
 |---|---|---|
-| API_TOKEN | dev-token | 寫入操作共用 token |
+| JWT_SECRET | (空) | JWT 簽章密鑰（需自行設定） |
 | ALLOWED_ORIGINS | * | CORS 白名單（逗號分隔） |
 | DATA_DIR | backend/data | cards.json 位置 |
 | UPLOADS_DIR | backend/uploads | 圖片儲存位置 |

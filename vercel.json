@@ -9,6 +9,7 @@
     }
   },
   "rewrites": [
+    { "source": "/uploads/(.*)", "destination": { "service": "my_backend" } },
     { "source": "/api/(.*)", "destination": { "service": "my_backend" } },
     { "source": "/(.*)", "destination": { "service": "my_frontend" } }
   ]

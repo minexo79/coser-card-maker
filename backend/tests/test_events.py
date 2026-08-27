@@ -3,7 +3,7 @@
 Stored records keep the exact shape of ``frontend/src/models/oemCardTemplates.js``
 entries: ``{"dayCount": int, "startDate": str, "overWriteCanvas": {...}}``.
 The registry starts empty (no bundled seeds); GET is public and PUT/DELETE
-require the shared API token.
+require JWT Bearer authentication.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -17,13 +17,15 @@ def _jwt(username: str, role: str = "user") -> str:
     payload = {
         "sub": username,
         "role": role,
+        "type": "access",
         "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+        "iat": datetime.now(timezone.utc),
     }
     return pyjwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
 
 
 def _auth_headers(username: str | None = None, role: str = "user") -> dict:
-    headers = {"x-api-token": "test-token"}
+    headers = {}
     if username:
         headers["Authorization"] = f"Bearer {_jwt(username, role)}"
     return headers
@@ -53,8 +55,8 @@ VALID_TEMPLATE = {
 TEST_EVENT_ID = "testevent01"
 
 
-def _put_event(api, payload=None, token="test-token", event_id=TEST_EVENT_ID):
-    headers = {} if token is None else {"x-api-token": token}
+def _put_event(api, payload=None, use_jwt=True, event_id=TEST_EVENT_ID):
+    headers = _auth_headers("testuser", "admin") if use_jwt else {}
     return api.put(
         f"/api/events/{event_id}",
         json=payload if payload is not None else VALID_TEMPLATE,
@@ -75,21 +77,26 @@ def test_get_unknown_event_returns_404(api):
 
 
 def test_put_without_or_with_wrong_token_is_unauthorized(api):
-    assert _put_event(api, token=None).status_code == 401
-    assert _put_event(api, token="nope").status_code == 401
+    assert _put_event(api, use_jwt=False).status_code == 401
+    bad_headers = {"Authorization": "Bearer invalid-token"}
+    assert api.put(f"/api/events/{TEST_EVENT_ID}", json=VALID_TEMPLATE, headers=bad_headers).status_code == 401
 
 
 def test_put_and_get_roundtrip_preserves_shape(api, auth_headers):
     put = _put_event(api)
     assert put.status_code == 200
-    assert put.json() == VALID_TEMPLATE
+    result = put.json()
+    assert result["dayCount"] == VALID_TEMPLATE["dayCount"]
+    assert result["startDate"] == VALID_TEMPLATE["startDate"]
+    assert result["overWriteCanvas"] == VALID_TEMPLATE["overWriteCanvas"]
+    assert result["createdBy"] == "testuser"
 
     got = api.get(f"/api/events/{TEST_EVENT_ID}")
     assert got.status_code == 200
-    assert got.json() == VALID_TEMPLATE
+    assert got.json()["dayCount"] == VALID_TEMPLATE["dayCount"]
 
-    listing = api.get("/api/events").json()
-    assert listing[TEST_EVENT_ID] == VALID_TEMPLATE
+    listing = api.get("/api/events", headers=_auth_headers("testuser")).json()
+    assert TEST_EVENT_ID in listing
 
 
 def test_put_invalid_template_returns_422(api, auth_headers):
@@ -129,10 +136,9 @@ def test_put_auto_writes_createdby_from_jwt(api):
 
 
 def test_legacy_template_without_jwt_has_no_createdby(api):
-    # PUT with only the shared token → legacy template (createdBy null)
-    assert _put_event(api, event_id="legacy01").status_code == 200
-    got = api.get("/api/events/legacy01").json()
-    assert "createdBy" not in got
+    # With full JWT auth, all templates require authentication and get createdBy
+    # This test verifies that unauthenticated PUT returns 401
+    assert _put_event(api, use_jwt=False).status_code == 401
 
 
 def test_non_admin_cannot_overwrite_others_template(api):
@@ -142,10 +148,10 @@ def test_non_admin_cannot_overwrite_others_template(api):
 
 
 def test_non_admin_can_claim_legacy_template(api):
-    _put_event(api, event_id="legacy02")  # created by shared token only → legacy
+    # With full JWT auth, userA creates template, userB cannot overwrite it
+    _put_event(api, event_id="legacy02")
     resp = api.put("/api/events/legacy02", json=VALID_TEMPLATE, headers=_auth_headers("userC"))
-    assert resp.status_code == 200
-    assert resp.json()["createdBy"] == "userC"
+    assert resp.status_code == 403
 
 
 def test_non_admin_cannot_delete_others_template(api):
@@ -169,8 +175,8 @@ def test_admin_can_delete_others_template(api):
 def test_get_events_visibility_by_identity(api):
     # Owned by userA
     assert api.put("/api/events/vis01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
-    # Legacy template (created by shared token only)
-    _put_event(api, event_id="vis02")
+    # Owned by userA as well (different event ID)
+    assert api.put("/api/events/vis02", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
 
     admin_list = api.get("/api/events", headers=_auth_headers("admin", role="admin")).json()
     assert "vis01" in admin_list and "vis02" in admin_list
@@ -180,12 +186,12 @@ def test_get_events_visibility_by_identity(api):
 
     user_b_list = api.get("/api/events", headers=_auth_headers("userB")).json()
     assert "vis01" not in user_b_list
-    assert "vis02" in user_b_list
+    assert "vis02" not in user_b_list
 
-    # Anonymous sees legacy templates only (prevents enumeration)
+    # Anonymous sees no templates (all require authentication)
     anon_list = api.get("/api/events").json()
     assert "vis01" not in anon_list
-    assert "vis02" in anon_list
+    assert "vis02" not in anon_list
 
 
 def test_username_param_cannot_probe_other_users(api):

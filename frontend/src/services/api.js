@@ -1,13 +1,11 @@
 // Thin API client for the CCM backend.
 // All requests use relative paths (/api/..., /uploads/...); local dev uses
 // Vite proxy, production uses Vercel rewrite — no hardcoded backend URL needed.
-// Write operations are authenticated with a shared token kept in localStorage.
-// VITE_API_TOKEN provides the default token at build time; note that any
-// VITE_* variable is bundled into the shipped JS and readable by clients.
+// Write operations are authenticated via JWT Bearer tokens.
+// Automatic refresh: when a 401 is received, the client attempts to refresh
+// the access token using the httpOnly refresh token cookie.
 
-// Vite 只會暴露 VITE_ 前綴的變數給瀏覽器程式碼。
-const ENV_API_TOKEN = import.meta.env.VITE_API_TOKEN || '';
-const TOKEN_STORAGE_KEY = import.meta.env.VITE_TOKEN_STORAGE_KEY || 'ccm_api_token';
+import { getToken, clearToken, refreshAccessToken } from './auth';
 
 // 把資源路徑組合成可載入的網址：
 // - 後端資源（以 / 開頭，如 /uploads/x.png）→ 原樣保留（相對路徑，proxy 或 rewrite 處理）。
@@ -19,57 +17,59 @@ export function resolveAssetUrl(path) {
   return path;
 }
 
-export function getToken() {
-  // .env 打包進去的預設 token 優先；否則使用使用者手動輸入（prompt）存的值
-  return ENV_API_TOKEN || safeGetStoredToken();
-}
+let isRefreshing = false;
+let failedQueue = [];
 
-function safeGetStoredToken() {
-  try {
-    return localStorage.getItem(TOKEN_STORAGE_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setToken(token) {
-  localStorage.setItem(TOKEN_STORAGE_KEY, token);
-}
-
-export function clearToken() {
-  localStorage.removeItem(TOKEN_STORAGE_KEY);
-}
-
-const JWT_STORAGE_KEY = 'ccm_jwt';
-
-function getJwtToken() {
-  try {
-    return localStorage.getItem(JWT_STORAGE_KEY);
-  } catch {
-    return null;
-  }
+function processQueue(error, token = null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    error ? reject(error) : resolve(token);
+  });
+  failedQueue = [];
 }
 
 async function request(path, options = {}) {
   const headers = new Headers(options.headers || {});
 
-  // JWT auth (user identity)
-  const jwt = getJwtToken();
-  if (jwt) {
-    headers.set('Authorization', `Bearer ${jwt}`);
-  }
-
-  // Legacy shared token (write operations)
   const token = getToken();
   if (token) {
-    headers.set('x-api-token', token);
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   const response = await fetch(path, {
     ...options,
     method: options.method || 'GET',
-    headers
+    headers,
   });
+
+  // If 401 and we have a stored token, try refresh
+  if (response.status === 401 && token && !path.includes('/api/auth/')) {
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        const newToken = await refreshAccessToken();
+        isRefreshing = false;
+        processQueue(null, newToken);
+        headers.set('Authorization', `Bearer ${newToken}`);
+        return fetch(path, { ...options, headers });
+      } catch (err) {
+        processQueue(err);
+        isRefreshing = false;
+        clearToken();
+        window.location.href = '/login';
+        throw err;
+      }
+    }
+    // Queue concurrent requests while refreshing
+    return new Promise((resolve, reject) => {
+      failedQueue.push({
+        resolve: (newToken) => {
+          headers.set('Authorization', `Bearer ${newToken}`);
+          resolve(fetch(path, { ...options, headers }));
+        },
+        reject,
+      });
+    });
+  }
 
   if (!response.ok) {
     let detail = null;

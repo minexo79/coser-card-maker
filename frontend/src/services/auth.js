@@ -48,6 +48,7 @@ async function authRequest(path, options = {}) {
     ...options,
     method: options.method || 'GET',
     headers,
+    credentials: 'same-origin',
   });
 
   if (!response.ok) {
@@ -72,6 +73,29 @@ export async function login(username, password) {
   setToken(data.token);
   setStoredUser(data.user);
   return data;
+}
+
+export async function refreshAccessToken() {
+  const res = await fetch('/api/auth/refresh', {
+    method: 'POST',
+    credentials: 'same-origin',
+  });
+  if (!res.ok) {
+    clearToken();
+    throw new Error('Token refresh failed');
+  }
+  const data = await res.json();
+  setToken(data.token);
+  setStoredUser(data.user);
+  return data.token;
+}
+
+export async function logout() {
+  await fetch('/api/auth/logout', {
+    method: 'POST',
+    credentials: 'same-origin',
+  }).catch(() => {});
+  clearToken();
 }
 
 export async function getMe() {
@@ -107,4 +131,8 @@ export async function resetUserPassword(username, newPassword) {
     method: 'PUT',
     body: JSON.stringify({ newPassword }),
   });
+}
+
+export async function listAuditLogs(limit = 100) {
+  return authRequest(`/api/auth/audit-logs?limit=${limit}`);
 }

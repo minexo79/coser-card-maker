@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useMemo } from 'react';
 import { getCurrentDateString, getDayIndexFromKey } from './useTools.js';
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 import { createImageLayerRenderer } from './useImageLayerRenderer.js';
+import { getToken } from '../services/auth.js';
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { buildCardPayload, applyCardPayload } from '../utils/cardPayload.js';
@@ -264,14 +265,9 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   }, [updateDayDetail]);
 
   const ensureApiToken = useCallback(() => {
-    if (api.getToken()) return true;
-    const token = window.prompt('請輸入後端 API Token：');
-    if (!token) {
-      alert('未設定 API Token，無法執行儲存操作。');
-      return false;
-    }
-    api.setToken(token);
-    return true;
+    if (getToken()) return true;
+    alert('請先登入後再執行儲存操作。');
+    return false;
   }, []);
 
   // 每日照片僅用於本機畫布顯示，不上傳後端，直接以 object URL 呈現。

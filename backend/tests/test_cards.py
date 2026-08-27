@@ -35,7 +35,7 @@ VALID_PAYLOAD = {
 
 
 def _post_card(api, payload=None, token="test-token"):
-    headers = {} if token is None else {"x-api-token": token}
+    headers = {} if token is None else {"Authorization": f"Bearer {token}"}
     return api.post("/api/cards", json=payload if payload is not None else VALID_PAYLOAD, headers=headers)
 
 

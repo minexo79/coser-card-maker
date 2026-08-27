@@ -12,7 +12,7 @@ describe('components/templateEditor/TemplateEditor', () => {
         </MemoryRouter>
       );
     });
-    expect(screen.getByText(/卡片版面編輯器/)).toBeTruthy();
+    expect(screen.getByText(/模板編輯器/)).toBeTruthy();
     expect(screen.getByTestId('template-day-count')).toBeTruthy();
     // 應以空白為起點，不是內建模板
     expect(screen.getByText(/從空白開始/)).toBeTruthy();

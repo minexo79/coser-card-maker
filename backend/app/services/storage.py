@@ -47,7 +47,7 @@ def _write_cards(cards: dict) -> None:
             os.remove(tmp_path)
 
 
-def save_card(payload: dict) -> dict:
+def save_card(payload: dict, created_by: str | None = None) -> dict:
     with _lock:
         card_id = uuid4().hex[:12]
         now = _now_iso()
@@ -58,6 +58,8 @@ def save_card(payload: dict) -> dict:
             "updatedAt": now,
             "payload": payload,
         }
+        if created_by:
+            record["createdBy"] = created_by
         cards = _read_cards()
         cards[card_id] = record
         _write_cards(cards)

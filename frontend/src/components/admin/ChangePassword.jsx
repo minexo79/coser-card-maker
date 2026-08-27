@@ -9,6 +9,14 @@ const ChangePassword = () => {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const strengthChecks = [
+    { label: '至少 8 個字元', test: (p) => p.length >= 8 },
+    { label: '至少一個大寫字母', test: (p) => /[A-Z]/.test(p) },
+    { label: '至少一個小寫字母', test: (p) => /[a-z]/.test(p) },
+    { label: '至少一個數字', test: (p) => /[0-9]/.test(p) },
+    { label: '至少一個特殊字元', test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(p) },
+  ];
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -16,10 +24,6 @@ const ChangePassword = () => {
 
     if (newPassword !== confirmPassword) {
       setError('新密碼與確認密碼不一致');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setError('密碼至少需要 8 個字元');
       return;
     }
 
@@ -60,6 +64,15 @@ const ChangePassword = () => {
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
           />
+          {newPassword && (
+            <ul className="text-xs text-gray-500 mt-1 space-y-0.5">
+              {strengthChecks.map(({ label, test }) => (
+                <li key={label} className={test(newPassword) ? 'text-green-600' : ''}>
+                  {label}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">確認新密碼</label>

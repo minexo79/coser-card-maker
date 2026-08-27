@@ -20,7 +20,6 @@ ccm/
 ```bash
 cd frontend
 npm install
-cp .env.example .env   # 設定 API_TOKEN 等環境變數
 npm run dev            # http://localhost:5173
 ```
 
@@ -31,7 +30,7 @@ cd backend
 conda create -n ccm-backend python=3.12 -y
 conda activate ccm-backend
 pip install -r requirements.txt
-cp .env.example .env   # 設定 API_TOKEN 與 ALLOWED_ORIGINS
+cp .env.example .env   # 設定 JWT_SECRET 與 ALLOWED_ORIGINS
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -63,3 +62,7 @@ python -m pytest tests -v
 ## 參考
 
 - [雲緣起活動網站前端 - YAF_web](https://github.com/YunlinAnimeFestival/YAF_web)
+
+## 協議
+
+本專案採用 [MIT License](./LICENSE) 授權
