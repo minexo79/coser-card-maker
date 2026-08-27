@@ -1,12 +1,31 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import { Home, Activity, Shield, LogIn, LogOut, Menu, X } from 'lucide-react';
+import { Home, Activity, Shield, LogIn, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import * as api from '../services/api.js';
 
 const NavBar = () => {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [eventTemplates, setEventTemplates] = useState([]);
+
+  useEffect(() => {
+    api.getEventList()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          setEventTemplates(data);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleEventChange = (eventId) => {
+    if (eventId) {
+      navigate(`/${eventId}`);
+    }
+  };
 
   const navItems = [
     { to: '/', label: '首頁', icon: Home, active: pathname === '/' },
@@ -26,7 +45,7 @@ const NavBar = () => {
     }`;
 
   return (
-    <nav className="sticky top-0 z-50 bg-orange-50">
+    <nav className="sticky top-0 z-50 bg-amber-50  honeycomb-bg">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="./favicon.ico" alt="Logo" className="w-8 h-8" />
@@ -35,6 +54,23 @@ const NavBar = () => {
 
         {/* Desktop menu */}
         <ul className="hidden md:flex items-center gap-2">
+          {eventTemplates.length > 0 && (
+            <li>
+              <div className="relative">
+                <select
+                  onChange={(e) => handleEventChange(e.target.value)}
+                  defaultValue=""
+                  className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 hover:border-orange-400 input-focus transition-all duration-200 cursor-pointer"
+                >
+                  <option value="" disabled>選擇活動</option>
+                  {eventTemplates.map((eventId) => (
+                    <option key={eventId} value={eventId}>{eventId}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              </div>
+            </li>
+          )}
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
@@ -79,6 +115,23 @@ const NavBar = () => {
       {/* Mobile dropdown */}
       {mobileOpen && (
         <ul className="md:hidden px-4 pb-3 space-y-1 border-t border-gray-100">
+          {eventTemplates.length > 0 && (
+            <li>
+              <div className="relative">
+                <select
+                  onChange={(e) => { handleEventChange(e.target.value); setMobileOpen(false); }}
+                  defaultValue=""
+                  className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 input-focus transition-all duration-200 cursor-pointer"
+                >
+                  <option value="" disabled>選擇活動</option>
+                  {eventTemplates.map((eventId) => (
+                    <option key={eventId} value={eventId}>{eventId}</option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+              </div>
+            </li>
+          )}
           {navItems.map((item) => {
             const Icon = item.icon;
             return (

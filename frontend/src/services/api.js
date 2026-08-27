@@ -124,6 +124,10 @@ export async function getEventTemplates() {
   return request('/api/events');
 }
 
+export async function getEventList() {
+  return request('/api/events/list');
+}
+
 export async function getEventTemplate(eventId) {
   return request(`/api/events/${encodeURIComponent(eventId)}`);
 }

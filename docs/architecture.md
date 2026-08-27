@@ -289,6 +289,7 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 | POST | `/api/cards` | JWT | 儲存圖卡 → `{id}` |
 | GET | `/api/cards/{card_id}` | 公開 | 讀取圖卡 |
 | GET | `/api/events` | 公開* | 列出活動模板（依身分過濾） |
+| GET | `/api/events/list` | 公開* | 列出活動名稱 |
 | GET | `/api/events/mine` | JWT | 我的模板（含共用模板） |
 | GET | `/api/events/{event_id}` | 公開 | 讀取單一模板 |
 | PUT | `/api/events/{event_id}` | JWT | 建立/覆寫模板（含所有權） |
@@ -426,6 +427,12 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 
 - **認證**：公開／JWT（自動依身分過濾，見 6.1 註）
 - **Response 200**：`{ "<eventId>": { dayCount, startDate, overWriteCanvas, createdBy } }`
+
+
+#### GET /api/events/list
+
+- **認證**：公開
+- **Response 200**：`["<eventId>", "<eventId>", "<eventId>", ...]`
 
 #### GET /api/events/mine
 

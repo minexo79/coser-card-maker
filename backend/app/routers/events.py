@@ -154,6 +154,14 @@ async def read_event_templates(
     return event_templates.list_event_templates(public_only=True)
 
 
+# --- Lightweight event list for homepage combobox ---
+
+@router.get("/list")
+async def list_event_ids() -> list[str]:
+    """Return only event IDs (no template payloads) for the NavBar combobox."""
+    return list(event_templates.list_event_templates().keys())
+
+
 # --- GET /api/events/mine (auto-filter from JWT) ---
 
 @router.get("/mine")
