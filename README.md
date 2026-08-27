@@ -58,7 +58,6 @@ python -m pytest tests -v
 ## 文件
 
 - 架構與流程詳解：`frontend/doc/architecture.md`
-- 重構計畫：`PLAN.md`
 
 ## 參考
 

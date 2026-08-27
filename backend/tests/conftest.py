@@ -1,11 +1,16 @@
 """Shared fixtures for backend API tests.
 
-Environment variables are configured *before* importing ``app.main`` so that
-settings are picked up from temporary directories instead of real data paths.
+Test-only environment variables are configured at *module import time* —
+before any ``app.*`` module can be imported during test collection — because
+``app.core.config.Settings`` reads its values from the environment at class
+definition time (``api_token = os.getenv(...)`` is evaluated when the class is
+created, not per call). ``load_dotenv()`` also refuses to override keys that
+already exist in the environment.
 """
 
 import os
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -17,21 +22,20 @@ if str(BACKEND_DIR) not in sys.path:
 TEST_TOKEN = "test-token"
 TEST_JWT_SECRET = "test-jwt-secret-for-testing-only"
 
+_TEST_ROOT = Path(tempfile.mkdtemp(prefix="ccm-pytest-data-"))
+
+os.environ["API_TOKEN"] = TEST_TOKEN
+os.environ["ALLOWED_ORIGINS"] = "*"
+os.environ["JWT_SECRET"] = TEST_JWT_SECRET
+os.environ["ADMIN_USERNAME"] = "admin"
+os.environ["ADMIN_PASSWORD"] = "changeme"  # skipped by startup (P-001)
+os.environ["DATA_DIR"] = str(_TEST_ROOT / "data")
+os.environ["UPLOADS_DIR"] = str(_TEST_ROOT / "uploads")
+
 
 @pytest.fixture(scope="session")
-def api(tmp_path_factory):
+def api():
     """TestClient wired to throwaway data/upload directories."""
-    data_dir = tmp_path_factory.mktemp("data")
-    uploads_dir = tmp_path_factory.mktemp("uploads")
-
-    os.environ["API_TOKEN"] = TEST_TOKEN
-    os.environ["DATA_DIR"] = str(data_dir)
-    os.environ["UPLOADS_DIR"] = str(uploads_dir)
-    os.environ["ALLOWED_ORIGINS"] = "*"
-    os.environ["JWT_SECRET"] = TEST_JWT_SECRET
-    os.environ["ADMIN_USERNAME"] = "admin"
-    os.environ["ADMIN_PASSWORD"] = "changeme"  # skipped by startup (P-001)
-
     from fastapi.testclient import TestClient
 
     from app.main import app
@@ -41,7 +45,7 @@ def api(tmp_path_factory):
 
 
 @pytest.fixture(scope="session")
-def uploads_dir():
+def uploads_dir() -> Path:
     return Path(os.environ["UPLOADS_DIR"])
 
 

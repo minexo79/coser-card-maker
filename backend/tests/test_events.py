@@ -6,6 +6,28 @@ The registry starts empty (no bundled seeds); GET is public and PUT/DELETE
 require the shared API token.
 """
 
+from datetime import datetime, timedelta, timezone
+
+import jwt as pyjwt
+
+TEST_JWT_SECRET = "test-jwt-secret-for-testing-only"
+
+
+def _jwt(username: str, role: str = "user") -> str:
+    payload = {
+        "sub": username,
+        "role": role,
+        "exp": datetime.now(timezone.utc) + timedelta(minutes=5),
+    }
+    return pyjwt.encode(payload, TEST_JWT_SECRET, algorithm="HS256")
+
+
+def _auth_headers(username: str | None = None, role: str = "user") -> dict:
+    headers = {"x-api-token": "test-token"}
+    if username:
+        headers["Authorization"] = f"Bearer {_jwt(username, role)}"
+    return headers
+
 VALID_TEMPLATE = {
     "dayCount": 2,
     "startDate": "2026-05-30",
@@ -93,3 +115,95 @@ def test_delete_requires_token_and_removes_entry(api, auth_headers):
     assert api.delete(f"/api/events/{TEST_EVENT_ID}", headers=auth_headers).status_code == 204
     assert api.get(f"/api/events/{TEST_EVENT_ID}").status_code == 404
     assert api.delete(f"/api/events/{TEST_EVENT_ID}", headers=auth_headers).status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 — createdBy ownership & visibility
+# ---------------------------------------------------------------------------
+
+
+def test_put_auto_writes_createdby_from_jwt(api):
+    resp = api.put("/api/events/owned01", json=VALID_TEMPLATE, headers=_auth_headers("userA"))
+    assert resp.status_code == 200
+    assert resp.json()["createdBy"] == "userA"
+
+
+def test_legacy_template_without_jwt_has_no_createdby(api):
+    # PUT with only the shared token → legacy template (createdBy null)
+    assert _put_event(api, event_id="legacy01").status_code == 200
+    got = api.get("/api/events/legacy01").json()
+    assert "createdBy" not in got
+
+
+def test_non_admin_cannot_overwrite_others_template(api):
+    assert api.put("/api/events/shared01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+    resp = api.put("/api/events/shared01", json=VALID_TEMPLATE, headers=_auth_headers("userB"))
+    assert resp.status_code == 403
+
+
+def test_non_admin_can_claim_legacy_template(api):
+    _put_event(api, event_id="legacy02")  # created by shared token only → legacy
+    resp = api.put("/api/events/legacy02", json=VALID_TEMPLATE, headers=_auth_headers("userC"))
+    assert resp.status_code == 200
+    assert resp.json()["createdBy"] == "userC"
+
+
+def test_non_admin_cannot_delete_others_template(api):
+    assert api.put("/api/events/delete01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+    assert api.delete("/api/events/delete01", headers=_auth_headers("userB")).status_code == 403
+    assert api.delete("/api/events/delete01", headers=_auth_headers("userA")).status_code == 204
+
+
+def test_admin_can_edit_and_keeps_original_owner(api):
+    assert api.put("/api/events/admin01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+    resp = api.put("/api/events/admin01", json=VALID_TEMPLATE, headers=_auth_headers("admin", role="admin"))
+    assert resp.status_code == 200
+    assert resp.json()["createdBy"] == "userA"
+
+
+def test_admin_can_delete_others_template(api):
+    assert api.put("/api/events/admin02", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+    assert api.delete("/api/events/admin02", headers=_auth_headers("admin", role="admin")).status_code == 204
+
+
+def test_get_events_visibility_by_identity(api):
+    # Owned by userA
+    assert api.put("/api/events/vis01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+    # Legacy template (created by shared token only)
+    _put_event(api, event_id="vis02")
+
+    admin_list = api.get("/api/events", headers=_auth_headers("admin", role="admin")).json()
+    assert "vis01" in admin_list and "vis02" in admin_list
+
+    user_a_list = api.get("/api/events", headers=_auth_headers("userA")).json()
+    assert "vis01" in user_a_list and "vis02" in user_a_list
+
+    user_b_list = api.get("/api/events", headers=_auth_headers("userB")).json()
+    assert "vis01" not in user_b_list
+    assert "vis02" in user_b_list
+
+    # Anonymous sees legacy templates only (prevents enumeration)
+    anon_list = api.get("/api/events").json()
+    assert "vis01" not in anon_list
+    assert "vis02" in anon_list
+
+
+def test_username_param_cannot_probe_other_users(api):
+    assert api.put("/api/events/probe01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+
+    resp = api.get("/api/events?username=userA", headers=_auth_headers("userB"))
+    assert resp.status_code == 200
+    assert "probe01" not in resp.json()
+
+    anon = api.get("/api/events?username=userA").json()
+    assert "probe01" not in anon
+
+
+def test_events_mine_endpoint(api):
+    assert api.get("/api/events/mine").status_code == 401
+
+    mine = api.get("/api/events/mine", headers=_auth_headers("userA")).json()
+    assert "vis01" in mine and "vis02" in mine
+
+    admin_mine = api.get("/api/events/mine", headers=_auth_headers("admin", role="admin")).json()
+    assert "vis01" in admin_mine

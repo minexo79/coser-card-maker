@@ -72,8 +72,15 @@ async function request(path, options = {}) {
   });
 
   if (!response.ok) {
-    const error = new Error(`API request failed with status ${response.status}`);
+    let detail = null;
+    try {
+      detail = (await response.json()).detail;
+    } catch {
+      /* ignore non-JSON error bodies */
+    }
+    const error = new Error(detail || `API request failed with status ${response.status}`);
     error.status = response.status;
+    error.detail = detail;
     throw error;
   }
 

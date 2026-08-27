@@ -49,14 +49,22 @@ def _write_events(events: dict) -> None:
             os.remove(tmp_path)
 
 
-def list_event_templates(username: str | None = None) -> dict:
-    """List templates, optionally filtered by createdBy.
+def list_event_templates(username: str | None = None, public_only: bool = False) -> dict:
+    """List templates with createdBy-based visibility rules.
 
-    - username=None or role=admin → return all templates
-    - username set → return only templates where createdBy matches or is null/absent
+    - public_only=True (anonymous visitors) → only legacy templates (createdBy null/absent)
+    - username=None, public_only=False → all templates (admin / legacy shared-token path)
+    - username set → only templates where createdBy matches or is null/absent
     """
     with _lock:
         all_templates = _read_events()
+
+    if public_only:
+        return {
+            eid: tmpl
+            for eid, tmpl in all_templates.items()
+            if tmpl.get("createdBy") is None
+        }
 
     if username is None:
         return all_templates

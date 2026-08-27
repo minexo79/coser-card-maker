@@ -1,3 +1,8 @@
+---
+name: card-template-format
+description: Defines the Anicon DIVA CardMaker card template format for creating, reading, and modifying event card layouts across 1–4 day templates.
+---
+
 # Card Template Format Skill
 
 描述 Anicon DIVA CardMaker 中卡片模板的鍵名與含義，適用於所有天數模板（1p~4p）。

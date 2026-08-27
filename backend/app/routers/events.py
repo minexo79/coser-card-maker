@@ -138,13 +138,19 @@ async def read_event_templates(
 ) -> dict:
     jwt_username, jwt_role = _parse_jwt_user(request)
 
-    # Admin sees everything; non-admin sees only their own + null createdBy
+    # Admin sees everything
     if jwt_role == "admin":
         return event_templates.list_event_templates()
 
-    # Explicit ?username= query param (non-admin users only see their own)
-    effective_user = username if username else jwt_username
-    return event_templates.list_event_templates(username=effective_user)
+    # Logged-in non-admin: only their own + legacy (createdBy null) templates.
+    # The explicit ?username= param is ignored so a user cannot probe another
+    # user's template list (Phase 4 isolation).
+    if jwt_username:
+        return event_templates.list_event_templates(username=jwt_username)
+
+    # Anonymous: legacy (createdBy null) templates only — prevents enumerating
+    # templates owned by registered users.
+    return event_templates.list_event_templates(public_only=True)
 
 
 # --- GET /api/events/mine (auto-filter from JWT) ---
@@ -171,7 +177,7 @@ async def read_event_template(event_id: str) -> dict:
     return template
 
 
-# --- PUT with createdBy auto-write ---
+# --- PUT with createdBy auto-write + ownership guard ---
 
 @router.put("/{event_id}", dependencies=[Depends(require_token)])
 async def upsert_event_template(event_id: str, request: Request) -> dict:
@@ -192,13 +198,22 @@ async def upsert_event_template(event_id: str, request: Request) -> dict:
     except ValidationError:
         raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Invalid event template")
 
-    # Auto-write createdBy from JWT
+    # Phase 4 ownership guard: a logged-in non-admin may only modify their own
+    # templates or legacy (createdBy null) templates; requests without JWT keep
+    # the legacy shared-token behavior (PLAN: 保留 x-api-token 機制不變).
     jwt_username, jwt_role = _parse_jwt_user(request)
-    existing_created_by = data.get("createdBy")
+    existing = event_templates.get_event_template(event_id)
+    existing_owner = existing.get("createdBy") if existing else None
+
+    if jwt_username and jwt_role != "admin":
+        if existing_owner is not None and existing_owner != jwt_username:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only edit your own templates")
+
+    # Auto-write createdBy from the caller's identity.
     if jwt_username:
-        # Admin editing others' templates keeps original createdBy
-        if jwt_role == "admin" and existing_created_by and existing_created_by != jwt_username:
-            cleaned["createdBy"] = existing_created_by
+        # Admin editing someone else's template keeps the original owner.
+        if jwt_role == "admin" and existing_owner and existing_owner != jwt_username:
+            cleaned["createdBy"] = existing_owner
         else:
             cleaned["createdBy"] = jwt_username
 
@@ -206,7 +221,16 @@ async def upsert_event_template(event_id: str, request: Request) -> dict:
 
 
 @router.delete("/{event_id}", dependencies=[Depends(require_token)], status_code=status.HTTP_204_NO_CONTENT)
-async def remove_event_template(event_id: str) -> None:
+async def remove_event_template(event_id: str, request: Request) -> None:
     _validate_event_id(event_id)
+
+    # Phase 4 ownership guard (same policy as PUT).
+    jwt_username, jwt_role = _parse_jwt_user(request)
+    if jwt_username and jwt_role != "admin":
+        template = event_templates.get_event_template(event_id)
+        owner = template.get("createdBy") if template else None
+        if template is not None and owner is not None and owner != jwt_username:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You can only delete your own templates")
+
     if not event_templates.delete_event_template(event_id):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event template not found")

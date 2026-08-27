@@ -116,7 +116,7 @@ const TemplateListPage = () => {
       ) : (
         <ul className="divide-y divide-gray-100 rounded-xl border border-gray-200 bg-white shadow-sm">
           {templates.map((template) => (
-            <li key={template.id} className="flex items-center gap-4 px-4 py-3">
+            <li key={template.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 md:flex-nowrap">
               <div className="h-16 w-12 shrink-0 overflow-hidden rounded border border-gray-200 bg-gray-100">
                 {template.overWriteCanvas?.baseImagePath ? (
                   <img
@@ -132,42 +132,55 @@ const TemplateListPage = () => {
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-medium text-gray-800">{template.id}</p>
+                <div className="flex items-center gap-2">
+                  <p className="min-w-0 truncate font-medium text-gray-800">{template.id}</p>
+                  {template.createdBy ? (
+                    <span className="shrink-0 max-w-24 truncate rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-normal text-gray-500" title={`建立者：${template.createdBy}`}>
+                      {template.createdBy}
+                    </span>
+                  ) : (
+                    <span className="shrink-0 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-normal text-emerald-600" title="舊模板，所有人皆可編輯">
+                      共用模板
+                    </span>
+                  )}
+                </div>
                 <p className="mt-0.5 text-xs text-gray-400">
                   {template.dayCount ?? 0} 天
                   {template.startDate ? `・${template.startDate}` : ''}
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleEdit(template.id)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-orange-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-orange-700"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-                編輯
-              </button>
-              <button
-                type="button"
-                onClick={() => handleShare(template.id)}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-600 transition-colors hover:bg-gray-50"
-                title="複製分享連結"
-              >
-                <Share2 className="h-3.5 w-3.5" />
-                分享
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(template.id)}
-                disabled={busyId === template.id}
-                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50"
-              >
-                {busyId === template.id ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Trash2 className="h-3.5 w-3.5" />
-                )}
-              </button>
+              <div className="flex w-full items-center gap-2 md:w-auto md:shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleEdit(template.id)}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 md:flex-none md:py-1.5"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  編輯
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleShare(template.id)}
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-600 transition-colors hover:bg-gray-50 md:flex-none md:py-1.5"
+                  title="複製分享連結"
+                >
+                  <Share2 className="h-3.5 w-3.5" />
+                  分享
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(template.id)}
+                  disabled={busyId === template.id}
+                  className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-sm text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 md:py-1.5"
+                >
+                  {busyId === template.id ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
             </li>
           ))}
         </ul>
