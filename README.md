@@ -57,7 +57,7 @@ python -m pytest tests -v
 
 ## 文件
 
-- 架構與流程詳解：`frontend/doc/architecture.md`
+- 架構與流程詳解：`docs/architecture.md`（含 `docs/architecture.md#6-backend-api-參考` 後端 API 參考）
 
 ## 參考
 

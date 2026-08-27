@@ -26,7 +26,7 @@ const NavBar = () => {
     }`;
 
   return (
-    <nav className="sticky top-0 z-50 bg-white shadow">
+    <nav className="sticky top-0 z-50 bg-orange-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <img src="./favicon.ico" alt="Logo" className="w-8 h-8" />
@@ -68,7 +68,7 @@ const NavBar = () => {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 rounded-lg text-gray-800 hover:bg-gray-200 transition-colors"
+          className="md:hidden p-2 rounded-lg text-gray-800 transition-colors"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label={mobileOpen ? '關閉選單' : '開啟選單'}
         >

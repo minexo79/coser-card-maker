@@ -28,7 +28,7 @@ const OemLayout = () => {
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-200">
+    <div className="min-h-screen bg-orange-50">
       <BrowserRouter>
         <AuthProvider>
           <NavBar />
