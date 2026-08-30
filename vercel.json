@@ -1,7 +1,10 @@
 {
   "services": {
     "my_frontend": {
-      "root": "frontend/"
+      "root": "frontend/",
+      "rewrites": [
+        { "source": "/((?!.*\\.[a-zA-Z0-9]+$).*)", "destination": "/index.html" }
+      ]
     },
     "my_backend": {
       "root": "backend/",
