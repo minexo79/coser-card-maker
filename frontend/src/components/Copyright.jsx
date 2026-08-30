@@ -6,8 +6,10 @@ const Copyright = () => {
     <div className="mb-4">
       <div className="text-center text-sm/6 text-gray-500 mt-8">
         {/* 版權聲明 */}
-        <p className="text-xs mb-1">AniconDIVA CardMaker @ Designed & Developed By Blackcat (XOT).</p>
-        <p className="text-xs mb-1">Figure Vectors by Vecteezy.</p>
+        <p className="text-xs mb-1">AniconDIVA CardMaker</p>
+        <p className="text-xs mb-1">Designed & Developed By Blackcat.</p>
+        <p className="text-xs mb-1 text-gray-400">Default Figure Vectors by Vecteezy.</p>
+        
         {/* GitHub 連結 */}
         <a href="https://github.com/minexo79/coser-card-maker" target="_blank" rel="noopener noreferrer">
           <img src="./github.svg" alt="GitHub" className="inline-block w-6 h-6" />

@@ -87,7 +87,7 @@ const TemplateEditor = () => {
       }
       setIsLoading(true);
       try {
-        const payload = await api.getEventTemplate(trimmed);
+        const payload = await api.getEventTemplate(trimmed, { silent: true });
         loadFromPayload(payload, trimmed);
         setSelectedId(null);
         setSlotImageURLs({});

@@ -1,52 +1,14 @@
-"""event_templates.json persistence with atomic writes (tmp file + os.replace).
+"""Event template persistence backed by MongoDB (collection: ``event_templates``).
 
-Records keep the exact shape used by ``frontend/src/models/oemCardTemplates.js``:
-``{"<eventId>": {"dayCount": int, "startDate": str, "overWriteCanvas": {...}}}``
-
-The registry starts empty; entries are created via ``PUT /api/events/{eventId}``.
-No seed data is bundled and the JSON file is only written on first upsert.
+Each document is one event template with ``_id`` = event id and a body of
+``{"dayCount", "startDate", "overWriteCanvas", "createdBy"}``.
 """
 
 import copy
-import json
-import os
-import tempfile
-import threading
-from pathlib import Path
 
-from app.core.config import get_settings
+from app.core.db import get_collection, strip_id
 
-_lock = threading.Lock()
-
-
-def _events_file() -> Path:
-    return get_settings().data_dir / "event_templates.json"
-
-
-def _read_events() -> dict:
-    path = _events_file()
-    if not path.exists():
-        return {}
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def _write_events(events: dict) -> None:
-    path = _events_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(events, f, ensure_ascii=False, indent=4)
-        os.replace(tmp_path, path)
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+COLLECTION = "event_templates"
 
 
 def list_event_templates(username: str | None = None, public_only: bool = False) -> dict:
@@ -56,45 +18,36 @@ def list_event_templates(username: str | None = None, public_only: bool = False)
     - username=None, public_only=False → all templates (admin / legacy shared-token path)
     - username set → only templates where createdBy matches or is null/absent
     """
-    with _lock:
-        all_templates = _read_events()
-
+    query: dict = {}
     if public_only:
-        return {
-            eid: tmpl
-            for eid, tmpl in all_templates.items()
-            if tmpl.get("createdBy") is None
-        }
+        query["createdBy"] = None
+    elif username is not None:
+        query = {"$or": [{"createdBy": None}, {"createdBy": username}]}
 
-    if username is None:
-        return all_templates
-
-    return {
-        eid: tmpl
-        for eid, tmpl in all_templates.items()
-        if tmpl.get("createdBy") is None or tmpl.get("createdBy") == username
-    }
+    result = {}
+    for doc in get_collection(COLLECTION).find(query):
+        event_id = doc["_id"]
+        result[event_id] = strip_id(doc)
+    return result
 
 
 def get_event_template(event_id: str) -> dict | None:
-    with _lock:
-        return _read_events().get(event_id)
+    doc = get_collection(COLLECTION).find_one({"_id": event_id})
+    if doc is None:
+        return None
+    return strip_id(doc)
 
 
 def upsert_event_template(event_id: str, template: dict) -> dict:
-    stored = json.loads(json.dumps(template))
-    with _lock:
-        events = _read_events()
-        events[event_id] = stored
-        _write_events(events)
-    return copy.deepcopy(stored)
+    stored = copy.deepcopy(template)
+    get_collection(COLLECTION).replace_one(
+        {"_id": event_id},
+        {"_id": event_id, **stored},
+        upsert=True,
+    )
+    return stored
 
 
 def delete_event_template(event_id: str) -> bool:
-    with _lock:
-        events = _read_events()
-        if event_id not in events:
-            return False
-        del events[event_id]
-        _write_events(events)
-        return True
+    result = get_collection(COLLECTION).delete_one({"_id": event_id})
+    return result.deleted_count > 0

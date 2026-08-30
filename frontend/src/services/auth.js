@@ -1,6 +1,9 @@
 // Auth API client — JWT-based authentication.
 // All requests use relative paths; local dev uses Vite proxy, production uses Vercel rewrite.
 
+import { FRONTEND_VERSION, NODE_VERSION } from '../versions.js';
+import { emitError } from './errorBus';
+
 const JWT_STORAGE_KEY = 'ccm_jwt';
 const USER_STORAGE_KEY = 'ccm_user';
 
@@ -44,12 +47,19 @@ async function authRequest(path, options = {}) {
     headers.set('Content-Type', 'application/json');
   }
 
-  const response = await fetch(path, {
-    ...options,
-    method: options.method || 'GET',
-    headers,
-    credentials: 'same-origin',
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      method: options.method || 'GET',
+      headers,
+      credentials: 'same-origin',
+    });
+  } catch (error) {
+    error.isNetworkError = true;
+    if (!options.silent) emitError(error);
+    throw error;
+  }
 
   if (!response.ok) {
     const error = new Error(`Auth request failed with status ${response.status}`);
@@ -57,6 +67,7 @@ async function authRequest(path, options = {}) {
     try {
       error.detail = (await response.json()).detail;
     } catch { /* ignore */ }
+    if (!options.silent) emitError(error);
     throw error;
   }
 
@@ -76,13 +87,23 @@ export async function login(username, password) {
 }
 
 export async function refreshAccessToken() {
-  const res = await fetch('/api/auth/refresh', {
-    method: 'POST',
-    credentials: 'same-origin',
-  });
+  let res;
+  try {
+    res = await fetch('/api/auth/refresh', {
+      method: 'POST',
+      credentials: 'same-origin',
+    });
+  } catch (error) {
+    error.isNetworkError = true;
+    emitError(error);
+    throw error;
+  }
   if (!res.ok) {
     clearToken();
-    throw new Error('Token refresh failed');
+    const error = new Error('Token refresh failed');
+    error.status = res.status;
+    emitError(error);
+    throw error;
   }
   const data = await res.json();
   setToken(data.token);
@@ -135,4 +156,10 @@ export async function resetUserPassword(username, newPassword) {
 
 export async function listAuditLogs(limit = 100) {
   return authRequest(`/api/auth/audit-logs?limit=${limit}`);
+}
+
+export async function getSystemStatus() {
+  return authRequest('/api/admin/system-status', {
+    headers: { 'X-Frontend-Version': FRONTEND_VERSION, 'X-Node-Version': NODE_VERSION },
+  });
 }

@@ -1,20 +1,17 @@
-"""Audit logging service — records security-relevant events to audit_log.json.
+"""Audit logging backed by MongoDB (collection: ``audit_log``).
 
-Uses the same atomic write pattern as storage.py / event_templates.py.
-Log entries are append-only (new entries are prepended to the list).
+Log entries are append-only, newest-first. Event constants match the previous
+JSON implementation.
 """
 
-import json
-import os
-import tempfile
-import threading
 from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from app.core.config import get_settings
+from app.core.db import get_collection, strip_id
 
-_lock = threading.Lock()
+COLLECTION = "audit_log"
+
+MAX_ENTRIES = 10000
 
 # Event type constants
 LOGIN_SUCCESS = "login_success"
@@ -27,36 +24,6 @@ TEMPLATE_UPSERT = "template_upsert"
 TEMPLATE_DELETE = "template_delete"
 
 
-def _audit_file() -> Path:
-    return get_settings().data_dir / "audit_log.json"
-
-
-def _read_log() -> list[dict]:
-    path = _audit_file()
-    if not path.exists():
-        return []
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, list) else []
-    except (json.JSONDecodeError, OSError):
-        return []
-
-
-def _write_log(entries: list[dict]) -> None:
-    path = _audit_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(entries, f, ensure_ascii=False, indent=2)
-        os.replace(tmp_path, path)
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
-
-
 def log_event(
     event_type: str,
     actor: str | None = None,
@@ -64,16 +31,9 @@ def log_event(
     detail: dict[str, Any] | None = None,
     ip_address: str | None = None,
 ) -> None:
-    """Append an audit log entry.
-
-    Args:
-        event_type: One of the event type constants (LOGIN_SUCCESS, etc.)
-        actor: Username performing the action (None for anonymous)
-        target: Username or resource ID being acted upon
-        detail: Additional structured data
-        ip_address: Client IP address (optional)
-    """
+    """Append an audit log entry."""
     entry = {
+        "created_ts": datetime.now(timezone.utc).timestamp(),
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event": event_type,
         "actor": actor,
@@ -81,13 +41,7 @@ def log_event(
         "detail": detail or {},
         "ip": ip_address,
     }
-
-    with _lock:
-        entries = _read_log()
-        entries.insert(0, entry)
-        if len(entries) > 10000:
-            entries = entries[:10000]
-        _write_log(entries)
+    get_collection(COLLECTION).insert_one(entry)
 
 
 def get_logs(
@@ -96,15 +50,19 @@ def get_logs(
     actor: str | None = None,
     target: str | None = None,
 ) -> list[dict]:
-    """Query audit logs with optional filters."""
-    with _lock:
-        entries = _read_log()
-
+    """Query audit logs with optional filters, newest first (up to limit)."""
+    query: dict = {}
     if event_type:
-        entries = [e for e in entries if e["event"] == event_type]
+        query["event"] = event_type
     if actor:
-        entries = [e for e in entries if e["actor"] == actor]
+        query["actor"] = actor
     if target:
-        entries = [e for e in entries if e.get("target") == target]
+        query["target"] = target
 
-    return entries[:limit]
+    docs = (
+        get_collection(COLLECTION)
+        .find(query)
+        .sort("created_ts", -1)
+        .limit(limit)
+    )
+    return [strip_id(doc) for doc in docs]

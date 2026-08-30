@@ -1,16 +1,17 @@
 # Anicon DIVA CardMaker
 
-以 React + HTML5 Canvas 為核心的預定圖製作工具，採前後端分離架構：
+以 React + HTML5 Canvas 為核心的預訂圖製作工具，採前後端分離架構：
 使用者填入活動資訊、上傳多天圖片，即時預覽合成結果，可儲存至後端並透過連結分享，最後下載為 PNG。
 
 ## 專案結構（monorepo）
 
 ```text
 ccm/
-├── .kilo/skills    # 所有用到的技術的 Skill 文件
-├── frontend/       # React + Vite 前端（原 CCM 專案）
-├── backend/        # Python FastAPI 後端（卡片儲存、圖片上傳、heartbeat）
-└── README.md       # 專案說明
+├── .kilo/skills     # 所有用到的技術的 Skill 文件
+├── frontend/        # React + Vite 前端
+├── backend/         # Python FastAPI 後端（MongoDB 儲存、R2/S3 圖片儲存、JWT 認證）
+├── docs/            # architecture.md 等架構文件
+└── README.md        # 專案說明
 ```
 
 ## 快速開始
@@ -30,18 +31,28 @@ cd backend
 conda create -n ccm-backend python=3.12 -y
 conda activate ccm-backend
 pip install -r requirements.txt
-cp .env.example .env   # 設定 JWT_SECRET 與 ALLOWED_ORIGINS
+cp .env.example .env   # 設定 JWT_SECRET、MONGODB_URI、R2_* 等環境變數
 uvicorn app.main:app --reload --port 8000
 ```
+
+> - **MongoDB**：`MONGODB_URI` 有值時連真實 MongoDB；留空時以記憶體 mongomock 執行，
+>   方便本機開發與測試。
+> - **底圖儲存**：設有 `R2_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` /
+>   `R2_BUCKET_NAME` 時，上傳底圖寫入 Cloudflare R2（Amazon S3 相容，boto3）；
+>   未設定時回退本機 `UPLOADS_DIR`。
 
 ## 頁面路由
 
 | 路由 | 說明 |
 |---|---|
-| `/` | 預設製圖頁 |
-| `/:eventName` | 客製化 OEM 模板 |
+| `/` | 首頁「本週場次」（列出本週有活動的場次） |
+| `/make` | DIY 預訂製作器（自訂版型） |
+| `/make?id=xxx`、`/:eventId` | 客製化 OEM 模板 |
 | `/card/:cardId` | 載入已儲存的圖卡（分享連結） |
-| `/heartbeat` | 後端伺服器心跳燈號 |
+| `/login` | 登入頁 |
+| `/admin` | 管理面板（模板清單/編輯、密碼修改、後端狀態；admin 另有使用者、審計日誌、系統狀態） |
+
+> `/template-editor`、`/upload` 為舊路徑，會導向 `/admin?tab=templates`。
 
 ## 測試與品質
 

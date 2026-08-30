@@ -4,12 +4,11 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware.cors import CORSMiddleware as StarletteCORSMiddleware
 
 from app.core.config import get_settings
-from app.routers import auth, cards, events, ping, uploads
+from app.routers import auth, cards, events, ping, system, uploads
+from app.services import object_storage
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -39,10 +38,16 @@ async def lifespan(app: FastAPI):
 
 
 settings = get_settings()
-settings.data_dir.mkdir(parents=True, exist_ok=True)
-settings.uploads_dir.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="CCM Backend", version="1.0.0", lifespan=lifespan)
+# 僅在使用本機儲存回退時才建立本機目錄：
+# - data_dir    僅在未設定 MongoDB（使用 mongomock）時建立
+# - uploads_dir 僅在未設定 R2/S3（使用本機磁碟）時建立
+if not settings.mongodb_uri:
+    settings.data_dir.mkdir(parents=True, exist_ok=True)
+if not object_storage.is_r2_configured():
+    settings.uploads_dir.mkdir(parents=True, exist_ok=True)
+
+app = FastAPI(title="CCM Backend", version=system.BACKEND_VERSION, lifespan=lifespan)
 
 
 app.add_middleware(SecurityHeadersMiddleware)
@@ -59,16 +64,6 @@ app.include_router(ping.router)
 app.include_router(cards.router)
 app.include_router(events.router)
 app.include_router(uploads.router)
+app.include_router(uploads.files_router)
 app.include_router(auth.router)
-
-uploads_app = StaticFiles(directory=str(settings.uploads_dir))
-app.mount(
-    "/uploads",
-    StarletteCORSMiddleware(
-        uploads_app,
-        allow_origins=settings.allowed_origins,
-        allow_methods=["GET", "HEAD", "OPTIONS"],
-        allow_headers=["*"],
-    ),
-    name="uploads",
-)
+app.include_router(system.router)

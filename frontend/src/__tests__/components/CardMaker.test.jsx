@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import CardMaker from '../../components/CardMaker';
 
@@ -25,6 +26,11 @@ vi.mock('../../components/CardPreview', () => ({
 
 vi.mock('../../components/PreviewModal', () => ({
   default: () => null
+}));
+
+const mockGetEventTemplate = vi.fn();
+vi.mock('../../services/api', () => ({
+  getEventTemplate: (...args) => mockGetEventTemplate(...args),
 }));
 
 describe('CardMaker - DIY View UI', () => {
@@ -92,7 +98,11 @@ describe('CardMaker - DIY View UI', () => {
       })
     );
 
-    const { rerender } = render(<CardMaker />);
+    const { rerender } = render(
+      <MemoryRouter>
+        <CardMaker />
+      </MemoryRouter>
+    );
 
     const scheduleTab = screen.getByRole('tab', { name: '預定資訊' });
     fireEvent.click(scheduleTab);
@@ -101,12 +111,20 @@ describe('CardMaker - DIY View UI', () => {
 
     const select = screen.getByRole('combobox');
     fireEvent.change(select, { target: { value: '2' } });
-    rerender(<CardMaker />);
+    rerender(
+      <MemoryRouter>
+        <CardMaker />
+      </MemoryRouter>
+    );
 
     expect(screen.queryByRole('tab', { name: '第二天 DAY 2' })).not.toBeNull();
 
     fireEvent.change(select, { target: { value: '1' } });
-    rerender(<CardMaker />);
+    rerender(
+      <MemoryRouter>
+        <CardMaker />
+      </MemoryRouter>
+    );
 
     expect(screen.queryByRole('tab', { name: '第二天 DAY 2' })).toBeNull();
   });
@@ -120,7 +138,11 @@ describe('CardMaker - DIY View UI', () => {
       })
     );
 
-    render(<CardMaker />);
+    render(
+      <MemoryRouter>
+        <CardMaker />
+      </MemoryRouter>
+    );
 
   const scheduleTab = screen.getByRole('tab', { name: '預定資訊' });
   fireEvent.click(scheduleTab);
@@ -136,5 +158,33 @@ describe('CardMaker - DIY View UI', () => {
 
     expect(handleImageUpload).toHaveBeenNthCalledWith(1, { name: '上傳圖片 (第一天 DAY 1)' }, 'd1');
     expect(handleImageUpload).toHaveBeenNthCalledWith(2, { name: '上傳圖片 (第二天 DAY 2)' }, 'd2');
+  });
+});
+
+describe('CardMaker - /make?id= 查詢參數', () => {
+  beforeEach(() => {
+    mockGetEventTemplate.mockReset();
+  });
+
+  it('有 ?id 時以該 id 載入 OEM 模板', () => {
+    mockGetEventTemplate.mockResolvedValue({ overWriteCanvas: {} });
+
+    render(
+      <MemoryRouter initialEntries={['/make?id=cwtt36']}>
+        <CardMaker />
+      </MemoryRouter>
+    );
+
+    expect(mockGetEventTemplate).toHaveBeenCalledWith('cwtt36');
+  });
+
+  it('無 ?id（一般 /make）時不載入 OEM 模板', () => {
+    render(
+      <MemoryRouter initialEntries={['/make']}>
+        <CardMaker />
+      </MemoryRouter>
+    );
+
+    expect(mockGetEventTemplate).not.toHaveBeenCalled();
   });
 });

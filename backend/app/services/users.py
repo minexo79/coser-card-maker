@@ -1,51 +1,16 @@
-"""users.json persistence with atomic writes (tmp file + os.replace).
+"""User persistence backed by MongoDB (collection: ``users``).
 
-Stores user accounts with bcrypt-hashed passwords. Uses the same
-threading.Lock + tempfile + os.replace pattern as storage.py / event_templates.py.
+Stores user accounts with bcrypt-hashed passwords. ``_id`` = username.
 """
 
-import json
-import os
-import tempfile
-import threading
 from datetime import datetime, timezone
-from pathlib import Path
 
 import bcrypt
 
 from app.core.config import get_settings
+from app.core.db import get_collection, strip_id
 
-_lock = threading.Lock()
-
-
-def _users_file() -> Path:
-    return get_settings().data_dir / "users.json"
-
-
-def _read_users() -> dict:
-    path = _users_file()
-    if not path.exists():
-        return {}
-    try:
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
-        return data if isinstance(data, dict) else {}
-    except (json.JSONDecodeError, OSError):
-        return {}
-
-
-def _write_users(users: dict) -> None:
-    path = _users_file()
-    path.parent.mkdir(parents=True, exist_ok=True)
-
-    fd, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            json.dump(users, f, ensure_ascii=False, indent=4)
-        os.replace(tmp_path, path)
-    finally:
-        if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+COLLECTION = "users"
 
 
 def _hash_password(password: str) -> str:
@@ -61,74 +26,61 @@ def _now_iso() -> str:
 
 
 def get_user(username: str) -> dict | None:
-    with _lock:
-        return _read_users().get(username)
+    doc = get_collection(COLLECTION).find_one({"_id": username})
+    if doc is None:
+        return None
+    return strip_id(doc)
 
 
 def verify_password(username: str, password: str) -> dict | None:
     """Return user dict if credentials match, else None."""
-    with _lock:
-        user = _read_users().get(username)
-        if user and _check_password(password, user["password_hash"]):
-            return user
+    user = get_user(username)
+    if user and _check_password(password, user["password_hash"]):
+        return user
     return None
 
 
 def create_user(username: str, password: str, role: str = "user") -> dict:
     """Create a new user. Raises ValueError if user already exists."""
-    with _lock:
-        users = _read_users()
-        if username in users:
-            raise ValueError(f"User '{username}' already exists")
-        record = {
-            "username": username,
-            "password_hash": _hash_password(password),
-            "role": role,
-            "created_at": _now_iso(),
-        }
-        users[username] = record
-        _write_users(users)
-        return record
+    collection = get_collection(COLLECTION)
+    if collection.find_one({"_id": username}) is not None:
+        raise ValueError(f"User '{username}' already exists")
+    record = {
+        "username": username,
+        "password_hash": _hash_password(password),
+        "role": role,
+        "created_at": _now_iso(),
+    }
+    collection.insert_one({"_id": username, **record})
+    return record
 
 
 def delete_user(username: str) -> bool:
-    with _lock:
-        users = _read_users()
-        if username not in users:
-            return False
-        del users[username]
-        _write_users(users)
-        return True
+    result = get_collection(COLLECTION).delete_one({"_id": username})
+    return result.deleted_count > 0
 
 
 def update_password(username: str, new_password: str) -> bool:
     """Update a user's password. Returns False if user not found."""
-    with _lock:
-        users = _read_users()
-        if username not in users:
-            return False
-        users[username]["password_hash"] = _hash_password(new_password)
-        _write_users(users)
-        return True
+    result = get_collection(COLLECTION).update_one(
+        {"_id": username},
+        {"$set": {"password_hash": _hash_password(new_password)}},
+    )
+    return result.matched_count > 0
 
 
 def list_users() -> list[dict]:
     """Return all users without password_hash."""
-    with _lock:
-        users = _read_users()
-    return [
-        {
-            "username": u["username"],
-            "role": u["role"],
-            "created_at": u["created_at"],
-        }
-        for u in users.values()
-    ]
+    users = []
+    for doc in get_collection(COLLECTION).find(
+        {}, {"_id": 0, "username": 1, "role": 1, "created_at": 1}
+    ):
+        users.append(dict(doc))
+    return users
 
 
 def user_exists(username: str) -> bool:
-    with _lock:
-        return username in _read_users()
+    return get_collection(COLLECTION).find_one({"_id": username}) is not None
 
 
 def ensure_initial_admin() -> None:
@@ -147,15 +99,15 @@ def ensure_initial_admin() -> None:
         print(f"[startup] WARNING: ADMIN_PASSWORD is still 'changeme'. Skipping admin account creation. Please set a strong password.")
         return
 
-    with _lock:
-        users = _read_users()
-        if username not in users:
-            record = {
-                "username": username,
-                "password_hash": _hash_password(password),
-                "role": "admin",
-                "created_at": _now_iso(),
-            }
-            users[username] = record
-            _write_users(users)
-            print(f"[startup] Created initial admin account: {username}")
+    collection = get_collection(COLLECTION)
+    if collection.find_one({"_id": username}) is not None:
+        return
+
+    record = {
+        "username": username,
+        "password_hash": _hash_password(password),
+        "role": "admin",
+        "created_at": _now_iso(),
+    }
+    collection.insert_one({"_id": username, **record})
+    print(f"[startup] Created initial admin account: {username}")

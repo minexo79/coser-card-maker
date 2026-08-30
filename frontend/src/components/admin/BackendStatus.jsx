@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { Activity } from 'lucide-react';
-import { ping } from '../services/api';
+import { ping } from '../../services/api';
 
 const POLL_INTERVAL_MS = 5000;
 
-const Heartbeat = () => {
+// 後端運行狀態（位於管理頁，一般使用者與管理員皆可見）。
+// 定期 ping 後端 /api/ping；背景輪詢設為靜默，連不上時不觸發全域錯誤彈窗，
+// 僅在此處以紅燈／狀態文字呈現。
+const BackendStatus = ({ pollIntervalMs = POLL_INTERVAL_MS } = {}) => {
   const [status, setStatus] = useState('checking');
   const [latencyMs, setLatencyMs] = useState(null);
   const [lastCheckedAt, setLastCheckedAt] = useState(null);
@@ -17,9 +20,8 @@ const Heartbeat = () => {
       const startedAt = performance.now();
 
       try {
-        const data = await ping();
+        const data = await ping({ silent: true });
         if (cancelled) return;
-
         if (data?.status === 'ok') {
           setStatus('online');
           setLatencyMs(Math.max(Math.round(performance.now() - startedAt), 0));
@@ -28,15 +30,14 @@ const Heartbeat = () => {
           setLatencyMs(null);
         }
         setLastCheckedAt(new Date());
-      } catch (error) {
+      } catch {
         if (cancelled) return;
-        console.error('> Heartbeat check failed:', error);
         setStatus('offline');
         setLatencyMs(null);
         setLastCheckedAt(new Date());
       } finally {
         if (!cancelled) {
-          timerRef.current = setTimeout(check, POLL_INTERVAL_MS);
+          timerRef.current = setTimeout(check, pollIntervalMs);
         }
       }
     };
@@ -47,7 +48,7 @@ const Heartbeat = () => {
       cancelled = true;
       clearTimeout(timerRef.current);
     };
-  }, []);
+  }, [pollIntervalMs]);
 
   const dotColorClass =
     status === 'online'
@@ -60,19 +61,21 @@ const Heartbeat = () => {
     status === 'online' ? '後端上線' : status === 'offline' ? '後端離線' : '檢查中…';
 
   return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl card-shadow p-10 w-full max-w-sm text-center">
-        <h1 className="text-xl text-gray-800 mb-8 flex items-center justify-center gap-2">
-          <Activity className="w-6 h-6 text-orange-600" />
-          後端伺服器狀態
-        </h1>
+    <div className="mb-6">
+      <h2 className="text-lg text-gray-800 mb-4 flex items-center gap-2">
+        <Activity className="w-5 h-5 text-orange-600" />
+        後端運行狀態
+      </h2>
 
+      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
         <div className="flex flex-col items-center gap-4">
           <div
-            data-testid="heartbeat-dot"
+            data-testid="backend-status-dot"
             className={`w-16 h-16 rounded-full ${dotColorClass} transition-colors duration-300`}
           />
-          <p className="text-lg font-medium text-gray-800">{statusText}</p>
+          <p className="text-lg font-medium text-gray-800" data-testid="backend-status-text">
+            {statusText}
+          </p>
           {lastCheckedAt && (
             <p className="text-xs text-gray-500">
               最後檢查：{lastCheckedAt.toLocaleTimeString()}
@@ -85,4 +88,4 @@ const Heartbeat = () => {
   );
 };
 
-export default Heartbeat;
+export default BackendStatus;

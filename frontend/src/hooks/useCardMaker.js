@@ -301,7 +301,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
       return;
     }
 
-    api.uploadImage(file)
+    api.uploadImage(file, { silent: true })
       .then((url) => setBaseImageData(url))
       .catch((error) => {
         console.error('Failed to upload base image:', error);
@@ -584,7 +584,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
         dayDetails,
         overWriteCanvas: getCurrentTemplate()
       });
-      const { id } = await api.saveCard(payload);
+      const { id } = await api.saveCard(payload, { silent: true });
       return id;
     } catch (error) {
       console.error('Failed to save card:', error);
@@ -600,7 +600,7 @@ export const useCardMaker = ({ eventName = null } = {}) => {
   // 不還原使用者內容。
   const loadCard = useCallback(async (cardId) => {
     try {
-      const record = await api.loadCard(cardId);
+      const record = await api.loadCard(cardId, { silent: true });
       const restored = applyCardPayload(record?.payload);
 
       // 還原卡片自帶的畫布覆寫設定（OEM 模板或儲存時的版面快照）

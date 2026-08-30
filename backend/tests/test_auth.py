@@ -11,10 +11,16 @@ from datetime import datetime, timedelta, timezone
 
 import jwt as pyjwt
 
+from app.core.db import get_collection
 from app.services import users as users_service
 
 TEST_JWT_SECRET = "test-jwt-secret-for-testing-only"
 STRONG_PASSWORD = "S3cure!Passw0rd"
+
+
+def _reset_users() -> None:
+    """Clear the shared users collection for isolated bootstrap tests."""
+    get_collection("users").delete_many({})
 
 
 def _jwt(username: str, role: str = "user") -> str:
@@ -37,9 +43,9 @@ def _auth(username: str, role: str = "user") -> dict:
 # ---------------------------------------------------------------------------
 
 
-def test_ensure_initial_admin_creates_admin(monkeypatch, tmp_path):
+def test_ensure_initial_admin_creates_admin(monkeypatch):
+    _reset_users()
     fake = types.SimpleNamespace(
-        data_dir=tmp_path,
         admin_username="boss",
         admin_password="S3cr3t!BossPass",
     )
@@ -52,9 +58,10 @@ def test_ensure_initial_admin_creates_admin(monkeypatch, tmp_path):
     assert user["role"] == "admin"
 
 
-def test_ensure_initial_admin_skips_default_password(monkeypatch, tmp_path):
+def test_ensure_initial_admin_skips_default_password(monkeypatch):
     """P-001: default 'changeme' must never create a live admin account."""
-    fake = types.SimpleNamespace(data_dir=tmp_path, admin_username="admin", admin_password="changeme")
+    _reset_users()
+    fake = types.SimpleNamespace(admin_username="admin", admin_password="changeme")
     monkeypatch.setattr(users_service, "get_settings", lambda: fake)
 
     users_service.ensure_initial_admin()
@@ -62,9 +69,9 @@ def test_ensure_initial_admin_skips_default_password(monkeypatch, tmp_path):
     assert users_service.get_user("admin") is None
 
 
-def test_ensure_initial_admin_keeps_existing_user(monkeypatch, tmp_path):
+def test_ensure_initial_admin_keeps_existing_user(monkeypatch):
+    _reset_users()
     fake = types.SimpleNamespace(
-        data_dir=tmp_path,
         admin_username="boss",
         admin_password="S3cr3t!BossPass",
     )

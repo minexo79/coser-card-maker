@@ -124,3 +124,30 @@ def test_upload_webp_format_rejected(api, auth_headers):
         headers=auth_headers,
     )
     assert resp.status_code == 415
+
+
+def test_get_missing_object_returns_404(api, auth_headers):
+    key = "f" * 32 + ".png"
+    resp = api.get(f"/uploads/{key}")
+    assert resp.status_code == 404
+
+
+def test_get_invalid_key_returns_404(api, auth_headers):
+    for key in ["../etc/passwd", "abc.png", "123.png"]:
+        resp = api.get(f"/uploads/{key}")
+        assert resp.status_code == 404, key
+
+
+def test_object_storage_local_roundtrip(auth_headers, uploads_dir):
+    from app.services import object_storage
+
+    assert object_storage.is_r2_configured() is False
+    key = "a" * 32 + ".png"
+    object_storage.save_object(key, PNG_1PX)
+    try:
+        assert object_storage.get_object(key) == PNG_1PX
+        assert object_storage.content_type_for(key) == "image/png"
+        assert (uploads_dir / key).is_file()
+        assert object_storage.get_object("nope.png") is None
+    finally:
+        (uploads_dir / key).unlink(missing_ok=True)

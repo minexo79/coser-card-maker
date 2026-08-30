@@ -28,7 +28,7 @@ describe('NavBar 元件', () => {
     renderWithRouter('/');
     expect(screen.getByText('場次預定製作工具')).toBeTruthy();
     expect(screen.getByText('首頁')).toBeTruthy();
-    expect(screen.getByText('後端狀態')).toBeTruthy();
+    expect(screen.getByText('預定製作')).toBeTruthy();
   });
 
   it('未登入時應顯示登入連結', () => {
@@ -44,7 +44,7 @@ describe('NavBar 元件', () => {
   it('各連結應指向正確路徑', () => {
     renderWithRouter('/');
     expect(screen.getByText('首頁').closest('a').getAttribute('href')).toBe('/');
-    expect(screen.getByText('後端狀態').closest('a').getAttribute('href')).toBe('/heartbeat');
+    expect(screen.getByText('預定製作').closest('a').getAttribute('href')).toBe('/make');
     expect(screen.getByText('登入').closest('a').getAttribute('href')).toBe('/login');
   });
 

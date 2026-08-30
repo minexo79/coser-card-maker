@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
 import { Settings as SettingIcon } from 'lucide-react';
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { useCardMakerContext } from '../contexts/useCardMakerContext';
 import * as api from '../services/api.js';
 import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
 import PreviewModal from './PreviewModal';
-import Copyright from './Copyright';
 
 const CardMaker = () => {
   const params = useParams();
+  const [searchParams] = useSearchParams();
   const {
     formData,
     imageDatas,
@@ -46,8 +46,8 @@ const CardMaker = () => {
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
 
-  // 路由 /:eventId（OEM）或 /:eventName 皆對應活動模板 key
-  const eventName = params.eventName || params.eventId;
+  // 路由 /:eventId（OEM）、/:eventName，或 /make?id=xxx 皆對應活動模板 key
+  const eventName = params.eventName || params.eventId || searchParams.get('id');
 
   // 從後端取得
   const [preset, setPreset] = useState(null);
@@ -400,8 +400,6 @@ const CardMaker = () => {
         onClose={() => setShowModal(false)}
       />
 
-      {/* 版權聲明 */}
-      <Copyright />
     </div>
   );
 };

@@ -96,6 +96,44 @@ describe('services/api', () => {
     await expect(api.ping()).rejects.toMatchObject({ status: 401 });
   });
 
+  it('網路錯誤時應發布 E001 到全域錯誤匯流排', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    const api = await import('../../services/api.js');
+    const bus = await import('../../services/errorBus.js');
+    const listener = vi.fn();
+    const unsub = bus.subscribeError(listener);
+
+    await expect(api.ping()).rejects.toThrow();
+    expect(listener).toHaveBeenCalledWith(expect.objectContaining({ code: 'E001' }));
+    unsub();
+  });
+
+  it('HTTP 錯誤時應發布 E005 到全域錯誤匯流排', async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ detail: 'Internal Server Error' }, 500));
+    const api = await import('../../services/api.js');
+    const bus = await import('../../services/errorBus.js');
+    const listener = vi.fn();
+    const unsub = bus.subscribeError(listener);
+
+    await expect(api.ping()).rejects.toThrow();
+    expect(listener).toHaveBeenCalledWith(
+      expect.objectContaining({ code: 'E005', message: 'Internal Server Error' })
+    );
+    unsub();
+  });
+
+  it('silent 選項應抑制錯誤彈窗發布', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
+    const api = await import('../../services/api.js');
+    const bus = await import('../../services/errorBus.js');
+    const listener = vi.fn();
+    const unsub = bus.subscribeError(listener);
+
+    await expect(api.ping({ silent: true })).rejects.toThrow();
+    expect(listener).not.toHaveBeenCalled();
+    unsub();
+  });
+
   describe('resolveAssetUrl', () => {
     it('以 / 開頭的後端資源應原樣保留（相對路徑）', async () => {
       const api = await setupApi();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import { Home, Activity, Shield, LogIn, LogOut, Menu, X, ChevronDown } from 'lucide-react';
+import { Home, Shield, LogIn, LogOut, Menu, X, ChevronDown, PenTool } from 'lucide-react';
 import * as api from '../services/api.js';
 
 const NavBar = () => {
@@ -12,7 +12,7 @@ const NavBar = () => {
   const [eventTemplates, setEventTemplates] = useState([]);
 
   useEffect(() => {
-    api.getEventList()
+    api.getEventList({ silent: true })
       .then((data) => {
         if (Array.isArray(data)) {
           setEventTemplates(data);
@@ -29,12 +29,12 @@ const NavBar = () => {
 
   const navItems = [
     { to: '/', label: '首頁', icon: Home, active: pathname === '/' },
+    { to: '/make', label: '預定製作', icon: PenTool, active: pathname === '/make' || pathname.startsWith('/card/') },
     ...(isAuthenticated
       ? [
           { to: '/admin', label: '管理', icon: Shield, active: pathname === '/admin' || pathname === '/template-editor' },
         ]
       : []),
-    { to: '/heartbeat', label: '後端狀態', icon: Activity, active: pathname === '/heartbeat' },
   ];
 
   const linkClass = (active) =>

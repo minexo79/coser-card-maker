@@ -3,19 +3,23 @@ import { useAuth } from '../../contexts/useAuth';
 import ChangePassword from './ChangePassword';
 import UserManagement from './UserManagement';
 import AuditLogList from './AuditLogList';
+import SystemStatus from './SystemStatus';
+import BackendStatus from './BackendStatus';
 import TemplateEditor from '../templateEditor/TemplateEditor';
 import TemplateListPage from '../templateEditor/TemplateListPage';
-import { LayoutDashboard, List, Users, Key, ScrollText } from 'lucide-react';
+import { LayoutDashboard, List, Users, Key, ScrollText, Activity, Server } from 'lucide-react';
 
 const TABS = [
   { key: 'list', label: '模板清單', icon: List },
   { key: 'templates', label: '模板編輯', icon: LayoutDashboard },
   { key: 'password', label: '密碼修改', icon: Key },
+  { key: 'status', label: '後端狀態', icon: Server },
 ];
 
 const ADMIN_TABS = [
   { key: 'users', label: '使用者管理', icon: Users },
   { key: 'audit', label: '審計日誌', icon: ScrollText },
+  { key: 'system', label: '系統狀態', icon: Activity },
 ];
 
 const AdminDashboard = () => {
@@ -23,7 +27,7 @@ const AdminDashboard = () => {
   const isAdmin = user?.role === 'admin';
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const allTabs = isAdmin ? [...TABS.slice(0, 2), ...ADMIN_TABS, ...TABS.slice(2)] : TABS;
+  const allTabs = isAdmin ? [...TABS.slice(0, 4), ...ADMIN_TABS, ...TABS.slice(4)] : TABS;
   const tabParam = searchParams.get('tab');
   const activeTab = allTabs.some((t) => t.key === tabParam) ? tabParam : allTabs[0].key;
 
@@ -85,6 +89,8 @@ const AdminDashboard = () => {
         {activeTab === 'users' && <UserManagement />}
         {activeTab === 'password' && <ChangePassword />}
         {activeTab === 'audit' && <AuditLogList />}
+        {activeTab === 'system' && <SystemStatus />}
+        {activeTab === 'status' && <BackendStatus />}
       </div>
     </div>
   );

@@ -6,6 +6,7 @@
 // the access token using the httpOnly refresh token cookie.
 
 import { getToken, clearToken, refreshAccessToken } from './auth';
+import { emitError } from './errorBus';
 
 // 把資源路徑組合成可載入的網址：
 // - 後端資源（以 / 開頭，如 /uploads/x.png）→ 原樣保留（相對路徑，proxy 或 rewrite 處理）。
@@ -35,11 +36,19 @@ async function request(path, options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(path, {
-    ...options,
-    method: options.method || 'GET',
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(path, {
+      ...options,
+      method: options.method || 'GET',
+      headers,
+    });
+  } catch (error) {
+    // 網路層失敗：後端連不上 → E001
+    error.isNetworkError = true;
+    if (!options.silent) emitError(error);
+    throw error;
+  }
 
   // If 401 and we have a stored token, try refresh
   if (response.status === 401 && token && !path.includes('/api/auth/')) {
@@ -81,6 +90,7 @@ async function request(path, options = {}) {
     const error = new Error(detail || `API request failed with status ${response.status}`);
     error.status = response.status;
     error.detail = detail;
+    if (!options.silent) emitError(error);
     throw error;
   }
 
@@ -91,27 +101,29 @@ async function request(path, options = {}) {
   return JSON.parse(text);
 }
 
-export async function ping() {
-  return request('/api/ping');
+export async function ping(options = {}) {
+  return request('/api/ping', options);
 }
 
-export async function saveCard(payload) {
+export async function saveCard(payload, options = {}) {
   return request('/api/cards', {
+    ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
 }
 
-export async function loadCard(id) {
-  return request(`/api/cards/${encodeURIComponent(id)}`);
+export async function loadCard(id, options = {}) {
+  return request(`/api/cards/${encodeURIComponent(id)}`, options);
 }
 
-export async function uploadImage(file) {
+export async function uploadImage(file, options = {}) {
   const formData = new FormData();
   formData.append('file', file);
 
   const data = await request('/api/uploads', {
+    ...options,
     method: 'POST',
     body: formData
   });
@@ -124,12 +136,12 @@ export async function getEventTemplates() {
   return request('/api/events');
 }
 
-export async function getEventList() {
-  return request('/api/events/list');
+export async function getEventList(options = {}) {
+  return request('/api/events/list', options);
 }
 
-export async function getEventTemplate(eventId) {
-  return request(`/api/events/${encodeURIComponent(eventId)}`);
+export async function getEventTemplate(eventId, options = {}) {
+  return request(`/api/events/${encodeURIComponent(eventId)}`, options);
 }
 
 export async function saveEventTemplate(eventId, template) {

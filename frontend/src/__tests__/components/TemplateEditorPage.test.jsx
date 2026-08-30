@@ -1,7 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import TemplateEditor from '../../components/templateEditor/TemplateEditor.jsx';
+
+const apiMocks = vi.hoisted(() => ({
+  getEventTemplate: vi.fn(),
+  uploadImage: vi.fn(),
+  saveEventTemplate: vi.fn(),
+}));
+
+vi.mock('../../services/api', () => apiMocks);
 
 describe('components/templateEditor/TemplateEditor', () => {
   it('應渲染標題與工具列', async () => {
@@ -43,5 +51,33 @@ describe('components/templateEditor/TemplateEditor', () => {
     // 新增後版面樹出現「圖片槽」群組，且第 1 天圖片槽已建立
     expect(screen.getByText('圖片槽')).toBeTruthy();
     expect(screen.getAllByText(/第1天/).length).toBeGreaterThan(0);
+  });
+});
+
+describe('components/templateEditor/TemplateEditor - 載入模板', () => {
+  beforeEach(() => {
+    apiMocks.getEventTemplate.mockReset();
+    apiMocks.uploadImage.mockReset();
+    apiMocks.saveEventTemplate.mockReset();
+  });
+
+  it('blur 活動 ID 時以 silent 載入模板，避免新模板觸發全域錯誤彈窗', async () => {
+    apiMocks.getEventTemplate.mockRejectedValue({ status: 404 });
+
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/template-editor']}>
+          <TemplateEditor />
+        </MemoryRouter>
+      );
+    });
+
+    const input = screen.getByTestId('template-event-id');
+    fireEvent.change(input, { target: { value: 'new-event' } });
+    await act(async () => {
+      fireEvent.blur(input);
+    });
+
+    expect(apiMocks.getEventTemplate).toHaveBeenCalledWith('new-event', { silent: true });
   });
 });
