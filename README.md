@@ -1,7 +1,7 @@
 # Anicon DIVA CardMaker
 
-以 React + HTML5 Canvas 為核心的預訂圖製作工具，採前後端分離架構：
-使用者填入活動資訊、上傳多天圖片，即時預覽合成結果，可儲存至後端並透過連結分享，最後下載為 PNG。
+以 React.JS + Python FastAPI 為網站架構的場次預定圖製作工具。採前後端分離架構：
+使用者填入活動資訊、上傳多天圖片，網站會即時預覽合成結果，可儲存至後端並透過連結下載為 PNG。
 
 ## 專案結構（monorepo）
 
@@ -46,7 +46,7 @@ uvicorn app.main:app --reload --port 8000
 | 路由 | 說明 |
 |---|---|
 | `/` | 首頁「本週場次」（列出本週有活動的場次） |
-| `/make` | DIY 預訂製作器（自訂版型） |
+| `/make` | DIY 預定製作器（自訂版型） |
 | `/make?id=xxx`、`/:eventId` | 客製化 OEM 模板 |
 | `/card/:cardId` | 載入已儲存的圖卡（分享連結） |
 | `/login` | 登入頁 |

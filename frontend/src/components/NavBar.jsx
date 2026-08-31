@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import { Home, Shield, LogIn, LogOut, Menu, X, ChevronDown, PenTool } from 'lucide-react';
+import { Home, Shield, LogIn, LogOut, Menu, X, ChevronDown, PenTool, Info } from 'lucide-react';
 import * as api from '../services/api.js';
 
 const NavBar = () => {
@@ -30,6 +30,7 @@ const NavBar = () => {
   const navItems = [
     { to: '/', label: '首頁', icon: Home, active: pathname === '/' },
     { to: '/make', label: '預定製作', icon: PenTool, active: pathname === '/make' || pathname.startsWith('/card/') },
+    { to: '/about', label: '關於', icon: Info, active: pathname === '/about' },
     ...(isAuthenticated
       ? [
           { to: '/admin', label: '管理', icon: Shield, active: pathname === '/admin' || pathname === '/template-editor' },

@@ -2,6 +2,7 @@ import CardMaker from './components/CardMaker';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
 import NavBar from './components/NavBar';
+import About from './components/About';
 import Copyright from './components/Copyright';
 import ErrorBoundary from './components/ErrorBoundary';
 import AdminDashboard from './components/admin/AdminDashboard';
@@ -29,7 +30,7 @@ const OemLayout = () => {
   );
 };
 
-// /make => DIY 預訂製作器；/make?id=xxx => XML（OEM）預訂頁
+// /make => DIY 預定製作器；/make?id=xxx => XML（OEM）預定頁
 const MakeLayout = () => {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('id');
@@ -51,6 +52,7 @@ function App() {
               <Routes>
                 {/* 公開路由 */}
                 <Route path="/login" element={<Login />} />
+                <Route path="/about" element={<About />} />
                 {/* 保留舊的 /template-editor 路徑，導向管理面板 */}
                 <Route path="/template-editor" element={<Navigate to="/admin?tab=templates" replace />} />
                 {/* 舊的 /upload 已合併進 /template-editor?tab=assets，保留轉址 */}
@@ -59,9 +61,9 @@ function App() {
                 <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
                 {/* 客製化模板 */}
                 <Route path="/:eventId" element={<OemLayout />} />
-                {/* 一般製圖（預訂製作器 / 分享連結）共用同一份狀態 */}
+                {/* 一般製圖（預定製作器 / 分享連結）共用同一份狀態 */}
                 <Route element={<DiyLayout />}>
-                  {/* 預訂製作器（DIY 自訂版型） */}
+                  {/* 預定製作器（DIY 自訂版型） */}
                   <Route path="/make" element={<MakeLayout />} />
                   {/* 載入已儲存的圖卡 */}
                   <Route path="/card/:cardId" element={<CardMaker />} />

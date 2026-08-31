@@ -44,7 +44,7 @@ const HomePage = () => {
             <CalendarDays className="w-6 h-6 text-orange-600" />
             本週場次
           </h1>
-          <p className="text-sm text-gray-500">挑選一個場次，開始製作你的預訂</p>
+          <p className="text-sm text-gray-500">挑選一個場次，開始製作你的預定</p>
         </div>
 
         {error && (
@@ -98,7 +98,7 @@ const HomePage = () => {
                     className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700"
                   >
                     <PenLine className="h-4 w-4" />
-                    製作預訂
+                    製作預定
                   </button>
                 </div>
               </div>

@@ -47,20 +47,20 @@ describe('HomePage 首頁', () => {
     vi.clearAllMocks();
   });
 
-  it('顯示本週場次與「製作預訂」按鈕', async () => {
+  it('顯示本週場次與「製作預定」按鈕', async () => {
     getEventTemplates.mockResolvedValue(events);
     renderPage();
 
     expect(await screen.findByText('cwtt36')).toBeTruthy();
-    const buttons = screen.getAllByRole('button', { name: /製作預訂/ });
+    const buttons = screen.getAllByRole('button', { name: /製作預定/ });
     expect(buttons).toHaveLength(1);
   });
 
-  it('點「製作預訂」導向 /:eventId', async () => {
+  it('點「製作預定」導向 /:eventId', async () => {
     getEventTemplates.mockResolvedValue(events);
     renderPage();
 
-    const btn = await screen.findByRole('button', { name: /製作預訂/ });
+    const btn = await screen.findByRole('button', { name: /製作預定/ });
     fireEvent.click(btn);
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/cwtt36');

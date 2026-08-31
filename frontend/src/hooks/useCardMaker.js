@@ -330,6 +330,36 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     };
   };
 
+  // 依方框寬度將文字換行並限制在方框高度內，回傳要繪製的行。
+  const wrapTextToBox = (text, ctx, box) => {
+    const maxWidth = box.width || Infinity;
+    const lineHeight = box.lineHeight || (box.fontSize ?? 16) * 1.2;
+    const maxLines = maxWidth < Infinity && lineHeight > 0 && box.height > 0
+      ? Math.max(1, Math.floor(box.height / lineHeight))
+      : Number.MAX_SAFE_INTEGER;
+
+    const lines = [];
+    const pushLine = (line) => lines.length < maxLines && line !== '' && lines.push(line);
+
+    // 以換行符為界，逐一處理每一段。段落內再逐字累加，超過寬度即換行，
+    // 這樣可同時處理無空白的中文與有空白的英文。
+    String(text ?? '').split(/\r?\n/).forEach((paragraphToken) => {
+      let current = '';
+      for (const char of paragraphToken) {
+        const candidate = current + char;
+        if (current !== '' && maxWidth < Infinity && ctx.measureText(candidate).width > maxWidth) {
+          pushLine(current);
+          current = char;
+        } else {
+          current = candidate;
+        }
+      }
+      pushLine(current);
+    });
+
+    return lines;
+  };
+
   // Render canvas with lock and cache checks to avoid duplicate work.
   const renderCanvas = useCallback(async () => {
     if (!canvasRef.current) return null;
@@ -439,14 +469,29 @@ export const useCardMaker = ({ eventName = null } = {}) => {
         ctx.fillStyle = renderTemplate.fontColor;
       else
         ctx.fillStyle = '#303030';
-      
+
       // 暱稱
       if (sharedFormData.nickname) {
-        ctx.font = ` ${renderTemplate.textPositions.nickname.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        const nicknameConfig = renderTemplate.textPositions.nickname;
+        ctx.font = ` ${nicknameConfig.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const nicknameBox = getTextBoxCenter(renderTemplate.textPositions.nickname);
-        ctx.fillText(sharedFormData.nickname, nicknameBox.x, nicknameBox.y);
+        const nicknameBox = getTextBoxCenter(nicknameConfig);
+        const nicknameLines = wrapTextToBox(sharedFormData.nickname, ctx, {
+          ...nicknameConfig,
+          width: nicknameBox.width,
+          height: nicknameBox.height,
+          lineHeight: nicknameConfig.lineHeight || nicknameConfig.fontSize * 1.2
+        });
+        if (nicknameLines.length === 1) {
+          ctx.fillText(nicknameLines[0], nicknameBox.x, nicknameBox.y);
+        } else {
+          const lineHeight = nicknameConfig.lineHeight || nicknameConfig.fontSize * 1.2;
+          const startY = nicknameBox.y - ((nicknameLines.length - 1) * lineHeight) / 2;
+          nicknameLines.forEach((line, index) => {
+            ctx.fillText(line, nicknameBox.x, startY + lineHeight * index);
+          });
+        }
       }
       
       // 身分: 文字輸入版本
@@ -479,24 +524,22 @@ export const useCardMaker = ({ eventName = null } = {}) => {
 
       // 備註
       if (sharedFormData.message) {
-        ctx.font = ` ${renderTemplate.textPositions.message.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
+        const messageConfig = {
+          ...renderTemplate.textPositions.message,
+          lineHeight: renderTemplate.textPositions.message.lineHeight || renderTemplate.textPositions.message.fontSize * 1.2
+        };
+        ctx.font = ` ${messageConfig.fontSize}px ${renderTemplate.textPositions.fontFamily}`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        const messageBox = getTextBoxCenter(renderTemplate.textPositions.message);
+        const messageBox = getTextBoxCenter(messageConfig);
 
-        const messageLines = sharedFormData.message
-          .split(/\r?\n/)
-          .flatMap((line) => {
-            if (!line) {
-              return [''];
-            }
-
-            return line
-              .split(/ +/)
-              .filter((segment) => segment.length > 0);
-          });
-        const lineHeight = renderTemplate.textPositions.message.lineHeight;
+        const messageLines = wrapTextToBox(sharedFormData.message, ctx, {
+          ...messageConfig,
+          width: messageBox.width,
+          height: messageBox.height
+        });
+        const lineHeight = messageConfig.lineHeight;
         const startY = messageBox.y - ((messageLines.length - 1) * lineHeight) / 2;
 
         messageLines.forEach((line, index) => {

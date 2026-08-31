@@ -2,7 +2,7 @@
 
 ## 1. 專案概覽
 
-Anicon DIVA CardMaker 是一個以 React + HTML5 Canvas 為核心的預訂圖製作工具。
+Anicon DIVA CardMaker 是一個以 React.JS + Python FastAPI 為網站架構的場次預定圖製作工具。
 使用者在表單填入活動資訊、設定天數、上傳每日圖片，即時預覽合成後的卡片，最後下載 PNG。
 可將圖卡儲存至後端並透過 `/card/:id` 連結分享。
 
@@ -142,8 +142,8 @@ ccm/
 | 路由 | 說明 | 權限 |
 |---|---|---|
 | `/` | 首頁「本週場次」（HomePage） | 公開 |
-| `/make` | DIY 預訂製作器（自訂版型，CardMakerProvider） | 公開 |
-| `/make?id=xxx` | OEM 預訂頁（`eventName = id`，覆寫版面） | 公開 |
+| `/make` | DIY 預定製作器（自訂版型，CardMakerProvider） | 公開 |
+| `/make?id=xxx` | OEM 預定頁（`eventName = id`，覆寫版面） | 公開 |
 | `/:eventId` | 客製化 OEM 模板（`/api/events/{id}` 覆寫版面） | 公開 |
 | `/card/:cardId` | 載入已儲存的圖卡（分享連結） | 公開 |
 | `/login` | 登入頁 | 公開 |
@@ -176,7 +176,7 @@ ccm/
   （overWriteCanvas）的草稿。
 - **admin/**：管理面板各 tab 內容（見 3.2）。
 - **HomePage.jsx**：使用 `eventCalendar.js` 篩選本週場次，顯示卡片縮圖與日期範圍，
-  點擊「製作預訂」進入該活動。
+  點擊「製作預定」進入該活動。
 - **ErrorBoundary.jsx / ErrorProvider.jsx**：渲染錯誤發布 E004；API 層錯誤透過
   `errorBus` 發布，以彈窗顯示「代碼：說明」。
 
