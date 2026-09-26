@@ -5,7 +5,7 @@ import { Home, Shield, LogIn, LogOut, Menu, X, ChevronDown, PenTool, Info } from
 import * as api from '../services/api.js';
 
 const NavBar = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -20,6 +20,11 @@ const NavBar = () => {
       })
       .catch(() => {});
   }, []);
+
+  // 下拉選單的值由目前路由推導（受控元件），離開活動頁後自動回到「選擇活動」。
+  // 若用 defaultValue（非受控），選過的活動會一直停在選單上，
+  // 之後再選同一個活動不會觸發 onChange，導致無法跳轉。
+  const selectedEventId = getRouteEventId(pathname, search, eventTemplates);
 
   const handleEventChange = (eventId) => {
     if (eventId) {
@@ -60,7 +65,7 @@ const NavBar = () => {
               <div className="relative">
                 <select
                   onChange={(e) => handleEventChange(e.target.value)}
-                  defaultValue=""
+                  value={selectedEventId}
                   className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 hover:border-orange-400 input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
@@ -122,7 +127,7 @@ const NavBar = () => {
               <div className="relative">
                 <select
                   onChange={(e) => { handleEventChange(e.target.value); setMobileOpen(false); }}
-                  defaultValue=""
+                  value={selectedEventId}
                   className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
@@ -177,5 +182,20 @@ const NavBar = () => {
     </nav>
   );
 };
+
+// 從路由取得目前的活動代號：/:eventId 或 /make?id=xxx；不在活動清單中則回傳 ''。
+function getRouteEventId(pathname, search, events) {
+  let routeId = '';
+  if (pathname === '/make') {
+    routeId = new URLSearchParams(search).get('id') || '';
+  } else {
+    try {
+      routeId = decodeURIComponent(pathname.slice(1));
+    } catch {
+      routeId = '';
+    }
+  }
+  return events.some((event) => event.id === routeId) ? routeId : '';
+}
 
 export default NavBar;

@@ -23,8 +23,10 @@ const DiyLayout = () => {
 
 const OemLayout = () => {
   const { eventId } = useParams();
+  // key：從 NavBar 直接切換到另一個活動時（/A → /B）整個重新掛載，
+  // 避免沿用上一個活動的版面、天數、身分等狀態。
   return (
-    <CardMakerProvider eventId={eventId}>
+    <CardMakerProvider key={eventId} eventId={eventId}>
       <CardMaker />
     </CardMakerProvider>
   );
@@ -35,7 +37,7 @@ const MakeLayout = () => {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('id');
   return (
-    <CardMakerProvider eventId={eventId}>
+    <CardMakerProvider key={eventId || 'diy'} eventId={eventId}>
       <CardMaker />
     </CardMakerProvider>
   );
