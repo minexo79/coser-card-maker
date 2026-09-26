@@ -2,13 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AlertTriangle, CheckCircle2, Calendar } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import * as api from '../../services/api.js';
-import { serializeDraft } from '../../utils/templateDraft.js';
+import { getSharedImageRadius, serializeDraft } from '../../utils/templateDraft.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
 import { EVENT_NAME_MAX_LENGTH, getEventDisplayName } from '../../utils/eventDisplay.js';
 import { useTemplateDraft } from './useTemplateDraft.js';
 import TemplateCanvas from './TemplateCanvas.jsx';
 import ElementList from './ElementList.jsx';
-import PropertyPanel from './PropertyPanel.jsx';
+import PropertyPanel, { NumberField } from './PropertyPanel.jsx';
 import Toolbar from './Toolbar.jsx';
 
 const SAVED_EVENT_KEY = 'ccm_template_editor_last_event';
@@ -50,6 +50,7 @@ const TemplateEditor = () => {
     loadFromPayload,
     clearAll,
     setSlotCount,
+    setImageRadius,
     resizeCanvas
   } = useTemplateDraft();
 
@@ -397,6 +398,14 @@ const TemplateEditor = () => {
                   />
                 </div>
               </label>
+              {/* 照片外框圓角：所有圖片槽共用同一個值 */}
+              <div data-testid="template-image-radius">
+                <NumberField
+                  label="照片圓角（px，所有圖片槽共用）"
+                  value={getSharedImageRadius(canvas)}
+                  onChange={setImageRadius}
+                />
+              </div>
             </div>
           </div>
 

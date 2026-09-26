@@ -6,6 +6,7 @@ import { getToken } from '../services/auth.js';
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { buildCardPayload, applyCardPayload } from '../utils/cardPayload.js';
+import { DEFAULT_IMAGE_RADIUS } from '../utils/templateDraft.js';
 
 const DEFAULT_CATEGORIES = ['COSER', '攝影', '路人'];
 
@@ -456,8 +457,11 @@ export const useCardMaker = ({ eventId = null } = {}) => {
         renderTemplate,
         imageDatas,
         imageOffsets,
-        // 使用者可切換每日照片是否使用圓角
-        radius: roundedCorners ? 32 : 0
+        // 使用者可切換每日照片是否使用圓角：
+        //   開啟 → 使用模板編輯器為各圖片槽設定的圓角（未設定時為 DEFAULT_IMAGE_RADIUS）
+        //   關閉 → 強制直角
+        radius: roundedCorners ? undefined : 0,
+        defaultRadius: DEFAULT_IMAGE_RADIUS
       });
     
       if (imageLayerRef.current) {

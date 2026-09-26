@@ -31,7 +31,9 @@ export const createImageLayerRenderer = () => {
     imageDatas,
     imageOffsets,
     // undefined = 沿用模板的 imageSlot.radius；數字 = 強制覆寫所有圖片的圓角半徑
-    radius
+    radius,
+    // 沿用模板時，若 imageSlot 沒有設定 radius 則使用此預設值
+    defaultRadius = 0
   }) => {
     if (!canvas) return;
 
@@ -83,7 +85,9 @@ export const createImageLayerRenderer = () => {
       ctx.save();
       ctx.beginPath();
 
-      const slotRadius = typeof radius === 'number' ? radius : imageSlot.radius;
+      const slotRadius = typeof radius === 'number'
+        ? radius
+        : (typeof imageSlot.radius === 'number' ? imageSlot.radius : defaultRadius);
 
       if (slotRadius)
         ctx.roundRect(

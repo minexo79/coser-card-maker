@@ -15,7 +15,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from app.core.config import get_settings
 from app.core.security import require_jwt_write
 
-BACKEND_VERSION = "1.0.0"
+BACKEND_VERSION = "1.0.1"
 BACKEND_PYTHON_VERSION = platform.python_version()
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])

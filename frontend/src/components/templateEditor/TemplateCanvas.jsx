@@ -4,6 +4,7 @@ import { clamp, normalizeRect } from '../../utils/geometry.js';
 import { resolveAssetUrl } from '../../services/api.js';
 import { usePointerDrag } from './usePointerDrag.js';
 import { computeSnap } from './snap.js';
+import { DEFAULT_IMAGE_RADIUS } from '../../utils/templateDraft.js';
 
 const isUploadedAsset = (path) => {
   if (!path) return false;
@@ -279,6 +280,7 @@ const CanvasInner = ({
             top: element.box.y,
             width: element.box.width,
             height: element.box.height,
+            borderRadius: element.box.radius ?? DEFAULT_IMAGE_RADIUS,
             pointerEvents: 'none'
           }}
         >

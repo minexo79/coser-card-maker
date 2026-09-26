@@ -1,4 +1,5 @@
 import { groupColor } from './constants.js';
+import { DEFAULT_IMAGE_RADIUS } from '../../utils/templateDraft.js';
 
 const HANDLES = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
 
@@ -75,6 +76,8 @@ const ElementOverlay = ({
         style={{
           inset: 0,
           border: `1.5px solid ${color}`,
+          // 圖片槽依設定的圓角顯示，方便預覽照片外框
+          borderRadius: element.group === 'imageSlots' ? box.radius ?? DEFAULT_IMAGE_RADIUS : undefined,
           background: selected ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255,255,255,0.02)',
           boxSizing: 'border-box'
         }}

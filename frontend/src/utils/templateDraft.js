@@ -11,6 +11,17 @@ import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 
 export const clone = (value) => JSON.parse(JSON.stringify(value));
 
+// 圖片槽（照片外框）圓角預設值（px）。
+// 同一個模板的所有圖片槽共用同一個圓角；資料上仍寫在每個 imageSlot.radius，
+// 以相容製卡頁的渲染與後端 schema。
+export const DEFAULT_IMAGE_RADIUS = 32;
+
+// 取得模板共用的圓角：以第一個有設定 radius 的圖片槽為準，皆未設定時回傳預設值。
+export function getSharedImageRadius(canvas) {
+  const slot = (canvas?.imageSlots || []).find((item) => typeof item?.radius === 'number');
+  return slot ? slot.radius : DEFAULT_IMAGE_RADIUS;
+}
+
 // 由 dayCount（1~4）找出對應的內建模板 key（如 "1p"）。
 export function templateKeyForDayCount(dayCount) {
   const count = Number.parseInt(dayCount, 10);
@@ -226,7 +237,7 @@ export function buildBlankBox(group, field) {
     case 'titleImage':
       return { ...base, x: 30, y: 30, width: 400, height: 200 };
     case 'textPositions': {
-      if (field === 'message') return { ...base, y: 450, height: 150, fontSize: 26, lineHeight: 32 };
+      if (field === 'message') return { ...base, y: 450, height: 150, fontSize: 26, lineHeight: 40 };
       if (field === 'category') return { ...base, y: 320, height: 80, fontSize: 28 };
       return { ...base, y: 180, height: 120, fontSize: 30 };
     }
