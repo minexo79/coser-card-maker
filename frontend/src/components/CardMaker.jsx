@@ -4,6 +4,7 @@ import { Settings as SettingIcon } from 'lucide-react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { useCardMakerContext } from '../contexts/useCardMakerContext';
 import * as api from '../services/api.js';
+import { getEventDisplayName } from '../utils/eventDisplay.js';
 import { getDayNumberFromKey } from '../hooks/useTools.js';
 import ImageUpload from './ImageUpload';
 import CardPreview from './CardPreview';
@@ -46,18 +47,18 @@ const CardMaker = () => {
   const activeSlot = visibleDaySlots.find((slot) => slot.key === activeDayKey) || visibleDaySlots[0] || null;
   const activeSlotKey = activeSlot?.key;
 
-  // 路由 /:eventId（OEM）、/:eventName，或 /make?id=xxx 皆對應活動模板 key
-  const eventName = params.eventName || params.eventId || searchParams.get('id');
+  // 路由 /:eventId（OEM）或 /make?id=xxx 皆對應活動代號
+  const eventId = params.eventId || searchParams.get('id');
 
   // 從後端取得
   const [preset, setPreset] = useState(null);
 
   useEffect(() => {
-    if (!eventName) return;
+    if (!eventId) return;
 
     let cancelled = false;
 
-    api.getEventTemplate(eventName)
+    api.getEventTemplate(eventId)
       .then((template) => {
         if (!cancelled && template?.overWriteCanvas) {
           setPreset(template);
@@ -70,7 +71,7 @@ const CardMaker = () => {
     return () => {
       cancelled = true;
     };
-  }, [eventName]);
+  }, [eventId]);
 
   // /card/:cardId 路由進入時自動載入
   useEffect(() => {
@@ -177,6 +178,12 @@ const CardMaker = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* OEM 活動頁頂部顯示活動名稱；DIY（無 preset）時不顯示 */}
+      {preset && (
+        <h1 className="mb-4 text-center text-2xl text-gray-800" data-testid="event-name">
+          {getEventDisplayName({ id: eventId, name: preset.name })}
+        </h1>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">

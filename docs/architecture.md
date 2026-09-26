@@ -19,6 +19,11 @@ Anicon DIVA CardMaker 是一個以 React.JS + Python FastAPI 為網站架構的�
   後端運行狀態、系統狀態
 - **客製化 OEM 模板**：以 `/api/events/{id}` 儲存之版面（含 `createdBy` 所有權），
   前端以 `/:eventId` 或 `/make?id=xxx` 載入並覆寫預設版面
+
+> **名詞定義**：**活動代號（`eventId`）** 是不可變的 slug（`[A-Za-z0-9_-]{1,64}`），
+> 用於 URL、API path 與 MongoDB `_id`；**活動名稱（`name`）** 是可修改的顯示名稱
+> （可含中文，最多 100 字），存在模板頂層。舊模板沒有 `name` 時，後端讀取會以
+> `eventId` 補上。前端顯示一律使用 `utils/eventDisplay.js` 的 `getEventDisplayName()`。
 - **首頁「本週場次」**：`/` 顯示本週有活動的場次卡片，點擊直接進入該活動製圖
 - **全域錯誤處理**：前端以彈窗顯示統一代碼（E001~E006）
 
@@ -143,7 +148,7 @@ ccm/
 |---|---|---|
 | `/` | 首頁「本週場次」（HomePage） | 公開 |
 | `/make` | DIY 預定製作器（自訂版型，CardMakerProvider） | 公開 |
-| `/make?id=xxx` | OEM 預定頁（`eventName = id`，覆寫版面） | 公開 |
+| `/make?id=xxx` | OEM 預定頁（`eventId = id`，覆寫版面） | 公開 |
 | `/:eventId` | 客製化 OEM 模板（`/api/events/{id}` 覆寫版面） | 公開 |
 | `/card/:cardId` | 載入已儲存的圖卡（分享連結） | 公開 |
 | `/login` | 登入頁 | 公開 |
@@ -152,7 +157,7 @@ ccm/
 
 路由巢狀：`ErrorProvider` > `ErrorBoundary` > `BrowserRouter` > `AuthProvider`；`/make` 與
 `/card/:cardId` 共用 `DiyLayout`（`CardMakerProvider`），`/:eventId` 用 `OemLayout`
-（以 `eventName` 帶入）。`Copyright` 在全站最外層顯示。
+（以 `eventId` 帶入）。`Copyright` 在全站最外層顯示。
 
 ### 3.2 管理面板（AdminDashboard.jsx，`?tab=` 切換）
 
@@ -169,7 +174,7 @@ ccm/
 ### 3.3 Components 層
 
 - **CardMaker.jsx**：主畫面容器（12 欄 grid：左側設定、右側預覽）；依路由取得的
-  `eventName`（`params.eventName || params.eventId || ?id=`）決定載入哪個活動模板。
+  `eventId`（`params.eventId || ?id=`）決定載入哪個活動模板，並於頁首顯示活動名稱。
 - **CardPreview / ImageUpload / PreviewModal**：純展示與預覽、檔案輸入封裝、
   放大預覽＋ `canvas.toDataURL()` 下載。
 - **templateEditor/**：模板編輯器系列元件，以 `useTemplateDraft` 管理可覆寫版面
@@ -342,7 +347,7 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 | POST | `/api/cards` | JWT | 儲存圖卡 → `{id}` |
 | GET | `/api/cards/{card_id}` | 公開 | 讀取圖卡 |
 | GET | `/api/events` | 公開* | 列出活動模板（依身分過濾） |
-| GET | `/api/events/list` | 公開* | 列出活動名稱（NavBar 下拉用） |
+| GET | `/api/events/list` | 公開* | 列出活動代號與名稱（NavBar 下拉用） |
 | GET | `/api/events/mine` | JWT | 我的模板（含共用模板） |
 | GET | `/api/events/{event_id}` | 公開 | 讀取單一模板 |
 | PUT | `/api/events/{event_id}` | JWT | 建立/覆寫模板（含所有權） |
@@ -354,7 +359,7 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 
 > `GET /api/events` 的可見性：admin 看全部；登入 non-admin 看自己的＋共用模板；
 > 匿名僅看共用（`createdBy` 為空）模板，無法列舉他人模板。`/api/events/list`
-> 回傳 `["<eventId>", ...]`，僅供 NavBar 下拉與首頁使用。
+> 回傳 `[{ "id", "name" }, ...]`，僅供 NavBar 下拉使用；目前**不套用**上述可見性過濾。
 
 ### 6.2 認證
 
@@ -435,9 +440,11 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
     "dayCount": 1,
     "startDate": "2026-01-01",
     "overWriteCanvas": { "...": "版面快照" },
-    "eventName": null
+    "eventId": "ff44"
   }
   ```
+- `eventId` 為活動代號；`eventName` 由後端依 `eventId` 查詢模板名稱寫入快照（前端送的值會被忽略，
+  找不到活動則為 `null`）。舊版前端只送 `eventName`（內容其實是代號）時，視為 `eventId`。
 - **Response 201**：`{ "id": "<12 位 hex>" }`
 - 錯誤：超過 5MB **413**；非 JSON / 欄位型別錯誤 **400**。
 
@@ -448,13 +455,15 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
   ```json
   {
     "id": "...",
-    "eventName": null,
+    "eventId": "ff44",
+    "eventName": "開拓動漫祭 FF44",
     "createdAt": "...",
     "updatedAt": "...",
     "createdBy": "username | 無",
-    "payload": { "dayCount": 1, "startDate": "...", "overWriteCanvas": {}, "eventName": null }
+    "payload": { "dayCount": 1, "startDate": "...", "overWriteCanvas": {}, "eventId": "ff44", "eventName": "開拓動漫祭 FF44" }
   }
   ```
+- 舊卡片沒有 `eventId` 時，讀取會以 `eventName`（當時存的是代號）補上。
 
 ### 6.5 活動模板（Events）
 
@@ -462,6 +471,7 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 
 ```json
 {
+  "name": "開拓動漫祭 FF44",
   "dayCount": 1,
   "startDate": "2026-01-01",
   "overWriteCanvas": {
@@ -477,17 +487,18 @@ Base URL：後端根路徑（本地 `http://localhost:8000`）。一律走 `api`
 }
 ```
 
-上傳欄位會自動補寫 `createdBy`（依 JWT 的 `sub`；admin 編輯他人模板時保留原擁有者）。
+`name` 選填，會去除首尾空白，空字串視為未設定，超過 100 字 **422**；讀取時缺值會以
+event id 補上。上傳欄位會自動補寫 `createdBy`（依 JWT 的 `sub`；admin 編輯他人模板時保留原擁有者）。
 
 #### GET /api/events
 
 - **認證**：公開／JWT（自動依身分過濾，見 6.1 註）
-- **Response 200**：`{ "<eventId>": { dayCount, startDate, overWriteCanvas, createdBy } }`
+- **Response 200**：`{ "<eventId>": { name, dayCount, startDate, overWriteCanvas, createdBy } }`
 
 #### GET /api/events/list
 
 - **認證**：公開
-- **Response 200**：`["<eventId>", "<eventId>", "<eventId>", ...]`
+- **Response 200**：`[{ "id": "<eventId>", "name": "<活動名稱>" }, ...]`（依 `startDate` 排序）
 
 #### GET /api/events/mine
 

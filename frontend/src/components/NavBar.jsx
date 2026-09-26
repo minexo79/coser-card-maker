@@ -23,7 +23,7 @@ const NavBar = () => {
 
   const handleEventChange = (eventId) => {
     if (eventId) {
-      navigate(`/${eventId}`);
+      navigate(`/${encodeURIComponent(eventId)}`);
     }
   };
 
@@ -64,8 +64,9 @@ const NavBar = () => {
                   className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 hover:border-orange-400 input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
-                  {eventTemplates.map((eventId) => (
-                    <option key={eventId} value={eventId}>{eventId}</option>
+                  {/* value 為活動代號（路由用），顯示文字為活動名稱 */}
+                  {eventTemplates.map((event) => (
+                    <option key={event.id} value={event.id}>{event.name}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
@@ -125,8 +126,9 @@ const NavBar = () => {
                   className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
-                  {eventTemplates.map((eventId) => (
-                    <option key={eventId} value={eventId}>{eventId}</option>
+                  {/* value 為活動代號（路由用），顯示文字為活動名稱 */}
+                  {eventTemplates.map((event) => (
+                    <option key={event.id} value={event.id}>{event.name}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />

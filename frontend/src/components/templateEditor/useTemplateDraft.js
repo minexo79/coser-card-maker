@@ -114,6 +114,14 @@ export function useTemplateDraft(initialDraft) {
     }));
   }, []);
 
+  // 設定活動顯示名稱（draft.name）。
+  const setName = useCallback((name) => {
+    setDraft((prev) => ({
+      ...prev,
+      name: name ?? ''
+    }));
+  }, []);
+
   // 設定草稿的起始日期（draft.startDate）。
   const setStartDate = useCallback((date) => {
     setDraft((prev) => ({
@@ -354,6 +362,8 @@ export function useTemplateDraft(initialDraft) {
     elements,
     elementsById,
     loadedEventId,
+    // 儲存成功後將草稿標記為對應此活動代號（例如另存為新活動）
+    markSavedAs: setLoadedEventId,
     resetFromTemplate,
     clearAll,
     replaceDraft,
@@ -362,6 +372,7 @@ export function useTemplateDraft(initialDraft) {
     updateMeta,
     updateNestedMeta,
     resizeCanvas,
+    setName,
     setStartDate,
     addElement,
     addCategorySelection,

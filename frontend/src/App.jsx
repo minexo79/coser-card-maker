@@ -24,7 +24,7 @@ const DiyLayout = () => {
 const OemLayout = () => {
   const { eventId } = useParams();
   return (
-    <CardMakerProvider eventName={eventId}>
+    <CardMakerProvider eventId={eventId}>
       <CardMaker />
     </CardMakerProvider>
   );
@@ -35,7 +35,7 @@ const MakeLayout = () => {
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get('id');
   return (
-    <CardMakerProvider eventName={eventId}>
+    <CardMakerProvider eventId={eventId}>
       <CardMaker />
     </CardMakerProvider>
   );

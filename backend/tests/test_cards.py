@@ -1,7 +1,7 @@
 """Contract tests for POST /api/cards and GET /api/cards/{id}.
 
 Payload format follows ``card-expect.json``: each stored card carries only
-{dayCount, startDate, overWriteCanvas, eventName} (layout snapshot).
+{dayCount, startDate, overWriteCanvas, eventId, eventName} (layout snapshot).
 """
 
 VALID_PAYLOAD = {
@@ -30,6 +30,7 @@ VALID_PAYLOAD = {
             "message": {"fontSize": 30, "x": 864.8, "y": 31, "width": 324.4, "height": 341.8, "lineHeight": 42},
         },
     },
+    "eventId": None,
     "eventName": None,
 }
 
@@ -50,6 +51,7 @@ def test_save_and_load_roundtrip(api, auth_headers):
 
     body = got.json()
     assert body["id"] == card_id
+    assert body["eventId"] is None
     assert body["eventName"] is None
     assert body["createdAt"]
     assert body["updatedAt"]
@@ -106,3 +108,60 @@ def test_payload_over_limit_returns_413(api, auth_headers):
     payload = {**VALID_PAYLOAD, "overWriteCanvas": {"junk": big_config}}
     resp = api.post("/api/cards", json=payload, headers=auth_headers)
     assert resp.status_code == 413
+
+
+def _put_event(api, auth_headers, event_id, name=None):
+    template = {
+        "dayCount": 1,
+        "startDate": "2026-05-30",
+        "overWriteCanvas": {"canvas": {"width": 1220, "height": 700}},
+    }
+    if name is not None:
+        template["name"] = name
+    resp = api.put(f"/api/events/{event_id}", json=template, headers=auth_headers)
+    assert resp.status_code == 200
+
+
+def test_card_snapshots_event_name_from_template(api, auth_headers):
+    _put_event(api, auth_headers, "cardevt01", name="開拓動漫祭")
+    payload = {**VALID_PAYLOAD, "eventId": "cardevt01", "eventName": "client-supplied"}
+    post = api.post("/api/cards", json=payload, headers=auth_headers)
+    assert post.status_code == 201
+
+    body = api.get(f"/api/cards/{post.json()['id']}").json()
+    assert body["eventId"] == "cardevt01"
+    assert body["eventName"] == "開拓動漫祭"
+    assert body["payload"]["eventName"] == "開拓動漫祭"
+
+
+def test_card_for_unknown_event_has_no_name(api, auth_headers):
+    payload = {**VALID_PAYLOAD, "eventId": "no-such-event"}
+    post = api.post("/api/cards", json=payload, headers=auth_headers)
+    body = api.get(f"/api/cards/{post.json()['id']}").json()
+    assert body["eventId"] == "no-such-event"
+    assert body["eventName"] is None
+
+
+def test_legacy_client_event_name_is_treated_as_id(api, auth_headers):
+    _put_event(api, auth_headers, "cardevt02", name="CWT70")
+    legacy = {k: v for k, v in VALID_PAYLOAD.items() if k != "eventId"}
+    post = api.post("/api/cards", json={**legacy, "eventName": "cardevt02"}, headers=auth_headers)
+    body = api.get(f"/api/cards/{post.json()['id']}").json()
+    assert body["eventId"] == "cardevt02"
+    assert body["eventName"] == "CWT70"
+
+
+def test_legacy_stored_card_backfills_event_id(api):
+    from app.core.db import get_collection
+
+    get_collection("cards").insert_one({
+        "_id": "legacy000001",
+        "id": "legacy000001",
+        "eventName": "old-event",
+        "createdAt": "2026-01-01T00:00:00+00:00",
+        "updatedAt": "2026-01-01T00:00:00+00:00",
+        "payload": {"dayCount": 1, "startDate": "", "overWriteCanvas": {}, "eventName": "old-event"},
+    })
+    body = api.get("/api/cards/legacy000001").json()
+    assert body["eventId"] == "old-event"
+    assert body["payload"]["eventId"] == "old-event"

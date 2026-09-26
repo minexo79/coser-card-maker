@@ -2,7 +2,10 @@
 
 Stored/returned records use the exact same shape as
 ``frontend/src/models/oemCardTemplates.js`` entries:
-``{"dayCount": int, "startDate": str, "overWriteCanvas": {...}}``
+``{"name": str, "dayCount": int, "startDate": str, "overWriteCanvas": {...}}``
+
+Terminology: ``event_id`` is the immutable URL slug (MongoDB ``_id``);
+``name`` is the mutable, human-readable display name (falls back to the id).
 GET is public; PUT/DELETE require JWT authentication.
 """
 
@@ -12,7 +15,7 @@ from datetime import date
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from app.core.config import get_settings
 from app.core.security import require_jwt_write
@@ -90,10 +93,21 @@ class EventTemplatePayload(BaseModel):
     """Main template payload — uses extra='ignore' for safe storage (A-006)."""
     model_config = ConfigDict(extra="ignore")
 
+    # Display name only — the event id lives in the URL path / Mongo ``_id``.
+    # Must be declared here: extra="ignore" would otherwise silently drop it.
+    name: str | None = Field(default=None, max_length=event_templates.EVENT_NAME_MAX_LENGTH)
     dayCount: int
     startDate: date
     overWriteCanvas: OverWriteCanvasConfig
     createdBy: str | None = None
+
+    @field_validator("name", mode="before")
+    @classmethod
+    def _normalize_name(cls, value: Any) -> Any:
+        # Blank names count as "not set" so reads fall back to the event id.
+        if isinstance(value, str):
+            return value.strip() or None
+        return value
 
 
 def _strip_unknown_fields(data: dict) -> dict:
@@ -157,9 +171,14 @@ async def read_event_templates(
 # --- Lightweight event list for homepage combobox ---
 
 @router.get("/list")
-async def list_event_ids() -> list[str]:
-    """Return only event IDs (no template payloads) for the NavBar combobox."""
-    return list(event_templates.list_event_templates().keys())
+async def list_event_summaries() -> list[dict]:
+    """Return ``[{"id", "name"}]`` (no template payloads) for the NavBar combobox.
+
+    NOTE: unlike ``GET /api/events`` this listing is NOT filtered by
+    ``createdBy`` visibility — it is the only way anonymous visitors discover
+    events. Tightening it needs a public/private flag first (see plan.md §7).
+    """
+    return event_templates.list_event_summaries()
 
 
 # --- GET /api/events/mine (auto-filter from JWT) ---

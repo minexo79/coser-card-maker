@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import * as api from '../../services/api.js';
 import { serializeDraft } from '../../utils/templateDraft.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { EVENT_NAME_MAX_LENGTH, getEventDisplayName } from '../../utils/eventDisplay.js';
 import { useTemplateDraft } from './useTemplateDraft.js';
 import TemplateCanvas from './TemplateCanvas.jsx';
 import ElementList from './ElementList.jsx';
@@ -39,8 +40,10 @@ const TemplateEditor = () => {
     elements,
     elementsById,
     loadedEventId,
+    markSavedAs,
     updateElement,
     updateMeta,
+    setName,
     setStartDate,
     addElement,
     removeElement,
@@ -82,7 +85,7 @@ const TemplateEditor = () => {
     async (id) => {
       const trimmed = (id || '').trim();
       if (!isValidEventId(trimmed)) {
-        showToast('無效的活動 ID', 'error');
+        showToast('無效的活動代號', 'error');
         return false;
       }
       setIsLoading(true);
@@ -92,12 +95,12 @@ const TemplateEditor = () => {
         setSelectedId(null);
         setSlotImageURLs({});
         setEventId(trimmed);
-        showToast(`已載入活動「${trimmed}」`);
+        showToast(`已載入活動「${getEventDisplayName({ id: trimmed, name: payload?.name })}」`);
         return true;
       } catch (error) {
         console.error(error);
         showToast(
-          error?.status === 404 ? `找不到活動「${trimmed}」` : '載入活動失敗，請檢查網路或 ID',
+          error?.status === 404 ? `找不到活動「${trimmed}」` : '載入活動失敗，請檢查網路或代號',
           'error'
         );
         return false;
@@ -209,7 +212,12 @@ const TemplateEditor = () => {
 
     const id = (eventId || '').trim();
     if (!isValidEventId(id)) {
-      showToast('請先輸入有效的活動 ID（僅限英數、-、_，1~64 字元）', 'error');
+      showToast('請先輸入有效的活動代號（僅限英數、-、_，1~64 字元）', 'error');
+      return;
+    }
+    // 活動名稱：前端必填（後端為相容舊 client 仍為選填）
+    if (!payload.name) {
+      showToast('請輸入活動名稱', 'error');
       return;
     }
 
@@ -224,6 +232,7 @@ const TemplateEditor = () => {
         overWriteCanvas.baseImagePath = uploadedUrl;
       }
       const finalPayload = {
+        name: payload.name,
         dayCount: payload.dayCount,
         startDate: payload.startDate,
         overWriteCanvas
@@ -231,17 +240,19 @@ const TemplateEditor = () => {
       await api.saveEventTemplate(id, finalPayload);
       localStorage.setItem(SAVED_EVENT_KEY, id);
       setEventId(id);
+      // 同步「已載入」的代號，另存為新活動後提示才會消失
+      markSavedAs(id);
       const shareUrl = `${window.location.origin}/${id}`;
       console.log('分享連結：', shareUrl);
       try {
         const copied = await copyToClipboard(shareUrl);
         showToast(
           copied
-            ? `儲存成功：${id}，分享連結已複製到剪貼簿`
-            : `儲存成功：${id}（請手動複製：${shareUrl}）`
+            ? `儲存成功：${payload.name}，分享連結已複製到剪貼簿`
+            : `儲存成功：${payload.name}（請手動複製：${shareUrl}）`
         );
       } catch {
-        showToast(`儲存成功：${id}（請手動複製：${shareUrl}）`);
+        showToast(`儲存成功：${payload.name}（請手動複製：${shareUrl}）`);
       }
     } catch (error) {
       console.error('儲存失敗：', error);
@@ -249,7 +260,7 @@ const TemplateEditor = () => {
     } finally {
       setSaving(false);
     }
-  }, [draft, eventId, showToast]);
+  }, [draft, eventId, markSavedAs, showToast]);
 
   // 清空 blob URL（元件卸載時）
   useEffect(() => {
@@ -269,6 +280,9 @@ const TemplateEditor = () => {
   );
 
   const isLoadedTemplate = !!loadedEventId;
+  // 已載入模板後改了代號 → 儲存時會另存為新活動（原活動不受影響）
+  const trimmedEventId = (eventId || '').trim();
+  const isSaveAsNew = isLoadedTemplate && !!trimmedEventId && trimmedEventId !== loadedEventId;
 
   return (
     <div className="min-h-screen">
@@ -280,7 +294,9 @@ const TemplateEditor = () => {
               isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
             }`}
           >
-            {isLoadedTemplate ? `已載入：${loadedEventId}` : '使用「＋新增」加入元素'}
+            {isLoadedTemplate
+              ? `已載入：${getEventDisplayName({ id: loadedEventId, name: draft?.name })}`
+              : '使用「＋新增」加入元素'}
           </span>
         </div>
       </div>
@@ -335,17 +351,34 @@ const TemplateEditor = () => {
             <h3 className="mb-3 text-sm text-gray-700">活動資訊</h3>
             <div className="space-y-3">
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] text-gray-500">活動 ID</span>
+                <span className="text-[11px] text-gray-500">活動名稱</span>
+                <input
+                  data-testid="template-event-name"
+                  type="text"
+                  value={draft?.name || ''}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="例如：開拓動漫祭 FF44"
+                  maxLength={EVENT_NAME_MAX_LENGTH}
+                  className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                />
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] text-gray-500">活動代號（網址用，僅限英數、-、_）</span>
                 <input
                   data-testid="template-event-id"
                   type="text"
                   value={eventId}
                   onChange={(e) => setEventId(e.target.value)}
                   onBlur={handleLoadEvent}
-                  placeholder="event-name"
+                  placeholder="ff44"
                   maxLength={64}
-                  className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-gray-300 px-2 py-1.5 font-mono text-sm"
                 />
+                {isSaveAsNew && (
+                  <span className="text-[11px] text-amber-600">
+                    代號已變更，儲存時會另存為新活動「{trimmedEventId}」，原活動「{loadedEventId}」不受影響
+                  </span>
+                )}
               </label>
               <label className="flex flex-col gap-1">
                 <span className="text-[11px] text-gray-500">起始日期</span>

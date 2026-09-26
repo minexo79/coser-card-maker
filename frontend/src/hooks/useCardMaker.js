@@ -45,7 +45,7 @@ const createStateByDayKeys = (dayKeys, valueFactory) => {
   }, {});
 };
 
-export const useCardMaker = ({ eventName = null } = {}) => {
+export const useCardMaker = ({ eventId = null } = {}) => {
   // Build template config once and reuse it across renders.
   const templateConfig = useMemo(() => buildTemplateConfig(), []);
   const defaultDayCount = templateConfig.supportedDayCounts[0] || 1;
@@ -623,7 +623,8 @@ export const useCardMaker = ({ eventName = null } = {}) => {
     try {
       const payload = buildCardPayload({
         dayCount,
-        eventName,
+        // 只送活動代號；活動名稱快照由後端依代號查詢後寫入
+        eventId,
         dayDetails,
         overWriteCanvas: getCurrentTemplate()
       });
@@ -636,10 +637,10 @@ export const useCardMaker = ({ eventName = null } = {}) => {
         : '儲存失敗，請稍後再試。');
       return null;
     }
-  }, [ensureApiToken, getCurrentTemplate, eventName, dayCount, dayDetails]);
+  }, [ensureApiToken, getCurrentTemplate, eventId, dayCount, dayDetails]);
 
   // Restore UI state from a stored card. Resolves true on success.
-  // payload 僅含版面快照（dayCount / startDate / overWriteCanvas / eventName），
+  // payload 僅含版面快照（dayCount / startDate / overWriteCanvas / eventId / eventName），
   // 不還原使用者內容。
   const loadCard = useCallback(async (cardId) => {
     try {

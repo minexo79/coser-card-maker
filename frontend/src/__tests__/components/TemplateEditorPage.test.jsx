@@ -80,4 +80,68 @@ describe('components/templateEditor/TemplateEditor - 載入模板', () => {
 
     expect(apiMocks.getEventTemplate).toHaveBeenCalledWith('new-event', { silent: true });
   });
+
+  it('載入模板後應顯示活動名稱', async () => {
+    apiMocks.getEventTemplate.mockResolvedValue({
+      name: '開拓動漫祭 FF44',
+      dayCount: 1,
+      startDate: '2026-05-30',
+      overWriteCanvas: { canvas: { width: 1220, height: 700 }, imageSlots: [] }
+    });
+
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/template-editor?event=ff44']}>
+          <TemplateEditor />
+        </MemoryRouter>
+      );
+    });
+
+    expect(screen.getByTestId('template-event-name').value).toBe('開拓動漫祭 FF44');
+    expect(screen.getByTestId('template-event-id').value).toBe('ff44');
+    expect(screen.getByText('已載入：開拓動漫祭 FF44')).toBeTruthy();
+  });
+
+  it('未填活動名稱時不送出儲存', async () => {
+    apiMocks.getEventTemplate.mockRejectedValue({ status: 404 });
+
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/template-editor']}>
+          <TemplateEditor />
+        </MemoryRouter>
+      );
+    });
+
+    fireEvent.change(screen.getByTestId('template-event-id'), { target: { value: 'ff44' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /儲存/ }));
+    });
+
+    expect(apiMocks.saveEventTemplate).not.toHaveBeenCalled();
+    expect(screen.getByText('請輸入活動名稱')).toBeTruthy();
+  });
+
+  it('儲存時 payload 應帶上活動名稱', async () => {
+    apiMocks.saveEventTemplate.mockResolvedValue({});
+
+    await act(async () => {
+      render(
+        <MemoryRouter initialEntries={['/template-editor']}>
+          <TemplateEditor />
+        </MemoryRouter>
+      );
+    });
+
+    fireEvent.change(screen.getByTestId('template-event-id'), { target: { value: 'ff44' } });
+    fireEvent.change(screen.getByTestId('template-event-name'), { target: { value: ' 開拓動漫祭 ' } });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /儲存/ }));
+    });
+
+    expect(apiMocks.saveEventTemplate).toHaveBeenCalledTimes(1);
+    const [id, payload] = apiMocks.saveEventTemplate.mock.calls[0];
+    expect(id).toBe('ff44');
+    expect(payload.name).toBe('開拓動漫祭');
+  });
 });

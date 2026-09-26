@@ -4,6 +4,7 @@ import { CalendarDays, Loader2, PenLine, Sparkles, AlertTriangle } from 'lucide-
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { filterThisWeek, formatEventDateRange } from '../utils/eventCalendar.js';
+import { getEventDisplayName } from '../utils/eventDisplay.js';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -87,7 +88,8 @@ const HomePage = () => {
                 </div>
 
                 <div className="flex flex-1 flex-col p-4">
-                  <p className="truncate font-medium text-gray-800">{event.id}</p>
+                  {/* 顯示活動名稱；導向路由仍使用 event.id（活動代號） */}
+                  <p className="truncate font-medium text-gray-800">{getEventDisplayName(event)}</p>
                   <p className="mt-1 text-xs text-gray-400">
                     {formatEventDateRange(event)}
                     {event.dayCount ? `・${event.dayCount} 天` : ''}

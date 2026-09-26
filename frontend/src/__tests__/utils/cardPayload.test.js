@@ -3,7 +3,7 @@ import { buildCardPayload, applyCardPayload } from '../../utils/cardPayload.js';
 
 const stateSample = {
   dayCount: 2,
-  eventName: 'demo-event',
+  eventId: 'demo-event',
   dayDetails: {
     d1: { date: '2026-05-23', cosrole: '' },
     d2: { date: '2026-05-24', cosrole: 'Miku' }
@@ -36,14 +36,14 @@ const stateSample = {
 };
 
 describe('utils/cardPayload', () => {
-  it('build 應只輸出 dayCount / startDate / overWriteCanvas / eventName', () => {
+  it('build 應只輸出 dayCount / startDate / overWriteCanvas / eventId', () => {
     const payload = buildCardPayload(stateSample);
 
     expect(payload).toEqual({
       dayCount: 2,
       startDate: '2026-05-23',
       overWriteCanvas: stateSample.overWriteCanvas,
-      eventName: 'demo-event'
+      eventId: 'demo-event'
     });
   });
 
@@ -55,14 +55,15 @@ describe('utils/cardPayload', () => {
       dayCount: 2,
       startDate: '2026-05-23',
       overWriteCanvas: stateSample.overWriteCanvas,
-      eventName: 'demo-event'
+      eventId: 'demo-event',
+      eventName: null
     });
   });
 
   it('未填起始日期時 startDate 為空字串（對齊 card-expect.json）', () => {
     const payload = buildCardPayload({
       dayCount: 1,
-      eventName: null,
+      eventId: null,
       dayDetails: { d1: { date: '', cosrole: '' } },
       overWriteCanvas: {}
     });
@@ -86,7 +87,21 @@ describe('utils/cardPayload', () => {
     expect(restored.dayCount).toBeNull();
     expect(restored.startDate).toBe('');
     expect(restored.overWriteCanvas).toBeNull();
+    expect(restored.eventId).toBeNull();
     expect(restored.eventName).toBeNull();
+  });
+
+  it('舊卡片的 eventName 應視為 eventId', () => {
+    const restored = applyCardPayload({ eventName: 'legacy-event' });
+
+    expect(restored.eventId).toBe('legacy-event');
+  });
+
+  it('新卡片同時保留 eventId 與名稱快照', () => {
+    const restored = applyCardPayload({ eventId: 'cwt-70', eventName: '開拓動漫祭' });
+
+    expect(restored.eventId).toBe('cwt-70');
+    expect(restored.eventName).toBe('開拓動漫祭');
   });
 
   it('非物件 payload 應拋出錯誤', () => {

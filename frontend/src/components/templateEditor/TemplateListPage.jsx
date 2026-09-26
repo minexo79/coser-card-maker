@@ -4,6 +4,7 @@ import { AlertTriangle, FolderOpen, Loader2, Pencil, RefreshCw, Share2, Trash2 }
 import { resolveAssetUrl } from '../../services/api.js';
 import * as api from '../../services/api.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { getEventDisplayName } from '../../utils/eventDisplay.js';
 
 const TemplateListPage = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const TemplateListPage = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm(`確定要刪除活動模板「${id}」嗎？此操作無法復原。`)) return;
+    if (!window.confirm(`確定要刪除活動模板「${getEventDisplayName(templates.find((t) => t.id === id)) || id}」嗎？此操作無法復原。`)) return;
     setBusyId(id);
     try {
       await api.deleteEventTemplate(id);
@@ -133,7 +134,7 @@ const TemplateListPage = () => {
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="min-w-0 truncate font-medium text-gray-800">{template.id}</p>
+                  <p className="min-w-0 truncate font-medium text-gray-800">{getEventDisplayName(template)}</p>
                   {template.createdBy ? (
                     <span className="shrink-0 max-w-24 truncate rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-normal text-gray-500" title={`建立者：${template.createdBy}`}>
                       {template.createdBy}
@@ -145,7 +146,7 @@ const TemplateListPage = () => {
                   )}
                 </div>
                 <p className="mt-0.5 text-xs text-gray-400">
-                  {template.dayCount ?? 0} 天
+                  <span className="font-mono">{template.id}</span>・{template.dayCount ?? 0} 天
                   {template.startDate ? `・${template.startDate}` : ''}
                 </p>
               </div>

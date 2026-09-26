@@ -56,6 +56,16 @@ describe('HomePage 首頁', () => {
     expect(buttons).toHaveLength(1);
   });
 
+  it('有活動名稱時顯示名稱而非代號', async () => {
+    getEventTemplates.mockResolvedValue({
+      cwtt36: { ...events.cwtt36, name: '台北動漫祭 CWT T36' },
+    });
+    renderPage();
+
+    expect(await screen.findByText('台北動漫祭 CWT T36')).toBeTruthy();
+    expect(screen.queryByText('cwtt36')).toBeNull();
+  });
+
   it('點「製作預定」導向 /:eventId', async () => {
     getEventTemplates.mockResolvedValue(events);
     renderPage();

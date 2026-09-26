@@ -3,6 +3,7 @@ import { AlertTriangle, FolderOpen, Loader2, Pencil, RefreshCw, Share2, Trash2, 
 import { resolveAssetUrl } from '../../services/api.js';
 import * as api from '../../services/api.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
+import { getEventDisplayName } from '../../utils/eventDisplay.js';
 
 const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   const [templates, setTemplates] = useState([]);
@@ -53,7 +54,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   };
 
   const handleDeleteClick = async (id) => {
-    if (!window.confirm(`確定要刪除活動模板「${id}」嗎？此操作無法復原。`)) return;
+    if (!window.confirm(`確定要刪除活動模板「${getEventDisplayName(templates.find((t) => t.id === id)) || id}」嗎？此操作無法復原。`)) return;
     try {
       await onDelete?.(id);
       setTemplates((prev) => prev.filter((t) => t.id !== id));
@@ -154,9 +155,9 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-gray-800">{template.id}</p>
+                    <p className="truncate font-medium text-gray-800">{getEventDisplayName(template)}</p>
                     <p className="mt-0.5 text-xs text-gray-400">
-                      {template.dayCount ?? 0} 天
+                      <span className="font-mono">{template.id}</span>・{template.dayCount ?? 0} 天
                       {template.startDate ? `・${template.startDate}` : ''}
                     </p>
                   </div>

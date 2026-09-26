@@ -1,7 +1,8 @@
 // 模板草稿（draft）的純函式資料操作。
 //
 // 一個 draft 的形狀為：
-//   { dayCount: number, startDate: string, overWriteCanvas: object }
+//   { name: string, dayCount: number, startDate: string, overWriteCanvas: object }
+// name 為活動顯示名稱；活動代號（eventId）不屬於草稿，由編輯器另外管理。
 // overWriteCanvas 與 cardTemplates.js / skill.md 描述的結構相同。
 //
 // 本模組不依賴 React，方便直接用 Vitest 測試。
@@ -32,6 +33,7 @@ export function createDraftFromBase(dayCount, options = {}) {
   const key = templateKeyForDayCount(dayCount);
   const base = CARD_TEMPLATES[key];
   return {
+    name: '',
     dayCount: base.imageSlots.length,
     startDate: options.startDate ?? todayString(),
     overWriteCanvas: clone(base)
@@ -45,6 +47,7 @@ export function createBlankDraft(options = {}) {
   const width = canvas.width ?? 1220;
   const height = canvas.height ?? 700;
   return {
+    name: '',
     // 從 0 開始時沒有圖片槽，dayCount 設為 1 以符合後端最小語意；
     // 真正的天數以 imageSlots.length === 0 表示「尚未設定」。
     dayCount: 1,
@@ -69,7 +72,7 @@ export function createBlankDraft(options = {}) {
   };
 }
 
-// 由後端 event template payload（{ dayCount, startDate, overWriteCanvas }）建立草稿。
+// 由後端 event template payload（{ name, dayCount, startDate, overWriteCanvas }）建立草稿。
 // 若資料不完整則擲錯。
 export function createDraftFromEventPayload(payload) {
   if (!payload || typeof payload !== 'object') {
@@ -82,6 +85,7 @@ export function createDraftFromEventPayload(payload) {
   const slots = Array.isArray(overWriteCanvas.imageSlots) ? overWriteCanvas.imageSlots : [];
   const dayCount = payload.dayCount ?? slots.length;
   return {
+    name: typeof payload.name === 'string' ? payload.name : '',
     dayCount,
     startDate: payload.startDate || todayString(),
     overWriteCanvas: clone(overWriteCanvas)
@@ -97,6 +101,8 @@ export function serializeDraft(draft) {
   const slots = draft.overWriteCanvas.imageSlots || [];
   const dayCount = slots.length || 1;
   return {
+    // 空字串代表未填；由編輯器擋下，後端也會把空白名稱視為未設定
+    name: (draft.name || '').trim(),
     dayCount,
     startDate: draft.startDate || '',
     overWriteCanvas: clone(draft.overWriteCanvas)
