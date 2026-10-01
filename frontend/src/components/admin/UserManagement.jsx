@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/useAuth';
 import * as auth from '../../services/auth';
 import { Trash2, RefreshCw, UserPlus } from 'lucide-react';
+import Loader from '../Loader';
 
 const UserManagement = () => {
   const { user: currentUser } = useAuth();
@@ -87,20 +88,20 @@ const UserManagement = () => {
   };
 
   if (loading) {
-    return <p className="text-sm text-gray-500">載入中...</p>;
+    return <Loader className="py-10" />;
   }
 
   return (
     <div>
-      <h2 className="text-lg text-gray-800 mb-4">使用者管理</h2>
+      <h2 className="text-lg text-fg mb-4">使用者管理</h2>
 
-      {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+      {error && <p className="text-sm text-danger mb-3">{error}</p>}
 
       {/* User list */}
       <div className="mb-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-600">
+            <tr className="border-b border-line text-left text-fg-soft">
               <th className="py-2">帳號</th>
               <th className="py-2">角色</th>
               <th className="py-2">建立時間</th>
@@ -109,14 +110,14 @@ const UserManagement = () => {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.username} className="border-b border-gray-100">
+              <tr key={u.username} className="border-b border-line">
                 <td className="py-2">{u.username}</td>
                 <td className="py-2">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin' ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-600'}`}>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin' ? 'bg-accent/15 text-accent' : 'bg-raised text-fg-soft'}`}>
                     {u.role}
                   </span>
                 </td>
-                <td className="py-2 text-gray-500 text-xs">
+                <td className="py-2 text-muted text-xs">
                   {new Date(u.created_at).toLocaleString()}
                 </td>
                 <td className="py-2 text-right space-x-2">
@@ -127,18 +128,18 @@ const UserManagement = () => {
                         value={resetPassword}
                         onChange={(e) => setResetPassword(e.target.value)}
                         placeholder="新密碼"
-                        className="px-2 py-1 border border-gray-300 rounded text-xs w-32"
+                        className="px-2 py-1 border border-line-strong rounded text-xs w-32"
                       />
                       <button
                         onClick={() => handleReset(u.username)}
                         disabled={resetting}
-                        className="text-xs text-orange-600 hover:underline"
+                        className="text-xs text-accent hover:underline"
                       >
                         確認
                       </button>
                       <button
                         onClick={() => { setResetTarget(null); setResetPassword(''); }}
-                        className="text-xs text-gray-500 hover:underline"
+                        className="text-xs text-muted hover:underline"
                       >
                         取消
                       </button>
@@ -147,7 +148,7 @@ const UserManagement = () => {
                     <>
                       <button
                         onClick={() => setResetTarget(u.username)}
-                        className="text-gray-500 hover:text-orange-600"
+                        className="text-muted hover:text-accent"
                         title="重設密碼"
                       >
                         <RefreshCw className="w-4 h-4 inline" />
@@ -155,7 +156,7 @@ const UserManagement = () => {
                       {u.username !== currentUser?.username && (
                         <button
                           onClick={() => handleDelete(u.username)}
-                          className="text-gray-500 hover:text-red-600"
+                          className="text-muted hover:text-danger"
                           title="刪除"
                         >
                           <Trash2 className="w-4 h-4 inline" />
@@ -171,8 +172,8 @@ const UserManagement = () => {
       </div>
 
       {/* Create user form */}
-      <div className="border-t border-gray-200 pt-4">
-        <h3 className="text-sm text-gray-700 mb-2 flex items-center gap-1">
+      <div className="border-t border-line pt-4">
+        <h3 className="text-sm text-fg-soft mb-2 flex items-center gap-1">
           <UserPlus className="w-4 h-4" /> 新增使用者
         </h3>
         <form onSubmit={handleCreate} className="flex gap-2 items-end flex-wrap items-center">
@@ -182,7 +183,7 @@ const UserManagement = () => {
             onChange={(e) => setNewUsername(e.target.value)}
             placeholder="帳號"
             required
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-36"
+            className="px-3 py-2 border border-line-strong rounded-lg text-sm w-36"
           />
           <input
             type="password"
@@ -190,12 +191,12 @@ const UserManagement = () => {
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="密碼"
             required
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-36"
+            className="px-3 py-2 border border-line-strong rounded-lg text-sm w-36"
           />
           <select
             value={newRole}
             onChange={(e) => setNewRole(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-xs"
+            className="px-3 py-2 border border-line-strong rounded-lg text-xs"
           >
             <option value="user">一般使用者</option>
             {/* <option value="admin">系統管理員</option> */}
@@ -203,7 +204,7 @@ const UserManagement = () => {
           <button
             type="submit"
             disabled={creating}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50 transition-colors"
+            className="px-4 py-2 bg-fg text-ink rounded-lg text-sm font-medium hover:bg-white disabled:opacity-50 transition-colors"
           >
             {creating ? '建立中...' : '建立'}
           </button>

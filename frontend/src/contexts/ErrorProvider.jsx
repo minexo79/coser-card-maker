@@ -28,32 +28,32 @@ const ErrorProvider = ({ children }) => {
           className="fixed inset-0 z-[100] flex items-center justify-center px-4"
         >
           <div
-            className="absolute inset-0 bg-black/40"
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={closeError}
             data-testid="error-modal-backdrop"
           />
-          <div className="relative bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+          <div className="relative bg-surface border border-line rounded-2xl max-w-md w-full p-6">
             <button
               onClick={closeError}
               aria-label="關閉錯誤視窗"
-              className="absolute top-3 right-3 text-gray-400 hover:text-gray-600 transition-colors"
+              className="absolute top-3 right-3 text-subtle hover:text-fg-soft transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
             <div className="flex items-start gap-3">
-              <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-red-100">
-                <AlertTriangle className="w-5 h-5 text-red-600" />
+              <div className="shrink-0 flex items-center justify-center w-10 h-10 rounded-full bg-danger/15">
+                <AlertTriangle className="w-5 h-5 text-danger" />
               </div>
               <div className="min-w-0">
                 <h2
                   id="error-modal-title"
-                  className="text-lg font-semibold text-red-600"
+                  className="text-lg font-semibold text-danger"
                   data-testid="error-modal-code"
                 >
                   {error.code}: {error.title}
                 </h2>
                 {error.message && (
-                  <p className="mt-3 text-sm text-gray-700 break-words" data-testid="error-modal-message">
+                  <p className="mt-3 text-sm text-fg-soft break-words" data-testid="error-modal-message">
                     {error.message}
                   </p>
                 )}
@@ -62,7 +62,7 @@ const ErrorProvider = ({ children }) => {
             <div className="mt-6 flex justify-end">
               <button
                 onClick={closeError}
-                className="px-4 py-2 rounded-lg text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 transition-colors"
+                className="px-4 py-2 rounded-lg text-sm font-medium text-ink bg-fg hover:bg-white transition-colors"
               >
                 知道了
               </button>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { listAuditLogs } from '../../services/auth';
+import Loader from '../Loader';
 
 const EVENT_LABELS = {
   login_success: '登入成功',
@@ -14,12 +15,12 @@ const EVENT_LABELS = {
 
 const badgeClass = (event) => {
   if (event.includes('failure') || event.includes('delete') || event.includes('reset')) {
-    return 'bg-red-100 text-red-700';
+    return 'bg-danger/15 text-danger';
   }
   if (event.includes('success') || event.includes('create')) {
-    return 'bg-green-100 text-green-700';
+    return 'bg-mint/15 text-mint';
   }
-  return 'bg-gray-100 text-gray-700';
+  return 'bg-raised text-fg-soft';
 };
 
 const AuditLogList = () => {
@@ -34,14 +35,14 @@ const AuditLogList = () => {
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="text-sm text-gray-500">載入中...</p>;
-  if (error) return <p className="text-sm text-red-600">{error}</p>;
+  if (loading) return <Loader className="py-10" />;
+  if (error) return <p className="text-sm text-danger">{error}</p>;
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg text-gray-800 mb-4">審計日誌</h2>
+      <h2 className="text-lg text-fg mb-4">審計日誌</h2>
       {logs.length === 0 ? (
-        <p className="text-sm text-gray-500">暫無記錄</p>
+        <p className="text-sm text-muted">暫無記錄</p>
       ) : (
         <>
           {/* Mobile: card layout */}
@@ -49,28 +50,28 @@ const AuditLogList = () => {
             {logs.map((log, i) => (
               <div
                 key={i}
-                className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm"
+                className="rounded-xl border border-line bg-surface p-3"
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${badgeClass(log.event)}`}>
                     {EVENT_LABELS[log.event] || log.event}
                   </span>
-                  <span className="text-xs text-gray-500 whitespace-nowrap">
+                  <span className="text-xs text-muted whitespace-nowrap">
                     {new Date(log.timestamp).toLocaleString()}
                   </span>
                 </div>
                 <dl className="mt-2.5 space-y-1 text-sm">
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-gray-400">操作者</dt>
-                    <dd className="min-w-0 break-all text-gray-700">{log.actor || '-'}</dd>
+                    <dt className="w-12 shrink-0 text-subtle">操作者</dt>
+                    <dd className="min-w-0 break-all text-fg-soft">{log.actor || '-'}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-gray-400">目標</dt>
-                    <dd className="min-w-0 break-all text-gray-700">{log.target || '-'}</dd>
+                    <dt className="w-12 shrink-0 text-subtle">目標</dt>
+                    <dd className="min-w-0 break-all text-fg-soft">{log.target || '-'}</dd>
                   </div>
                   <div className="flex gap-2">
-                    <dt className="w-12 shrink-0 text-gray-400">IP</dt>
-                    <dd className="min-w-0 break-all text-gray-500">{log.ip || '-'}</dd>
+                    <dt className="w-12 shrink-0 text-subtle">IP</dt>
+                    <dd className="min-w-0 break-all text-muted">{log.ip || '-'}</dd>
                   </div>
                 </dl>
               </div>
@@ -80,7 +81,7 @@ const AuditLogList = () => {
           {/* Desktop: table layout */}
           <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-500 border-b">
+              <thead className="text-xs text-muted border-b">
                 <tr>
                   <th className="py-2 pr-4">時間</th>
                   <th className="py-2 pr-4">事件</th>
@@ -91,8 +92,8 @@ const AuditLogList = () => {
               </thead>
               <tbody>
                 {logs.map((log, i) => (
-                  <tr key={i} className="border-b border-gray-100">
-                    <td className="py-2 pr-4 whitespace-nowrap text-gray-600">
+                  <tr key={i} className="border-b border-line">
+                    <td className="py-2 pr-4 whitespace-nowrap text-fg-soft">
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
                     <td className="py-2 pr-4">
@@ -100,9 +101,9 @@ const AuditLogList = () => {
                         {EVENT_LABELS[log.event] || log.event}
                       </span>
                     </td>
-                    <td className="py-2 pr-4 text-gray-700">{log.actor || '-'}</td>
-                    <td className="py-2 pr-4 text-gray-700">{log.target || '-'}</td>
-                    <td className="py-2 pr-4 text-gray-500">{log.ip || '-'}</td>
+                    <td className="py-2 pr-4 text-fg-soft">{log.actor || '-'}</td>
+                    <td className="py-2 pr-4 text-fg-soft">{log.target || '-'}</td>
+                    <td className="py-2 pr-4 text-muted">{log.ip || '-'}</td>
                   </tr>
                 ))}
               </tbody>

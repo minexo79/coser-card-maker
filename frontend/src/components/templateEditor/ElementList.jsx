@@ -15,15 +15,15 @@ const ElementList = ({ elements, selectedId, onSelect, onAddCategory, onRemoveCa
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <h3 className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
-          <Layers className="h-4 w-4 text-gray-400" />
+        <h3 className="flex items-center gap-1.5 text-sm font-medium text-fg-soft">
+          <Layers className="h-4 w-4 text-subtle" />
           版面樹
-          <span className="text-xs text-gray-400">({elements.length})</span>
+          <span className="text-xs text-subtle">({elements.length})</span>
         </h3>
         <button
           type="button"
           onClick={onAddCategory}
-          className="flex items-center gap-1 rounded border border-gray-300 px-2 py-0.5 text-xs text-gray-600 hover:bg-gray-50"
+          className="flex items-center gap-1 rounded border border-line-strong px-2 py-0.5 text-xs text-fg-soft hover:bg-raised"
           title="新增身分圈選框"
         >
           <Plus className="h-3 w-3" />
@@ -32,7 +32,7 @@ const ElementList = ({ elements, selectedId, onSelect, onAddCategory, onRemoveCa
       </div>
 
       {groups.length === 0 && (
-        <p className="py-3 text-center text-xs text-gray-400">
+        <p className="py-3 text-center text-xs text-subtle">
           尚無任何元素
           <br />
           從上方「＋ 新增元素」開始
@@ -41,7 +41,7 @@ const ElementList = ({ elements, selectedId, onSelect, onAddCategory, onRemoveCa
 
       {groups.map(({ group, items }) => (
         <div key={group} className="space-y-1">
-          <p className="px-1 text-[11px] font-medium tracking-wide text-gray-400 uppercase">
+          <p className="px-1 text-[11px] font-medium tracking-wide text-subtle uppercase">
             {groupLabel(group)}
           </p>
           <div className="space-y-0.5">
@@ -59,14 +59,14 @@ const ElementList = ({ elements, selectedId, onSelect, onAddCategory, onRemoveCa
                       onSelect(element.id);
                     }
                   }}
-                  className="group flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-gray-100"
+                  className="group flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm transition-colors hover:bg-raised"
                   style={active ? { background: `${groupColor(element.group)}22` } : undefined}
                 >
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-sm"
                     style={{ background: groupColor(element.group) }}
                   />
-                  <span className="flex-1 truncate text-gray-700">{element.label}</span>
+                  <span className="flex-1 truncate text-fg-soft">{element.label}</span>
                   {element.deletable !== false && (
                     <button
                       type="button"
@@ -74,7 +74,7 @@ const ElementList = ({ elements, selectedId, onSelect, onAddCategory, onRemoveCa
                         e.stopPropagation();
                         onRemoveCategory?.(element.id);
                       }}
-                      className="text-gray-300 opacity-0 transition-opacity hover:text-red-500 group-hover:opacity-100"
+                      className="text-subtle opacity-0 transition-opacity hover:text-danger group-hover:opacity-100"
                       title="刪除"
                     >
                       <Trash2 className="h-3.5 w-3.5" />

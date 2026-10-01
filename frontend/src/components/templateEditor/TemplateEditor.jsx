@@ -19,7 +19,7 @@ const Toast = ({ type, message }) => {
   const isError = type === 'error';
   return (
     <div
-      className={`fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm text-white shadow-lg ${
+      className={`fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm text-white ${
         isError ? 'bg-red-600' : 'bg-green-600'
       }`}
       role="alert"
@@ -274,10 +274,10 @@ const TemplateEditor = () => {
     <div className="min-h-screen">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-xl text-gray-800">模板編輯器</h1>
+          <h1 className="text-xl text-fg">模板編輯器</h1>
           <span
             className={`rounded-full px-3 py-1 text-xs ${
-              isLoadedTemplate ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700'
+              isLoadedTemplate ? 'bg-accent/15 text-accent' : 'bg-warn/15 text-warn'
             }`}
           >
             {isLoadedTemplate ? `已載入：${loadedEventId}` : '使用「＋新增」加入元素'}
@@ -325,17 +325,17 @@ const TemplateEditor = () => {
               showLabels={showLabels}
             />
           </div>
-          <p className="mt-2 text-[11px] text-gray-500">
+          <p className="mt-2 text-[11px] text-muted">
             提示：按著方框拖曳可移動，拖曳四角可縮放；於下方「每日照片預覽」上傳照片可預覽照片顯示效果。
           </p>
         </div>
 
         <div className="w-full shrink-0 space-y-4 lg:w-80">
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-3 text-sm text-gray-700">活動資訊</h3>
+          <div className="rounded-xl border border-line bg-surface p-4">
+            <h3 className="mb-3 text-sm text-fg-soft">活動資訊</h3>
             <div className="space-y-3">
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] text-gray-500">活動 ID</span>
+                <span className="text-[11px] text-muted">活動 ID</span>
                 <input
                   data-testid="template-event-id"
                   type="text"
@@ -344,13 +344,13 @@ const TemplateEditor = () => {
                   onBlur={handleLoadEvent}
                   placeholder="event-name"
                   maxLength={64}
-                  className="w-full rounded-md border border-gray-300 px-2 py-1.5 text-sm"
+                  className="w-full rounded-md border border-line-strong px-2 py-1.5 text-sm"
                 />
               </label>
               <label className="flex flex-col gap-1">
-                <span className="text-[11px] text-gray-500">起始日期</span>
+                <span className="text-[11px] text-muted">起始日期</span>
                 <div className="relative">
-                  <Calendar className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-400" />
+                  <Calendar className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-subtle" />
                   <input
                     data-testid="template-start-date"
                     type="date"
@@ -358,8 +358,8 @@ const TemplateEditor = () => {
                     max="2099-12-31"
                     value={draft?.startDate || ''}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-2 py-1.5 pl-7 text-sm"
-                    style={{ WebkitAppearance: 'none', appearance: 'none', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }}
+                    className="w-full rounded-md border border-line-strong px-2 py-1.5 pl-7 text-sm"
+                    style={{ WebkitAppearance: 'none', appearance: 'none' }}
                     title="活動起始日期"
                   />
                 </div>
@@ -367,7 +367,7 @@ const TemplateEditor = () => {
             </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <ElementList
               elements={elements}
               selectedId={selectedId}
@@ -377,7 +377,7 @@ const TemplateEditor = () => {
             />
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-line bg-surface p-4">
             <PropertyPanel
               element={selectedElement}
               onUpdate={(patch) => selectedId && updateElement(selectedId, patch)}

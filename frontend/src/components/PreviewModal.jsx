@@ -41,11 +41,11 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="relative bg-white rounded-2xl shadow-2xl max-w-4xl max-h-[90vh] overflow-auto">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="relative bg-surface border border-line rounded-2xl max-w-4xl max-h-[90vh] overflow-auto">
         {/* 標題欄 */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
-          <h3 className="text-lg text-gray-800">卡片預覽</h3>
+        <div className="flex items-center justify-between p-4 border-b border-line">
+          <h3 className="text-lg text-fg">卡片預覽</h3>
           <div className="flex items-center gap-2">
             <button
               onClick={handleDownload}
@@ -56,9 +56,9 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+              className="p-2 hover:bg-raised rounded-lg transition-colors duration-200"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-5 h-5 text-muted" />
             </button>
           </div>
         </div>
@@ -68,14 +68,14 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
           <img
             ref={previewImageRef}
             alt="卡片預覽"
-            className="max-w-full max-h-[70vh] rounded-lg shadow-lg"
+            className="max-w-full max-h-[70vh] rounded-lg bg-white"
             onClick={onClose}
             style={{ cursor: 'pointer' }}
           />
         </div>
         
-        <div className="p-4 text-center border-t border-gray-200">
-          <p className="text-sm text-gray-500">
+        <div className="p-4 text-center border-t border-line">
+          <p className="text-sm text-muted">
             點擊圖片或關閉按鈕關閉預覽
           </p>
         </div>

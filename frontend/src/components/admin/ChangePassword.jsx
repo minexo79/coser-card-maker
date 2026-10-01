@@ -42,31 +42,31 @@ const ChangePassword = () => {
 
   return (
     <div className="max-w-sm">
-      <h2 className="text-lg text-gray-800 mb-4">修改密碼</h2>
+      <h2 className="text-lg text-fg mb-4">修改密碼</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">舊密碼</label>
+          <label className="block text-sm font-medium text-fg-soft mb-1">舊密碼</label>
           <input
             type="password"
             value={oldPassword}
             onChange={(e) => setOldPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">新密碼</label>
+          <label className="block text-sm font-medium text-fg-soft mb-1">新密碼</label>
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
           />
           {newPassword && (
-            <ul className="text-xs text-gray-500 mt-1 space-y-0.5">
+            <ul className="text-xs text-muted mt-1 space-y-0.5">
               {strengthChecks.map(({ label, test }) => (
-                <li key={label} className={test(newPassword) ? 'text-green-600' : ''}>
+                <li key={label} className={test(newPassword) ? 'text-mint' : ''}>
                   {label}
                 </li>
               ))}
@@ -74,23 +74,23 @@ const ChangePassword = () => {
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">確認新密碼</label>
+          <label className="block text-sm font-medium text-fg-soft mb-1">確認新密碼</label>
           <input
             type="password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+            className="w-full px-3 py-2 border border-line-strong rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent"
           />
         </div>
 
-        {message && <p className="text-sm text-green-600">{message}</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {message && <p className="text-sm text-mint">{message}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <button
           type="submit"
           disabled={submitting}
-          className="px-4 py-2 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 disabled:opacity-50 transition-colors"
+          className="px-4 py-2 bg-fg text-ink rounded-lg text-sm font-medium hover:bg-white disabled:opacity-50 transition-colors"
         >
           {submitting ? '更新中...' : '更新密碼'}
         </button>

@@ -19,13 +19,13 @@ import {
 
 const styles = {
   btn: 'inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50',
-  secondary: 'border border-gray-300 text-gray-700 hover:bg-gray-100',
-  primary: 'bg-orange-600 text-white hover:bg-orange-700 disabled:bg-gray-300',
+  secondary: 'border border-line-strong text-fg-soft hover:bg-raised',
+  primary: 'bg-fg text-ink hover:bg-white disabled:bg-line-strong',
   icon: 'h-4 w-4'
 };
 
 const menuCls =
-  'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-40';
+  'flex w-full items-center gap-2 rounded px-3 py-2 text-left text-sm text-fg-soft hover:bg-raised disabled:cursor-not-allowed disabled:opacity-40';
 
 const normalizeHex = (color) =>
   typeof color === 'string' && /^#[0-9a-fA-F]{6}$/.test(color) ? color.toLowerCase() : null;
@@ -63,7 +63,7 @@ const Toolbar = ({
   );
 
   return (
-    <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+    <div className="mb-4 flex flex-wrap items-end gap-2 rounded-xl border border-line bg-surface p-3">
       <button
         type="button"
         onClick={onBaseImageClick}
@@ -87,8 +87,8 @@ const Toolbar = ({
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-20" onClick={() => setMenuOpen(false)} />
-            <div className="absolute left-0 top-full z-30 mt-1 w-48 overflow-hidden rounded-lg border border-gray-200 bg-white py-1 shadow-xl">
-              <div className="border-b border-gray-100 px-3 py-1 text-xs font-medium text-gray-400">
+            <div className="absolute left-0 top-full z-30 mt-1 w-48 overflow-hidden rounded-lg border border-line bg-surface py-1">
+              <div className="border-b border-line px-3 py-1 text-xs font-medium text-subtle">
                 新增到版面
               </div>
               {addMenuItem(
@@ -137,11 +137,11 @@ const Toolbar = ({
         {showLabels ? '隱藏標籤' : '顯示標籤'}
       </button>
 
-      <div className="mx-1 h-8 w-px bg-gray-200" />
+      <div className="mx-1 h-8 w-px bg-line" />
 
       {/* TODO: 有BUG 先註解掉不用 */}
       {/* <label className="flex flex-col">
-        <span className="text-[11px] text-gray-500">圖片槽數</span>
+        <span className="text-[11px] text-muted">圖片槽數</span>
         <div className="flex items-center gap-1">
           <button
             type="button"
@@ -150,7 +150,7 @@ const Toolbar = ({
               if (dayCount > 1) onDayChange?.(dayCount - 1);
               else onDayChange?.(0);
             }}
-            className="inline-flex h-8 w-6 items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+            className="inline-flex h-8 w-6 items-center justify-center rounded border border-line text-muted hover:bg-raised disabled:opacity-40"
             title="移除最後一個圖片槽"
           >
             <Minus className="h-3.5 w-3.5" />
@@ -163,13 +163,13 @@ const Toolbar = ({
             value={dayCount}
             disabled={dayCountDisabled}
             onChange={(e) => onDayChange?.(Number(e.target.value))}
-            className="w-14 rounded-md border border-gray-300 px-1 py-1 text-center text-sm"
+            className="w-14 rounded-md border border-line-strong px-1 py-1 text-center text-sm"
           />
           <button
             type="button"
             disabled={dayCountDisabled}
             onClick={() => onDayChange?.((dayCount || 0) + 1)}
-            className="inline-flex h-8 w-6 items-center justify-center rounded border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40"
+            className="inline-flex h-8 w-6 items-center justify-center rounded border border-line text-muted hover:bg-raised disabled:opacity-40"
             title="新增一個圖片槽"
           >
             <Plus className="h-3.5 w-3.5" />
@@ -179,8 +179,8 @@ const Toolbar = ({
 
       <button type="button" onClick={onToggleLabels} className="hidden" />
 
-      <label className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-2 py-1.5 text-sm" title="文字顏色（儲存後由製卡端使用）">
-        <Palette className="h-4 w-4 text-gray-500" />
+      <label className="flex items-center gap-1.5 rounded-lg border border-line-strong px-2 py-1.5 text-sm" title="文字顏色（儲存後由製卡端使用）">
+        <Palette className="h-4 w-4 text-muted" />
         <input
           data-testid="template-font-color"
           type="color"

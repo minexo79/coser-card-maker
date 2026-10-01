@@ -51,6 +51,6 @@ describe('NavBar 元件', () => {
   it('在首頁時，首頁為 active', () => {
     renderWithRouter('/');
     const homeLink = screen.getByText('首頁').closest('a');
-    expect(homeLink.className).toContain('bg-orange-600');
+    expect(homeLink.className).toContain('bg-fg');
   });
 });

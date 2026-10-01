@@ -41,17 +41,17 @@ const NavBar = () => {
   const linkClass = (active) =>
     `flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
       active
-        ? 'bg-orange-600 text-white'
-        : 'text-gray-800 hover:bg-gray-800 hover:text-white'
+        ? 'bg-fg text-ink'
+        : 'text-muted hover:bg-raised hover:text-fg'
     }`;
 
   return (
-    <nav className="sticky top-0 z-50 bg-amber-50  honeycomb-bg">
+    <nav className="sticky top-0 z-50 border-b border-line bg-ink/80 backdrop-blur-md">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <img src="./favicon.ico" alt="Logo" className="w-8 h-8" />
-          <span className="text-lg text-gray-800">場次預定製作工具</span>
-        </div>
+        <Link to="/" className="flex items-center gap-2">
+          <img src="./favicon.ico" alt="Logo" className="w-8 h-8 invert" />
+          <span className="font-display text-lg tracking-tight text-fg">場次預定製作工具</span>
+        </Link>
 
         {/* Desktop menu */}
         <ul className="hidden md:flex items-center gap-2">
@@ -61,14 +61,14 @@ const NavBar = () => {
                 <select
                   onChange={(e) => handleEventChange(e.target.value)}
                   defaultValue=""
-                  className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 hover:border-orange-400 input-focus transition-all duration-200 cursor-pointer"
+                  className="appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-fg bg-surface border border-line-strong hover:border-accent input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
                   {eventTemplates.map((eventId) => (
                     <option key={eventId} value={eventId}>{eventId}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
             </li>
           )}
@@ -87,7 +87,7 @@ const NavBar = () => {
             <li>
               <button
                 onClick={logout}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-200"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-raised hover:text-fg transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />
                 登出
@@ -105,7 +105,7 @@ const NavBar = () => {
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 rounded-lg text-gray-800 transition-colors"
+          className="md:hidden p-2 rounded-lg text-fg transition-colors"
           onClick={() => setMobileOpen((v) => !v)}
           aria-label={mobileOpen ? '關閉選單' : '開啟選單'}
         >
@@ -115,21 +115,21 @@ const NavBar = () => {
 
       {/* Mobile dropdown */}
       {mobileOpen && (
-        <ul className="md:hidden px-4 pb-3 space-y-1 border-t border-gray-100">
+        <ul className="md:hidden px-4 py-3 space-y-1 border-t border-line animate-fade-in">
           {eventTemplates.length > 0 && (
             <li>
               <div className="relative">
                 <select
                   onChange={(e) => { handleEventChange(e.target.value); setMobileOpen(false); }}
                   defaultValue=""
-                  className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-gray-800 bg-white border border-gray-300 input-focus transition-all duration-200 cursor-pointer"
+                  className="w-full appearance-none pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-fg bg-surface border border-line-strong input-focus transition-all duration-200 cursor-pointer"
                 >
                   <option value="" disabled>選擇活動</option>
                   {eventTemplates.map((eventId) => (
                     <option key={eventId} value={eventId}>{eventId}</option>
                   ))}
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none" />
               </div>
             </li>
           )}
@@ -152,7 +152,7 @@ const NavBar = () => {
             <li>
               <button
                 onClick={() => { logout(); setMobileOpen(false); }}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-gray-800 hover:bg-gray-800 hover:text-white transition-all duration-200"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm font-medium text-muted hover:bg-raised hover:text-fg transition-all duration-200"
               >
                 <LogOut className="w-4 h-4" />
                 登出
@@ -172,6 +172,7 @@ const NavBar = () => {
           )}
         </ul>
       )}
+      <div className="color-bar -mb-px" aria-hidden="true" />
     </nav>
   );
 };

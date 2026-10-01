@@ -80,7 +80,7 @@ describe('HomePage 首頁', () => {
     getEventTemplates.mockResolvedValue(events);
     renderPage();
 
-    const selfLabel = await screen.findByText(/我想要自己來/);
+    const selfLabel = await screen.findByText(/我要自己來/);
     const selfBtn = selfLabel.closest('button');
     expect(selfBtn).toBeTruthy();
     fireEvent.click(selfBtn);

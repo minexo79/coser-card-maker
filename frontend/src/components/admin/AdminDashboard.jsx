@@ -40,9 +40,9 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 flex flex-col md:flex-row gap-4 h-[calc(100vh-2rem)]">
+    <div className="container mx-auto p-4 flex flex-col md:flex-row gap-4 h-[calc(100vh-2rem)] animate-fade-in">
       {/* Mobile: horizontal tab bar */}
-      <div className="md:hidden flex overflow-x-auto gap-1 bg-white rounded-2xl shadow border border-gray-200 p-1 shrink-0">
+      <div className="md:hidden flex overflow-x-auto gap-1 bg-surface rounded-2xl border border-line p-1 shrink-0">
         {allTabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -51,8 +51,8 @@ const AdminDashboard = () => {
               onClick={() => switchTab(tab.key)}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap rounded-md transition-colors ${
                 activeTab === tab.key
-                  ? 'text-orange-600 bg-orange-50'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'text-accent bg-accent/10'
+                  : 'text-fg-soft hover:text-fg hover:bg-raised'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -63,7 +63,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Desktop: vertical sidebar */}
-      <div className="hidden md:flex flex-col w-48 shrink-0 bg-white rounded-2xl shadow border border-gray-200 py-2">
+      <div className="hidden md:flex flex-col w-48 shrink-0 bg-surface rounded-2xl border border-line py-2">
         {allTabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -72,8 +72,8 @@ const AdminDashboard = () => {
               onClick={() => switchTab(tab.key)}
               className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'text-orange-600 bg-orange-50 border-r-2 border-orange-600'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                  ? 'text-accent bg-accent/10 border-r-2 border-accent'
+                  : 'text-fg-soft hover:text-fg hover:bg-raised'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
         })}
       </div>
 
-      <div className="flex-1 bg-white rounded-2xl shadow border border-gray-200 p-4 overflow-auto">
+      <div className="flex-1 bg-surface rounded-2xl border border-line p-4 overflow-auto">
         {activeTab === 'list' && <TemplateListPage />}
         {activeTab === 'templates' && <TemplateEditor />}
         {activeTab === 'users' && <UserManagement />}

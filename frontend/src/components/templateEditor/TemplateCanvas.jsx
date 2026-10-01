@@ -163,7 +163,7 @@ function computeSnap(box, others, mode, handle, canvasW, canvasH) {
 
 const checkerboard = {
   backgroundImage:
-    'linear-gradient(45deg, #e5e7eb 25%, transparent 25%), linear-gradient(-45deg, #e5e7eb 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #e5e7eb 75%), linear-gradient(-45deg, transparent 75%, #e5e7eb 75%)',
+    'linear-gradient(45deg, #3c3c42 25%, transparent 25%), linear-gradient(-45deg, #3c3c42 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3c3c42 75%), linear-gradient(-45deg, transparent 75%, #3c3c42 75%)',
   backgroundSize: '20px 20px',
   backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0'
 };
@@ -350,7 +350,7 @@ const TemplateCanvas = ({
     >
       <div
         data-testid="template-canvas-inner"
-        className="relative w-full overflow-hidden rounded-md border border-gray-300"
+        className="relative w-full overflow-hidden rounded-md border border-line-strong"
         style={{ ...checkerboard, aspectRatio: `${width} / ${height}` }}
         onPointerDown={(e) => {
           if (e.target === e.currentTarget) {

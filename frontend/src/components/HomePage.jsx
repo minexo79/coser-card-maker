@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, Loader2, PenLine, Sparkles, AlertTriangle } from 'lucide-react';
+import { CalendarDays, PenLine, Sparkles, AlertTriangle } from 'lucide-react';
+import { Skeleton } from './Loader';
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { filterThisWeek, formatEventDateRange } from '../utils/eventCalendar.js';
@@ -36,66 +37,73 @@ const HomePage = () => {
   const loading = rawTemplates === null && !error;
 
   return (
-    <div className="container mx-auto p-4">
-      {/* <div className="rounded-2xl bg-white p-6 shadow-xl card-shadow"> */}
-      <div className="rounded-2xl p-6">
-        <div className="mb-6 text-center">
-          <h1 className="text-2xl text-gray-800 mb-1 flex items-center justify-center gap-2">
-            <CalendarDays className="w-6 h-6 text-orange-600" />
-            本週場次
-          </h1>
-          <p className="text-sm text-gray-500">挑選一個場次，開始製作你的預定</p>
-        </div>
+    <div className="container mx-auto px-4 pb-4 pt-10 md:pt-16">
+      <div>
+        <header className="mb-10 animate-fade-up">
+          <p className="eyebrow mb-4">This week</p>
+          <h1 className="text-4xl leading-tight text-fg md:text-5xl">本週場次</h1>
+          <p className="mt-3 text-muted">挑選一個場次，開始製作你的預定</p>
+        </header>
 
         {error && (
-          <div className="mb-4 flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <div className="mb-4 flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/10 px-4 py-3 text-sm text-danger">
             <AlertTriangle className="h-4 w-4 shrink-0" />
             {error}
           </div>
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center gap-2 py-16 text-gray-400">
-            <Loader2 className="h-5 w-5 animate-spin" />
-            載入中…
+          // 骨架屏：版面與實際場次卡片一致，載入完成時不會跳動
+          <div role="status" aria-label="載入中" className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="overflow-hidden rounded-2xl border border-line bg-surface">
+                <Skeleton className="h-36 w-full rounded-none" />
+                <div className="p-4">
+                  <Skeleton className="h-4 w-2/3" />
+                  <Skeleton className="mt-2 h-3 w-1/2" />
+                  <Skeleton className="mt-4 h-9 w-full" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : weekEvents.length === 0 ? (
-          <div className="py-16 text-center">
-            <CalendarDays className="mx-auto mb-3 h-12 w-12 text-gray-500" />
-            <p className="text-sm text-gray-400">本週暫無場次</p>
-            <p className="mt-1 text-xs text-gray-500">可以換個時間再來看看，或自己動手做</p>
+          <div className="animate-fade-up rounded-2xl border border-dashed border-line py-16 text-center">
+            <CalendarDays className="mx-auto mb-3 h-12 w-12 text-subtle" />
+            <p className="text-sm text-fg-soft">本週暫無場次</p>
+            <p className="mt-1 text-xs text-muted">可以換個時間再來看看，或自己動手做</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {weekEvents.map((event) => (
+            {weekEvents.map((event, index) => (
               <div
                 key={event.id}
-                className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm"
+                className="group flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors duration-200 hover:border-line-strong"
+                style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}
               >
-                <div className="h-36 w-full overflow-hidden rounded-t-xl bg-gray-100">
+                <div className="h-36 w-full overflow-hidden bg-raised">
                   {event.overWriteCanvas?.baseImagePath ? (
                     <img
                       src={resolveAssetUrl(event.overWriteCanvas.baseImagePath)}
                       alt=""
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-300">
+                    <div className="flex h-full w-full items-center justify-center text-xs text-subtle">
                       無底圖
                     </div>
                   )}
                 </div>
 
                 <div className="flex flex-1 flex-col p-4">
-                  <p className="truncate font-medium text-gray-800">{event.id}</p>
-                  <p className="mt-1 text-xs text-gray-400">
+                  <p className="truncate font-medium text-fg">{event.id}</p>
+                  <p className="mt-1 text-xs text-muted">
                     {formatEventDateRange(event)}
                     {event.dayCount ? `・${event.dayCount} 天` : ''}
                   </p>
                   <button
                     type="button"
                     onClick={() => navigate(`/${encodeURIComponent(event.id)}`)}
-                    className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-orange-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700"
+                    className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-fg px-3 py-2 text-sm font-medium text-ink transition-colors hover:bg-white"
                   >
                     <PenLine className="h-4 w-4" />
                     製作預定
@@ -107,15 +115,15 @@ const HomePage = () => {
         )}
 
         {/* 想要自己來? */}
-        <div className="mt-8 border-t border-gray-100 pt-6 text-center">
-          <p className="mb-3 text-sm text-gray-500">上面都沒有嗎？</p>
+        <div className="mt-12 flex flex-wrap items-center justify-center gap-4 border-t border-line pt-8">
+          <p className="text-sm text-muted">上面都沒有嗎？</p>
           <button
             type="button"
             onClick={() => navigate('/make')}
-            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-orange-600 px-5 py-2.5 text-sm font-medium text-orange-600 transition-colors hover:bg-orange-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-accent px-5 py-2.5 text-sm font-medium text-accent transition-colors hover:bg-accent/10"
           >
             <Sparkles className="h-4 w-4" />
-            我想要自己來!
+            我要自己來!
           </button>
         </div>
       </div>

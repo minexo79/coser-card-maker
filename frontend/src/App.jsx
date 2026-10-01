@@ -43,7 +43,7 @@ const MakeLayout = () => {
 
 function App() {
   return (
-    <div className="min-h-screen bg-amber-50 honeycomb-bg">
+    <div className="min-h-screen bg-ink page-bg">
       <ErrorProvider>
         <ErrorBoundary>
           <BrowserRouter>

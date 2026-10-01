@@ -55,29 +55,29 @@ const BackendStatus = ({ pollIntervalMs = POLL_INTERVAL_MS } = {}) => {
       ? 'bg-green-500 animate-pulse'
       : status === 'offline'
         ? 'bg-red-500'
-        : 'bg-gray-400 animate-pulse';
+        : 'bg-subtle animate-pulse';
 
   const statusText =
     status === 'online' ? '後端上線' : status === 'offline' ? '後端離線' : '檢查中…';
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg text-gray-800 mb-4 flex items-center gap-2">
-        <Activity className="w-5 h-5 text-orange-600" />
+      <h2 className="text-lg text-fg mb-4 flex items-center gap-2">
+        <Activity className="w-5 h-5 text-accent" />
         後端運行狀態
       </h2>
 
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="rounded-xl border border-line bg-surface p-6">
         <div className="flex flex-col items-center gap-4">
           <div
             data-testid="backend-status-dot"
             className={`w-16 h-16 rounded-full ${dotColorClass} transition-colors duration-300`}
           />
-          <p className="text-lg font-medium text-gray-800" data-testid="backend-status-text">
+          <p className="text-lg font-medium text-fg" data-testid="backend-status-text">
             {statusText}
           </p>
           {lastCheckedAt && (
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted">
               最後檢查：{lastCheckedAt.toLocaleTimeString()}
               {latencyMs !== null && `（${latencyMs} ms）`}
             </p>

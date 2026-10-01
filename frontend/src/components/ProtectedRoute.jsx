@@ -1,13 +1,14 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
+import Loader from './Loader';
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-gray-500 text-sm">載入中...</p>
+      <div className="min-h-[70vh] flex items-center justify-center">
+        <Loader />
       </div>
     );
   }

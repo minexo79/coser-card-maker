@@ -28,7 +28,7 @@ const NumberField = ({ label, value, onChange }) => {
 
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
       <input
         type="number"
         step="1"
@@ -38,7 +38,7 @@ const NumberField = ({ label, value, onChange }) => {
         onKeyDown={(e) => {
           if (e.key === 'Enter') e.currentTarget.blur();
         }}
-        className="w-full rounded border border-gray-300 px-2 py-1 text-sm"
+        className="w-full rounded border border-line-strong px-2 py-1 text-sm"
       />
     </label>
   );
@@ -51,8 +51,8 @@ const Hint = ({ children, className = '' }) => (
 const PropertyPanel = ({ element, onUpdate, onRemove }) => {
   if (!element) {
     return (
-      <div className="space-y-4 text-sm text-gray-500">
-        <div className="flex items-center gap-2 border-b border-gray-200 pb-2 text-gray-700">
+      <div className="space-y-4 text-sm text-muted">
+        <div className="flex items-center gap-2 border-b border-line pb-2 text-fg-soft">
           <SettingsIcon className="h-4 w-4" />
           <span className="font-medium">未選取元素</span>
         </div>
@@ -65,8 +65,8 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
   const color = groupColor(element.group);
 
   return (
-    <div className="space-y-4 text-sm text-gray-800">
-      <div className="flex items-center justify-between border-b border-gray-200 pb-2">
+    <div className="space-y-4 text-sm text-fg">
+      <div className="flex items-center justify-between border-b border-line pb-2">
         <div className="flex items-center gap-2">
           <span className="inline-block h-3 w-3 shrink-0 rounded" style={{ background: color }} />
           <span className="font-medium">{element.label}</span>
@@ -75,7 +75,7 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
           <button
             type="button"
             onClick={onRemove}
-            className="flex shrink-0 items-center gap-1 rounded border border-red-200 px-2 py-0.5 text-xs text-red-600 hover:bg-red-50"
+            className="flex shrink-0 items-center gap-1 rounded border border-danger/30 px-2 py-0.5 text-xs text-danger hover:bg-danger/10"
           >
             <Trash2 className="h-3 w-3" />
             刪除
@@ -96,8 +96,8 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
         <NumberField label="H" value={box.height} onChange={(v) => onUpdate({ height: v })} />
       </div>
 
-      <div className="space-y-2 border-t border-gray-200 pt-3">
-        <div className="flex items-center gap-2 text-xs text-gray-500">
+      <div className="space-y-2 border-t border-line pt-3">
+        <div className="flex items-center gap-2 text-xs text-muted">
           <TypeIcon className="h-3.5 w-3.5" />
           進階樣式
         </div>
@@ -116,17 +116,17 @@ const PropertyPanel = ({ element, onUpdate, onRemove }) => {
       </div>
 
       {element.group === 'imageSlots' && (
-        <Hint className="border-amber-100 bg-amber-50 text-amber-700">
+        <Hint className="border-warn/30 bg-warn/10 text-warn">
           圖片槽代表使用者上傳圖片的顯示範圍，可在下方「預覽照片」放圖檢視效果。
         </Hint>
       )}
       {element.group === 'categorySelection' && (
-        <Hint className="border-emerald-100 bg-emerald-50 text-emerald-700">
+        <Hint className="border-mint/30 bg-mint/10 text-mint">
           身分圈選框：此方框代表對應該身分名稱時要反白顯示的區域。
         </Hint>
       )}
       {element.group === 'titleImage' && (
-        <Hint className="border-orange-100 bg-orange-50 text-orange-700">
+        <Hint className="border-accent/30 bg-accent/10 text-accent">
           標題圖的顯示位置，實際圖案請上傳標題圖片後檢視。
         </Hint>
       )}
