@@ -3,6 +3,8 @@ import ElementOverlay from './ElementOverlay.jsx';
 import { clamp, normalizeRect } from '../../utils/geometry.js';
 import { resolveAssetUrl } from '../../services/api.js';
 import { usePointerDrag } from './usePointerDrag.js';
+import { computeSnap } from './snap.js';
+import { DEFAULT_IMAGE_RADIUS } from '../../utils/templateDraft.js';
 
 const isUploadedAsset = (path) => {
   if (!path) return false;
@@ -10,7 +12,6 @@ const isUploadedAsset = (path) => {
 };
 
 const MIN_SIZE = 8;
-const SNAP_THRESHOLD = 5;
 
 function computeResizeBox(origin, dx, dy, handle) {
   let { x, y, width, height } = origin;
@@ -27,140 +28,6 @@ function computeResizeBox(origin, dx, dy, handle) {
   return normalizeRect({ x, y, width, height }).rect;
 }
 
-function getEdges(box) {
-  return {
-    left: box.x,
-    cx: box.x + box.width / 2,
-    right: box.x + box.width,
-    top: box.y,
-    cy: box.y + box.height / 2,
-    bottom: box.y + box.height
-  };
-}
-
-// 回傳吸附後的 box 與 snapLines
-function computeSnap(box, others, mode, handle, canvasW, canvasH) {
-  const snapped = { ...box };
-  const lines = [];
-  const th = SNAP_THRESHOLD;
-
-  const my = getEdges(box);
-
-  // 收集所有參考吸附點
-  const refXs = [];
-  const refYs = [];
-
-  // 畫布邊緣也算
-  refXs.push({ val: 0, label: 'canvas-left' });
-  refXs.push({ val: canvasW / 2, label: 'canvas-cx' });
-  refXs.push({ val: canvasW, label: 'canvas-right' });
-  refYs.push({ val: 0, label: 'canvas-top' });
-  refYs.push({ val: canvasH / 2, label: 'canvas-cy' });
-  refYs.push({ val: canvasH, label: 'canvas-bottom' });
-
-  for (const el of others) {
-    const e = getEdges(el.box);
-    refXs.push({ val: e.left, label: `el-${el.id}-left` });
-    refXs.push({ val: e.cx, label: `el-${el.id}-cx` });
-    refXs.push({ val: e.right, label: `el-${el.id}-right` });
-    refYs.push({ val: e.top, label: `el-${el.id}-top` });
-    refYs.push({ val: e.cy, label: `el-${el.id}-cy` });
-    refYs.push({ val: e.bottom, label: `el-${el.id}-bottom` });
-  }
-
-  // 決定哪些邊需要吸附
-  const checkLeft = mode === 'move' || (mode === 'resize' && handle.includes('w'));
-  const checkCx = mode === 'move';
-  const checkRight = mode === 'move' || (mode === 'resize' && handle.includes('e'));
-  const checkTop = mode === 'move' || (mode === 'resize' && handle.includes('n'));
-  const checkCy = mode === 'move';
-  const checkBottom = mode === 'move' || (mode === 'resize' && handle.includes('s'));
-
-  // X 軸吸附
-  let bestDx = Infinity;
-  let snapX = null;
-  let snapLineX = null;
-
-  if (checkLeft) {
-    for (const ref of refXs) {
-      const d = Math.abs(my.left - ref.val);
-      if (d < th && d < Math.abs(bestDx)) {
-        bestDx = ref.val - my.left;
-        snapX = ref.val;
-        snapLineX = { x: ref.val, type: 'vertical' };
-      }
-    }
-  }
-  if (checkRight) {
-    for (const ref of refXs) {
-      const d = Math.abs(my.right - ref.val);
-      if (d < th && d < Math.abs(bestDx)) {
-        bestDx = ref.val - my.right;
-        snapX = ref.val - box.width;
-        snapLineX = { x: ref.val, type: 'vertical' };
-      }
-    }
-  }
-  if (checkCx) {
-    for (const ref of refXs) {
-      const d = Math.abs(my.cx - ref.val);
-      if (d < th && d < Math.abs(bestDx)) {
-        bestDx = ref.val - my.cx;
-        snapX = ref.val - box.width / 2;
-        snapLineX = { x: ref.val, type: 'vertical' };
-      }
-    }
-  }
-
-  if (snapX !== null) {
-    snapped.x = Math.round(snapX);
-    if (snapLineX) lines.push(snapLineX);
-  }
-
-  // Y 軸吸附
-  let bestDy = Infinity;
-  let snapY = null;
-  let snapLineY = null;
-
-  if (checkTop) {
-    for (const ref of refYs) {
-      const d = Math.abs(my.top - ref.val);
-      if (d < th && d < Math.abs(bestDy)) {
-        bestDy = ref.val - my.top;
-        snapY = ref.val;
-        snapLineY = { y: ref.val, type: 'horizontal' };
-      }
-    }
-  }
-  if (checkBottom) {
-    for (const ref of refYs) {
-      const d = Math.abs(my.bottom - ref.val);
-      if (d < th && d < Math.abs(bestDy)) {
-        bestDy = ref.val - my.bottom;
-        snapY = ref.val - box.height;
-        snapLineY = { y: ref.val, type: 'horizontal' };
-      }
-    }
-  }
-  if (checkCy) {
-    for (const ref of refYs) {
-      const d = Math.abs(my.cy - ref.val);
-      if (d < th && d < Math.abs(bestDy)) {
-        bestDy = ref.val - my.cy;
-        snapY = ref.val - box.height / 2;
-        snapLineY = { y: ref.val, type: 'horizontal' };
-      }
-    }
-  }
-
-  if (snapY !== null) {
-    snapped.y = Math.round(snapY);
-    if (snapLineY) lines.push(snapLineY);
-  }
-
-  return { box: snapped, lines };
-}
-
 const checkerboard = {
   backgroundImage:
     'linear-gradient(45deg, #3c3c42 25%, transparent 25%), linear-gradient(-45deg, #3c3c42 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #3c3c42 75%), linear-gradient(-45deg, transparent 75%, #3c3c42 75%)',
@@ -173,7 +40,7 @@ const BaseImage = ({ src }) => {
     return (
       <div
         data-testid="template-canvas-placeholder"
-        className="absolute inset-0 flex items-center justify-center text-sm text-gray-400"
+        className="absolute inset-0 flex items-center justify-center text-sm text-subtle"
       >
         尚未上傳底圖，前往上方「上傳底圖」或於工具列載入
       </div>
@@ -413,6 +280,7 @@ const CanvasInner = ({
             top: element.box.y,
             width: element.box.width,
             height: element.box.height,
+            borderRadius: element.box.radius ?? DEFAULT_IMAGE_RADIUS,
             pointerEvents: 'none'
           }}
         >

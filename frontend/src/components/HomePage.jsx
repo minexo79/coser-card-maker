@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, PenLine, Sparkles, AlertTriangle } from 'lucide-react';
+import { CalendarDays, PenLine, Sparkles, AlertTriangle, FaceSlightlyFrowning } from 'lucide-react';
 import { Skeleton } from './Loader';
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
 import { filterThisWeek, formatEventDateRange } from '../utils/eventCalendar.js';
+import { getEventDisplayName } from '../utils/eventDisplay.js';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -40,7 +41,6 @@ const HomePage = () => {
     <div className="container mx-auto px-4 pb-4 pt-10 md:pt-16">
       <div>
         <header className="mb-10 animate-fade-up">
-          <p className="eyebrow mb-4">This week</p>
           <h1 className="text-4xl leading-tight text-fg md:text-5xl">本週場次</h1>
           <p className="mt-3 text-muted">挑選一個場次，開始製作你的預定</p>
         </header>
@@ -68,9 +68,9 @@ const HomePage = () => {
           </div>
         ) : weekEvents.length === 0 ? (
           <div className="animate-fade-up rounded-2xl border border-dashed border-line py-16 text-center">
-            <CalendarDays className="mx-auto mb-3 h-12 w-12 text-subtle" />
+            <FaceSlightlyFrowning className="mx-auto mb-3 h-12 w-12 text-subtle" />
             <p className="text-sm text-fg-soft">本週暫無場次</p>
-            <p className="mt-1 text-xs text-muted">可以換個時間再來看看，或自己動手做</p>
+            <p className="mt-1 text-xs text-muted">可以換個時間再來看看</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -95,7 +95,8 @@ const HomePage = () => {
                 </div>
 
                 <div className="flex flex-1 flex-col p-4">
-                  <p className="truncate font-medium text-fg">{event.id}</p>
+                  {/* 顯示活動名稱；導向路由仍使用 event.id（活動代號） */}
+                  <p className="truncate font-medium text-fg">{getEventDisplayName(event)}</p>
                   <p className="mt-1 text-xs text-muted">
                     {formatEventDateRange(event)}
                     {event.dayCount ? `・${event.dayCount} 天` : ''}

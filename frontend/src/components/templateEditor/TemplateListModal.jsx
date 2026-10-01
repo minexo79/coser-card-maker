@@ -4,6 +4,7 @@ import { resolveAssetUrl } from '../../services/api.js';
 import * as api from '../../services/api.js';
 import { copyToClipboard } from '../../utils/clipboard.js';
 import Loader from '../Loader';
+import { getEventDisplayName } from '../../utils/eventDisplay.js';
 
 const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   const [templates, setTemplates] = useState([]);
@@ -54,7 +55,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
   };
 
   const handleDeleteClick = async (id) => {
-    if (!window.confirm(`確定要刪除活動模板「${id}」嗎？此操作無法復原。`)) return;
+    if (!window.confirm(`確定要刪除活動模板「${getEventDisplayName(templates.find((t) => t.id === id)) || id}」嗎？此操作無法復原。`)) return;
     try {
       await onDelete?.(id);
       setTemplates((prev) => prev.filter((t) => t.id !== id));
@@ -87,7 +88,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
         <div className="flex items-center justify-between border-b border-line px-6 py-4">
           <div className="flex items-center gap-2">
             <FolderOpen className="h-5 w-5 text-accent" />
-            <h2 className="text-lg font-semibold text-fg">已儲存的模板</h2>
+            <h2 className="text-xl font-semibold text-fg">已儲存的模板</h2>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -152,9 +153,9 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
                   </div>
 
                   <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium text-fg">{template.id}</p>
+                    <p className="truncate font-medium text-fg">{getEventDisplayName(template)}</p>
                     <p className="mt-0.5 text-xs text-subtle">
-                      {template.dayCount ?? 0} 天
+                      <span className="font-mono">{template.id}</span>・{template.dayCount ?? 0} 天
                       {template.startDate ? `・${template.startDate}` : ''}
                     </p>
                   </div>

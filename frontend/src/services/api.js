@@ -7,6 +7,7 @@
 
 import { getToken, clearToken, refreshAccessToken } from './auth';
 import { emitError } from './errorBus';
+import { normalizeEventList } from '../utils/eventDisplay.js';
 
 // 把資源路徑組合成可載入的網址：
 // - 後端資源（以 / 開頭，如 /uploads/x.png）→ 原樣保留（相對路徑，proxy 或 rewrite 處理）。
@@ -136,8 +137,9 @@ export async function getEventTemplates() {
   return request('/api/events');
 }
 
+// 回傳 [{ id, name }]：id 為活動代號（路由用），name 為顯示名稱。
 export async function getEventList(options = {}) {
-  return request('/api/events/list', options);
+  return normalizeEventList(await request('/api/events/list', options));
 }
 
 export async function getEventTemplate(eventId, options = {}) {

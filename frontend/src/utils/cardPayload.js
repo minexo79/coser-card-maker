@@ -2,7 +2,8 @@
 // Kept framework-free so they are trivial to unit test.
 //
 // Payload shape mirrors oemCardTemplates.js event entries — each card stores only its
-// own layout snapshot: { dayCount, startDate, overWriteCanvas, eventName }.
+// own layout snapshot: { dayCount, startDate, overWriteCanvas, eventId }.
+// eventId is the event slug; the backend adds an eventName snapshot (display name) on save.
 // User-generated content (form data / image URLs) is intentionally not persisted.
 
 const cloneJsonOrNull = (value) => {
@@ -13,7 +14,7 @@ const cloneJsonOrNull = (value) => {
 // Build the JSON body expected by POST /api/cards.
 export function buildCardPayload({
   dayCount,
-  eventName = null,
+  eventId = null,
   dayDetails,
   overWriteCanvas
 }) {
@@ -22,7 +23,7 @@ export function buildCardPayload({
     // 對齊 oemCardTemplates.js：起始日期取自 d1（未填寫時為空字串）
     startDate: dayDetails?.d1?.date ?? '',
     overWriteCanvas: cloneJsonOrNull(overWriteCanvas),
-    eventName: eventName ?? null
+    eventId: eventId ?? null
   };
 }
 
@@ -36,6 +37,8 @@ export function applyCardPayload(payload) {
     dayCount: payload.dayCount ?? null,
     startDate: payload.startDate ?? '',
     overWriteCanvas: cloneJsonOrNull(payload.overWriteCanvas),
+    // 舊卡片沒有 eventId，當時把活動代號存在 eventName
+    eventId: payload.eventId ?? payload.eventName ?? null,
     eventName: payload.eventName ?? null
   };
 }

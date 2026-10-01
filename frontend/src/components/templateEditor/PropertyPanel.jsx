@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Settings as SettingsIcon, Type as TypeIcon, Trash2 } from 'lucide-react';
 import { groupColor } from './constants.js';
 
-const NumberField = ({ label, value, onChange }) => {
+export const NumberField = ({ label, value, onChange }) => {
   const [text, setText] = useState(() => String(value ?? ''));
   const [prevValue, setPrevValue] = useState(value);
 

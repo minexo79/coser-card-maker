@@ -9,6 +9,22 @@ description: Defines the Anicon DIVA CardMaker card template format for creating
 
 ---
 
+## 活動模板外層（`/api/events/{eventId}`）
+
+下方各節描述的是 `overWriteCanvas` 的內容；存進後端的活動模板外層結構為：
+
+| 鍵 | 類型 | 含義 |
+|---|---|---|
+| `name` | `string` | 活動名稱（顯示用，可含中文，最多 100 字；缺值時以 eventId 代替） |
+| `dayCount` | `int` | 天數（1~4） |
+| `startDate` | `string` | 起始日期 `YYYY-MM-DD` |
+| `overWriteCanvas` | `object` | 版面設定（見下方各節） |
+| `createdBy` | `string \| null` | 建立者（後端依 JWT 自動寫入） |
+
+活動代號（eventId）不在 body 中，而是 URL path 與 MongoDB `_id`，僅限 `[A-Za-z0-9_-]{1,64}`。
+
+---
+
 ## 頂層鍵
 
 | 鍵 | 類型 | 含義 |

@@ -93,7 +93,7 @@ const UserManagement = () => {
 
   return (
     <div>
-      <h2 className="text-lg text-fg mb-4">使用者管理</h2>
+      <h2 className="text-xl text-fg mb-4">使用者管理</h2>
 
       {error && <p className="text-sm text-danger mb-3">{error}</p>}
 

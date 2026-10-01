@@ -46,7 +46,16 @@ describe('utils/templateDraft', () => {
       };
       const draft = createDraftFromEventPayload(payload);
       expect(draft.dayCount).toBe(3);
+      expect(draft.name).toBe('');
       expect(draft.overWriteCanvas.imageSlots).toHaveLength(3);
+    });
+    it('帶入活動名稱', () => {
+      const draft = createDraftFromEventPayload({
+        name: '開拓動漫祭',
+        dayCount: 1,
+        overWriteCanvas: { imageSlots: [{ key: 'd1' }] }
+      });
+      expect(draft.name).toBe('開拓動漫祭');
     });
     it('缺少 overWriteCanvas 應拋錯', () => {
       expect(() => createDraftFromEventPayload({})).toThrow();
@@ -63,6 +72,16 @@ describe('utils/templateDraft', () => {
       });
       expect(payload.dayCount).toBe(2);
       expect(payload.overWriteCanvas.imageSlots).toHaveLength(2);
+    });
+    it('活動名稱去除首尾空白後輸出', () => {
+      const payload = serializeDraft({
+        name: '  CWT70  ',
+        dayCount: 1,
+        startDate: '',
+        overWriteCanvas: { imageSlots: [{}] }
+      });
+      expect(payload.name).toBe('CWT70');
+      expect(serializeDraft({ overWriteCanvas: { imageSlots: [] } }).name).toBe('');
     });
     it('dayCount 與 imageSlots 不一致時以 imageSlots 長度為準（方案 A）', () => {
       const payload = serializeDraft({

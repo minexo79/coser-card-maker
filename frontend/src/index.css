@@ -93,12 +93,7 @@
   .btn-secondary {
     @apply border border-line-strong hover:bg-raised text-fg font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
-
-  /* 區塊上方的小標：亮藍色 */
-  .eyebrow {
-    @apply text-xs uppercase tracking-widest text-azure;
-  }
-
+  
   /* 卡片：1px 邊框分層，不用陰影 */
   .panel {
     @apply rounded-2xl border border-line bg-surface;

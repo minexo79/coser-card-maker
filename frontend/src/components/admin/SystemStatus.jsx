@@ -22,7 +22,7 @@ const SystemStatus = () => {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg text-fg mb-4">系統狀態</h2>
+      <h2 className="text-xl text-fg mb-4">系統狀態</h2>
 
       {/* 版本標示 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">

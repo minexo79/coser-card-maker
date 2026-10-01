@@ -5,9 +5,7 @@ const About = () => {
     <div className="container mx-auto px-4 pb-4 pt-10 md:pt-16">
       <div className="mx-auto max-w-2xl animate-fade-up">
         <div className="mb-8">
-          <p className="eyebrow mb-4">Anicon DIVA CardMaker</p>
           <h1 className="text-4xl leading-tight text-fg flex items-center gap-3">
-            <Info className="w-8 h-8 text-accent" />
             關於本專案
           </h1>
         </div>

@@ -40,7 +40,7 @@ const AuditLogList = () => {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg text-fg mb-4">審計日誌</h2>
+      <h2 className="text-xl text-fg mb-4">審計日誌</h2>
       {logs.length === 0 ? (
         <p className="text-sm text-muted">暫無記錄</p>
       ) : (

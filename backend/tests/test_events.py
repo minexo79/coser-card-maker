@@ -213,3 +213,51 @@ def test_events_mine_endpoint(api):
 
     admin_mine = api.get("/api/events/mine", headers=_auth_headers("admin", role="admin")).json()
     assert "vis01" in admin_mine
+
+
+# ---------------------------------------------------------------------------
+# Display name (``name``) vs event id
+# ---------------------------------------------------------------------------
+
+
+def test_put_and_get_name_roundtrip(api):
+    payload = {**VALID_TEMPLATE, "name": "  開拓動漫祭 FF44  "}
+    resp = _put_event(api, payload=payload, event_id="named01")
+    assert resp.status_code == 200
+    assert resp.json()["name"] == "開拓動漫祭 FF44"
+
+    got = api.get("/api/events/named01").json()
+    assert got["name"] == "開拓動漫祭 FF44"
+
+
+def test_missing_or_blank_name_falls_back_to_id(api):
+    assert _put_event(api, event_id="noname01").json()["name"] == "noname01"
+    assert api.get("/api/events/noname01").json()["name"] == "noname01"
+
+    blank = {**VALID_TEMPLATE, "name": "   "}
+    assert _put_event(api, payload=blank, event_id="noname02").json()["name"] == "noname02"
+
+    admin_list = api.get("/api/events", headers=_auth_headers("admin", role="admin")).json()
+    assert admin_list["noname01"]["name"] == "noname01"
+
+
+def test_name_too_long_returns_422(api):
+    payload = {**VALID_TEMPLATE, "name": "名" * 101}
+    assert _put_event(api, payload=payload, event_id="longname01").status_code == 422
+
+
+def test_name_can_change_without_changing_id(api):
+    _put_event(api, payload={**VALID_TEMPLATE, "name": "舊名稱"}, event_id="rename01")
+    _put_event(api, payload={**VALID_TEMPLATE, "name": "新名稱"}, event_id="rename01")
+    assert api.get("/api/events/rename01").json()["name"] == "新名稱"
+
+
+def test_event_list_returns_id_and_name(api):
+    _put_event(api, payload={**VALID_TEMPLATE, "name": "清單測試"}, event_id="listname01")
+    _put_event(api, event_id="listname02")
+
+    listing = api.get("/api/events/list").json()
+    assert isinstance(listing, list)
+    by_id = {item["id"]: item for item in listing}
+    assert by_id["listname01"] == {"id": "listname01", "name": "清單測試"}
+    assert by_id["listname02"] == {"id": "listname02", "name": "listname02"}

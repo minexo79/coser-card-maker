@@ -7,6 +7,7 @@ import {
   createDraftFromBase,
   createDraftFromEventPayload,
   createBlankDraft,
+  getSharedImageRadius,
   scaleOverWriteCanvas
 } from '../../utils/templateDraft.js';
 
@@ -114,6 +115,14 @@ export function useTemplateDraft(initialDraft) {
     }));
   }, []);
 
+  // 設定活動顯示名稱（draft.name）。
+  const setName = useCallback((name) => {
+    setDraft((prev) => ({
+      ...prev,
+      name: name ?? ''
+    }));
+  }, []);
+
   // 設定草稿的起始日期（draft.startDate）。
   const setStartDate = useCallback((date) => {
     setDraft((prev) => ({
@@ -173,6 +182,8 @@ export function useTemplateDraft(initialDraft) {
         const key = `d${index + 1}`;
         const slot = {
           key,
+          // 新圖片槽沿用模板共用的圓角
+          radius: getSharedImageRadius(canvas),
           label: `第${index + 1}天`,
           x: 50 + (index % 5) * 20,
           y: 80,
@@ -312,6 +323,16 @@ export function useTemplateDraft(initialDraft) {
     [elementsById]
   );
 
+  // 設定模板共用的照片圓角：一次套用到所有圖片槽。
+  const setImageRadius = useCallback((radius) => {
+    const value = Math.max(0, Number(radius) || 0);
+    setDraft((prev) => {
+      const canvas = ensureContainers(prev.overWriteCanvas);
+      canvas.imageSlots = canvas.imageSlots.map((slot) => ({ ...slot, radius: value }));
+      return { ...prev, overWriteCanvas: canvas };
+    });
+  }, []);
+
   // 直接設定圖片槽數量（用於工具列的「＋/－」或直接輸入數字）。
   const setSlotCount = useCallback((nextCount) => {
     const clamped = Math.max(0, Math.floor(Number(nextCount) || 0));
@@ -322,11 +343,13 @@ export function useTemplateDraft(initialDraft) {
       const next = { ...prev, overWriteCanvas: canvas };
 
       if (clamped > current) {
-        // 補齊到目標數量
+        // 補齊到目標數量；新圖片槽沿用模板共用的圓角
+        const radius = getSharedImageRadius(next.overWriteCanvas);
         while (next.overWriteCanvas.imageSlots.length < clamped) {
           const index = next.overWriteCanvas.imageSlots.length;
           next.overWriteCanvas.imageSlots.push({
             key: `d${index + 1}`,
+            radius,
             label: `第${index + 1}天`,
             x: 50 + (index % 5) * 20,
             y: 80,
@@ -354,6 +377,8 @@ export function useTemplateDraft(initialDraft) {
     elements,
     elementsById,
     loadedEventId,
+    // 儲存成功後將草稿標記為對應此活動代號（例如另存為新活動）
+    markSavedAs: setLoadedEventId,
     resetFromTemplate,
     clearAll,
     replaceDraft,
@@ -362,6 +387,7 @@ export function useTemplateDraft(initialDraft) {
     updateMeta,
     updateNestedMeta,
     resizeCanvas,
+    setName,
     setStartDate,
     addElement,
     addCategorySelection,
@@ -369,6 +395,7 @@ export function useTemplateDraft(initialDraft) {
     removeElement,
     duplicateElement,
     setSlotCount,
+    setImageRadius,
     hasElement
   };
 }

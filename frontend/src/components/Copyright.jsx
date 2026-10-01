@@ -4,7 +4,7 @@ const Copyright = () => {
 
   return (
     <div className="mb-4">
-      <div className="text-center text-sm/6 text-subtle mt-12">
+      <div className="text-center text-sm/6 text-subtle mt-4">
         {/* 版權聲明 */}
         <p className="text-xs mb-2">AniconDIVA CardMaker @ Developed By Blackcat.</p>
         {/* GitHub 連結 */}

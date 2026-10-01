@@ -170,6 +170,20 @@ describe('services/api', () => {
     expect(init.method).toBe('GET');
   });
 
+  it('getEventList() 應 GET /api/events/list 並回傳 [{ id, name }]', async () => {
+    fetchMock.mockResolvedValue(jsonResponse([{ id: 'ff44', name: '開拓動漫祭' }, { id: 'cwt70' }]));
+    const api = await setupApi();
+
+    const result = await api.getEventList();
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toBe('/api/events/list');
+    expect(result).toEqual([
+      { id: 'ff44', name: '開拓動漫祭' },
+      { id: 'cwt70', name: 'cwt70' }
+    ]);
+  });
+
   it('getEventTemplate(id) 應 GET /api/events/{id}', async () => {
     fetchMock.mockResolvedValue(jsonResponse({ dayCount: 2 }));
     const api = await setupApi();

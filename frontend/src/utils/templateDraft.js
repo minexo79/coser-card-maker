@@ -1,7 +1,8 @@
 // 模板草稿（draft）的純函式資料操作。
 //
 // 一個 draft 的形狀為：
-//   { dayCount: number, startDate: string, overWriteCanvas: object }
+//   { name: string, dayCount: number, startDate: string, overWriteCanvas: object }
+// name 為活動顯示名稱；活動代號（eventId）不屬於草稿，由編輯器另外管理。
 // overWriteCanvas 與 cardTemplates.js / skill.md 描述的結構相同。
 //
 // 本模組不依賴 React，方便直接用 Vitest 測試。
@@ -9,6 +10,17 @@
 import { CARD_TEMPLATES } from '../models/cardTemplates.js';
 
 export const clone = (value) => JSON.parse(JSON.stringify(value));
+
+// 圖片槽（照片外框）圓角預設值（px）。
+// 同一個模板的所有圖片槽共用同一個圓角；資料上仍寫在每個 imageSlot.radius，
+// 以相容製卡頁的渲染與後端 schema。
+export const DEFAULT_IMAGE_RADIUS = 32;
+
+// 取得模板共用的圓角：以第一個有設定 radius 的圖片槽為準，皆未設定時回傳預設值。
+export function getSharedImageRadius(canvas) {
+  const slot = (canvas?.imageSlots || []).find((item) => typeof item?.radius === 'number');
+  return slot ? slot.radius : DEFAULT_IMAGE_RADIUS;
+}
 
 // 由 dayCount（1~4）找出對應的內建模板 key（如 "1p"）。
 export function templateKeyForDayCount(dayCount) {
@@ -32,6 +44,7 @@ export function createDraftFromBase(dayCount, options = {}) {
   const key = templateKeyForDayCount(dayCount);
   const base = CARD_TEMPLATES[key];
   return {
+    name: '',
     dayCount: base.imageSlots.length,
     startDate: options.startDate ?? todayString(),
     overWriteCanvas: clone(base)
@@ -45,6 +58,7 @@ export function createBlankDraft(options = {}) {
   const width = canvas.width ?? 1220;
   const height = canvas.height ?? 700;
   return {
+    name: '',
     // 從 0 開始時沒有圖片槽，dayCount 設為 1 以符合後端最小語意；
     // 真正的天數以 imageSlots.length === 0 表示「尚未設定」。
     dayCount: 1,
@@ -69,7 +83,7 @@ export function createBlankDraft(options = {}) {
   };
 }
 
-// 由後端 event template payload（{ dayCount, startDate, overWriteCanvas }）建立草稿。
+// 由後端 event template payload（{ name, dayCount, startDate, overWriteCanvas }）建立草稿。
 // 若資料不完整則擲錯。
 export function createDraftFromEventPayload(payload) {
   if (!payload || typeof payload !== 'object') {
@@ -82,6 +96,7 @@ export function createDraftFromEventPayload(payload) {
   const slots = Array.isArray(overWriteCanvas.imageSlots) ? overWriteCanvas.imageSlots : [];
   const dayCount = payload.dayCount ?? slots.length;
   return {
+    name: typeof payload.name === 'string' ? payload.name : '',
     dayCount,
     startDate: payload.startDate || todayString(),
     overWriteCanvas: clone(overWriteCanvas)
@@ -97,6 +112,8 @@ export function serializeDraft(draft) {
   const slots = draft.overWriteCanvas.imageSlots || [];
   const dayCount = slots.length || 1;
   return {
+    // 空字串代表未填；由編輯器擋下，後端也會把空白名稱視為未設定
+    name: (draft.name || '').trim(),
     dayCount,
     startDate: draft.startDate || '',
     overWriteCanvas: clone(draft.overWriteCanvas)
@@ -220,7 +237,7 @@ export function buildBlankBox(group, field) {
     case 'titleImage':
       return { ...base, x: 30, y: 30, width: 400, height: 200 };
     case 'textPositions': {
-      if (field === 'message') return { ...base, y: 450, height: 150, fontSize: 26, lineHeight: 32 };
+      if (field === 'message') return { ...base, y: 450, height: 150, fontSize: 26, lineHeight: 40 };
       if (field === 'category') return { ...base, y: 320, height: 80, fontSize: 28 };
       return { ...base, y: 180, height: 120, fontSize: 30 };
     }

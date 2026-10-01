@@ -62,8 +62,7 @@ const BackendStatus = ({ pollIntervalMs = POLL_INTERVAL_MS } = {}) => {
 
   return (
     <div className="mb-6">
-      <h2 className="text-lg text-fg mb-4 flex items-center gap-2">
-        <Activity className="w-5 h-5 text-accent" />
+      <h2 className="text-xl text-fg mb-4 flex items-center gap-2">
         後端運行狀態
       </h2>
 
