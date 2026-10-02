@@ -6,7 +6,7 @@ const CardPreview = ({ canvasRef, imageLayerRef, isLoading, onPreviewClick }) =>
       {/* 預覽區容器，直接把圖片放大到跟Container一樣大 (max-w-md -> max-w-max) */}
       <div className="relative bg-ink border border-line rounded-xl p-4 w-full max-w-max mx-auto">
         {isLoading && (
-          <div className="absolute inset-0 bg-ink/80 backdrop-blur-sm flex items-center justify-center z-10 rounded-xl">
+          <div className="absolute inset-0 bg-ink/85 flex items-center justify-center z-10 rounded-xl">
             <div className="flex flex-col items-center gap-3">
               <Loader label="生成中…" />
             </div>

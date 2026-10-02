@@ -41,7 +41,7 @@ const PreviewModal = ({ show, canvasRef, onClose }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div className="relative bg-surface border border-line rounded-2xl max-w-4xl max-h-[90vh] overflow-auto">
         {/* 標題欄 */}
         <div className="flex items-center justify-between p-4 border-b border-line">

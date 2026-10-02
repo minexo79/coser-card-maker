@@ -113,7 +113,7 @@ const UserManagement = () => {
               <tr key={u.username} className="border-b border-line">
                 <td className="py-2">{u.username}</td>
                 <td className="py-2">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin' ? 'bg-accent/15 text-accent' : 'bg-raised text-fg-soft'}`}>
+                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${u.role === 'admin' ? 'bg-accent/15 text-accent' : 'bg-line text-fg-soft'}`}>
                     {u.role}
                   </span>
                 </td>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/useAuth';
-import { LogIn } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -33,9 +32,8 @@ const Login = () => {
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
       <div className="w-full max-w-sm bg-surface border border-line rounded-2xl p-8 animate-fade-up">
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <LogIn className="w-6 h-6 text-accent" />
-          <h1 className="text-xl font-bold text-fg">登入</h1>
+        <div className="mb-6 border-b border-line pb-3">
+          <h1 className="text-lg text-fg">登入</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

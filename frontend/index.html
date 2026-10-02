@@ -5,28 +5,28 @@
     <link rel="icon" type="image/x-icon" href="./favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="dark" />
-    <meta name="theme-color" content="#1c1c1e" />
+    <meta name="theme-color" content="#202020" />
     <title>場次預定製作工具</title>
     <!-- 說明 -->
     <meta name="description" content="快速製作屬於你的場次預定圖！">
     <!-- 開機畫面：JS 與字體載入前就要顯示，所以樣式內嵌在這裡 -->
     <style>
       @font-face { font-family: 'LINESeedTW'; src: url('/fonts/LINESeedTW_TTF_Bd.ttf') format('truetype'); font-weight: 400 900; font-display: swap; }
-      html, body { margin: 0; background: #1c1c1e; }
+      html, body { margin: 0; background: #202020; }
       #splash {
         position: fixed; inset: 0; z-index: 9999;
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
-        background: #1c1c1e; color: #aaaab4;
+        background: #202020; color: #bec8d8;
         font: 12px/1 'LINESeedTW', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
         letter-spacing: 0.18em; text-transform: uppercase;
         transition: opacity 0.35s ease-out;
       }
       #splash.splash-hide { opacity: 0; pointer-events: none; }
       #splash img { width: 44px; height: 44px; filter: invert(1); animation: splash-pulse 1.6s ease-in-out infinite; }
-      #splash .splash-bar { position: relative; width: 140px; height: 2px; overflow: hidden; border-radius: 1px; background: #3c3c42; }
+      #splash .splash-bar { position: relative; width: 140px; height: 2px; overflow: hidden; border-radius: 1px; background: #12243f; }
       #splash .splash-bar::after {
         content: ''; position: absolute; inset: 0; width: 40%;
-        background: linear-gradient(to right, #ff6a1a, #38bdf8);
+        background: #ff8c00;
         animation: splash-bar 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
       }
       @keyframes splash-bar { 0% { transform: translateX(-100%); } 100% { transform: translateX(250%); } }

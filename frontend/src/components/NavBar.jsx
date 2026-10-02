@@ -51,7 +51,7 @@ const NavBar = () => {
     }`;
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-line bg-ink/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-line bg-ink">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
           <img src="./favicon.ico" alt="Logo" className="w-8 h-8 invert" />
@@ -179,7 +179,7 @@ const NavBar = () => {
           )}
         </ul>
       )}
-      <div className="color-bar -mb-px" aria-hidden="true" />
+      <div className="color-bar" aria-hidden="true" />
     </nav>
   );
 };

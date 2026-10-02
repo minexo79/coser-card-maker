@@ -116,7 +116,7 @@ const TemplateListPage = () => {
         <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
           {templates.map((template) => (
             <li key={template.id} className="flex flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 md:flex-nowrap">
-              <div className="h-16 w-12 shrink-0 overflow-hidden rounded border border-line bg-raised">
+              <div className="h-16 w-12 shrink-0 overflow-hidden rounded border border-line bg-line">
                 {template.overWriteCanvas?.baseImagePath ? (
                   <img
                     src={resolveAssetUrl(template.overWriteCanvas.baseImagePath)}
@@ -134,7 +134,7 @@ const TemplateListPage = () => {
                 <div className="flex items-center gap-2">
                   <p className="min-w-0 truncate font-medium text-fg">{getEventDisplayName(template)}</p>
                   {template.createdBy ? (
-                    <span className="shrink-0 max-w-24 truncate rounded bg-raised px-1.5 py-0.5 text-[10px] font-normal text-muted" title={`建立者：${template.createdBy}`}>
+                    <span className="shrink-0 max-w-24 truncate rounded bg-line px-1.5 py-0.5 text-[10px] font-normal text-muted" title={`建立者：${template.createdBy}`}>
                       {template.createdBy}
                     </span>
                   ) : (

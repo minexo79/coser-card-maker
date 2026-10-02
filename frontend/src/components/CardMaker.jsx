@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { Image as ImageIcon } from 'lucide-react';
-import { Settings as SettingIcon } from 'lucide-react';
 import { useParams, useSearchParams } from "react-router-dom";
 import { useCardMakerContext } from '../contexts/useCardMakerContext';
 import * as api from '../services/api.js';
@@ -180,7 +178,7 @@ const CardMaker = () => {
     <div className="container mx-auto p-4">
       {/* OEM 活動頁頂部顯示活動名稱；DIY（無 preset）時不顯示 */}
       {preset && (
-        <h1 className="mb-4 text-center text-2xl text-fg" data-testid="event-name">
+        <h1 className="mb-4 border-l-4 border-accent pl-3 text-2xl text-fg" data-testid="event-name">
           {getEventDisplayName({ id: eventId, name: preset.name })}
         </h1>
       )}
@@ -188,8 +186,8 @@ const CardMaker = () => {
         {/* 左側設定面板 */}
         <div className="lg:col-span-5">
           <div className="bg-surface border border-line rounded-2xl p-6 h-full">
-            <h2 className="text-xl text-fg text-center mb-6 flex items-center justify-center gap-2">
-              <SettingIcon className="w-6 h-6 text-accent" />
+            <h2 className="section-title">
+              <span aria-hidden="true">01</span>
               內容設定
             </h2>
 
@@ -374,7 +372,7 @@ const CardMaker = () => {
             )}
 
             {/* 問題反饋連結 */}
-            <div className="text-right text-sm/6 text-muted mt-8">
+            <div className="text-right text-sm/6 text-muted mt-8 underline underline-offset-4 hover:text-accent">
               <a href="https://forms.gle/ddpGAjKPXj1TsYVP9" target="_blank" rel="noopener noreferrer">
                 遇到問題請點我反饋!
               </a>
@@ -385,8 +383,8 @@ const CardMaker = () => {
         {/* 右側預覽區域 */}
         <div className="lg:col-span-7">
           <div className="bg-surface border border-line rounded-2xl p-6 h-full">
-            <h2 className="text-xl text-fg text-center mb-6 flex items-center justify-center gap-2">
-              <ImageIcon className="w-6 h-6 text-accent" />
+            <h2 className="section-title">
+              <span aria-hidden="true">02</span>
               圖片預覽
             </h2>
 

@@ -20,7 +20,7 @@ const badgeClass = (event) => {
   if (event.includes('success') || event.includes('create')) {
     return 'bg-mint/15 text-mint';
   }
-  return 'bg-raised text-fg-soft';
+  return 'bg-line text-fg-soft';
 };
 
 const AuditLogList = () => {

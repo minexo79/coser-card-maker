@@ -77,7 +77,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
       onClick={onClose}
     >
       <div
@@ -138,7 +138,7 @@ const TemplateListModal = ({ onClose, onLoad, onDelete }) => {
               {templates.map((template) => (
                 <li key={template.id} className="flex items-center gap-4 py-3">
                   {/* 底圖縮圖 */}
-                  <div className="h-16 w-12 shrink-0 overflow-hidden rounded border border-line bg-raised">
+                  <div className="h-16 w-12 shrink-0 overflow-hidden rounded border border-line bg-line">
                     {template.overWriteCanvas?.baseImagePath ? (
                       <img
                         src={resolveAssetUrl(template.overWriteCanvas.baseImagePath)}

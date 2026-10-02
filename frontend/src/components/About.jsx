@@ -5,7 +5,7 @@ const About = () => {
     <div className="container mx-auto px-4 pb-4 pt-10 md:pt-16">
       <div className="mx-auto max-w-2xl animate-fade-up">
         <div className="mb-8">
-          <h1 className="text-4xl leading-tight text-fg flex items-center gap-3">
+          <h1 className="border-l-4 border-accent pl-4 text-4xl leading-tight text-fg">
             關於本專案
           </h1>
         </div>
