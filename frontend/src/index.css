@@ -15,21 +15,21 @@
 :root {
   color-scheme: dark;
 
-  --ink: 28 28 30;
-  --surface: 37 37 40;
-  --raised: 48 48 52;
-  --line: 60 60 66;
-  --line-strong: 86 86 94;
+  --ink: 32 32 32;
+  --surface: 32 32 32;
+  --raised: 237 145 33;
+  --line: 64 64 64;
+  --line-strong: 96 96 96;
 
-  --fg: 245 245 247;
-  --fg-soft: 212 212 218;
-  --muted: 170 170 180;
-  --subtle: 146 146 156;
+  --fg: 255 255 255;
+  --fg-soft: 225 232 240;
+  --muted: 190 200 216;
+  --subtle: 160 172 192;
 
-  --accent: 255 106 26;
-  --azure: 56 189 248;
-  --mint: 25 213 158;
-  --danger: 248 113 113;
+  --accent: 255 140 0;
+  --azure: 137 207 240;
+  --mint: 137 207 240;
+  --danger: 255 138 138;
   --warn: 251 191 36;
 }
 
@@ -94,6 +94,15 @@
     @apply border border-line-strong hover:bg-raised text-fg font-medium py-2 px-4 rounded-lg transition-colors duration-200;
   }
   
+  /* 區塊標題：靠左，前面帶橘色編號 */
+  .section-title {
+    @apply mb-6 flex items-baseline gap-3 border-b border-line pb-3 text-lg text-fg;
+  }
+
+  .section-title > span {
+    @apply text-sm text-accent;
+  }
+
   /* 卡片：1px 邊框分層，不用陰影 */
   .panel {
     @apply rounded-2xl border border-line bg-surface;
@@ -117,7 +126,7 @@
   @apply bg-subtle;
 }
 
-/* 頁面背景：頂部淡出的格線 */
+/* 頁面背景：淡淡的格線 */
 .page-bg {
   isolation: isolate;
 }
@@ -129,23 +138,15 @@
   z-index: -1;
   pointer-events: none;
   background-image:
-    linear-gradient(to right, rgb(var(--line) / 0.55) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(var(--line) / 0.55) 1px, transparent 1px);
+    linear-gradient(to right, rgb(var(--line) / 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(var(--line) / 0.3) 1px, transparent 1px);
   background-size: 56px 56px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 100%);
-  mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, #000 0%, transparent 100%);
 }
 
-/* 橘 → 藍的細色條（導覽列底部） */
+/* 導覽列底部的細線：橘色為主，尾端一段淺綠（硬切，不做漸層） */
 .color-bar {
-  height: 1px;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgb(var(--accent) / 0.9) 30%,
-    rgb(var(--azure) / 0.9) 70%,
-    transparent
-  );
+  height: 2px;
+  background: linear-gradient(to right, rgb(var(--accent)) 0 75%, rgb(var(--mint)) 75% 100%);
 }
 
 /* ---- 載入動畫 ---- */
@@ -186,7 +187,7 @@
   position: absolute;
   inset: 0;
   width: 40%;
-  background: linear-gradient(to right, rgb(var(--accent)), rgb(var(--azure)));
+  background: rgb(var(--accent));
   animation: loader-bar 1.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
 }
 
@@ -199,7 +200,7 @@
 .skeleton {
   position: relative;
   overflow: hidden;
-  background-color: rgb(var(--raised));
+  background-color: rgb(var(--line));
 }
 
 .skeleton::after {
@@ -224,4 +225,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* raised 是橘色底（按鈕選中／滑過）：上面的文字與圖示改用深色才看得清楚 */
+.bg-raised,
+.hover\:bg-raised:hover,
+.hover\:bg-raised:hover svg {
+  color: rgb(var(--ink));
 }

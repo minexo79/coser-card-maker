@@ -28,7 +28,7 @@ const ErrorProvider = ({ children }) => {
           className="fixed inset-0 z-[100] flex items-center justify-center px-4"
         >
           <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/80"
             onClick={closeError}
             data-testid="error-modal-backdrop"
           />

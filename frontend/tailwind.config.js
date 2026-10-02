@@ -42,18 +42,18 @@ export default {
         'warn': token('warn'),
       },
       borderRadius: {
-        'lg': '6px',
-        'xl': '10px',
-        '2xl': '14px',
+        'lg': '4px',
+        'xl': '6px',
+        '2xl': '8px',
       },
       animation: {
         'spin-slow': 'spin 2s linear infinite',
-        'fade-up': 'fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both',
-        'fade-in': 'fade-in 0.3s ease-out both',
+        'fade-up': 'fade-up 0.25s ease-out both',
+        'fade-in': 'fade-in 0.15s ease-out both',
       },
       keyframes: {
         'fade-up': {
-          '0%': { opacity: '0', transform: 'translateY(1rem)' },
+          '0%': { opacity: '0', transform: 'translateY(0.5rem)' },
           '100%': { opacity: '1', transform: 'none' },
         },
         'fade-in': {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CalendarDays, PenLine, Sparkles, AlertTriangle, FaceSlightlyFrowning } from 'lucide-react';
+import { PenLine, Sparkles, AlertTriangle, FaceSlightlyFrowning } from 'lucide-react';
 import { Skeleton } from './Loader';
 import * as api from '../services/api.js';
 import { resolveAssetUrl } from '../services/api.js';
@@ -41,8 +41,8 @@ const HomePage = () => {
     <div className="container mx-auto px-4 pb-4 pt-10 md:pt-16">
       <div>
         <header className="mb-10 animate-fade-up">
-          <h1 className="text-4xl leading-tight text-fg md:text-5xl">本週場次</h1>
-          <p className="mt-3 text-muted">挑選一個場次，開始製作你的預定</p>
+          <h1 className="border-l-4 border-accent pl-4 text-4xl leading-tight text-fg md:text-5xl">本週場次</h1>
+          <p className="mt-3 pl-5 text-muted">挑選一個場次，開始製作你的預定</p>
         </header>
 
         {error && (
@@ -77,15 +77,15 @@ const HomePage = () => {
             {weekEvents.map((event, index) => (
               <div
                 key={event.id}
-                className="group flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors duration-200 hover:border-line-strong"
+                className="flex animate-fade-up flex-col overflow-hidden rounded-2xl border border-line bg-surface transition-colors duration-200 hover:border-accent"
                 style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}
               >
-                <div className="h-36 w-full overflow-hidden bg-raised">
+                <div className="h-36 w-full overflow-hidden bg-line">
                   {event.overWriteCanvas?.baseImagePath ? (
                     <img
                       src={resolveAssetUrl(event.overWriteCanvas.baseImagePath)}
                       alt=""
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center text-xs text-subtle">
