@@ -1,0 +1,212 @@
+# CI 流程：程式碼測試（前後端）→ 程式碼品質檢查 → 套件包檢查 → CodeQL
+# 每個階段透過 `needs` 串接，前一階段失敗時後續階段不會執行。
+name: CI
+
+on:
+  push:
+    branches: [master, action-check]
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "24"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ------------------------------------------------------------------
+  # 1. 程式碼測試
+  # ------------------------------------------------------------------
+  test-frontend:
+    name: Test / Frontend (Vitest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Run tests with coverage
+        run: npm run coverage
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage
+          if-no-files-found: ignore
+
+  test-backend:
+    name: Test / Backend (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - run: pip install -r requirements.txt
+
+      # conftest.py 會自行設定測試用環境變數（mongomock、本機磁碟），不需外部服務
+      - name: Run tests
+        run: python -m pytest -v
+
+  # ------------------------------------------------------------------
+  # 2. 程式碼品質檢查
+  # ------------------------------------------------------------------
+  quality-frontend:
+    name: Quality / Frontend (ESLint + build)
+    needs: [test-frontend, test-backend]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+  quality-backend:
+    name: Quality / Backend (Ruff)
+    needs: [test-frontend, test-backend]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install ruff
+
+      # 專案尚無 ruff 設定檔，先檢查語法錯誤 (E9)、pyflakes (F) 與 bugbear (B)
+      - name: Ruff lint
+        run: ruff check . --select E9,F,B --output-format github
+
+  # ------------------------------------------------------------------
+  # 3. 套件包檢查（已知漏洞）
+  # ------------------------------------------------------------------
+  deps-frontend:
+    name: Dependencies / Frontend (npm audit)
+    needs: [quality-frontend, quality-backend]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      # 只檢查正式相依套件；high 以上視為失敗
+      - name: npm audit (production)
+        run: npm audit --omit=dev --audit-level=high
+
+      # dev 相依套件只回報不擋流程
+      - name: npm audit (all, report only)
+        run: npm audit --audit-level=high || true
+
+  deps-backend:
+    name: Dependencies / Backend (pip-audit)
+    needs: [quality-frontend, quality-backend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip install pip-audit
+
+      - name: pip-audit
+        run: pip-audit -r backend/requirements.txt --desc
+
+  dependency-review:
+    name: Dependencies / Dependency Review (PR only)
+    if: github.event_name == 'pull_request'
+    needs: [quality-frontend, quality-backend]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
+
+  # ------------------------------------------------------------------
+  # 4. CodeQL 靜態安全分析
+  # ------------------------------------------------------------------
+  codeql:
+    name: CodeQL (${{ matrix.language }})
+    needs: [deps-frontend, deps-backend, dependency-review]
+    # dependency-review 只在 PR 執行，push 時會是 skipped，需允許
+    if: |
+      always() &&
+      needs.deps-frontend.result == 'success' &&
+      needs.deps-backend.result == 'success' &&
+      (needs.dependency-review.result == 'success' || needs.dependency-review.result == 'skipped')
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [javascript-typescript, python]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+          queries: security-and-quality
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
