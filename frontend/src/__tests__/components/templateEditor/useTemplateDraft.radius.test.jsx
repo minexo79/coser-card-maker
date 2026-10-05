@@ -6,14 +6,14 @@ import { DEFAULT_IMAGE_RADIUS, getSharedImageRadius } from '../../../utils/templ
 const slots = (result) => result.current.draft.overWriteCanvas.imageSlots;
 
 describe('useTemplateDraft 共用照片圓角', () => {
-  it('預設圓角為 5，新增的圖片槽帶入預設值', () => {
+  it('預設圓角為 32，新增的圖片槽帶入預設值', () => {
     const { result } = renderHook(() => useTemplateDraft());
     expect(DEFAULT_IMAGE_RADIUS).toBe(32);
 
     act(() => {
       result.current.setSlotCount(2);
     });
-    expect(slots(result).map((s) => s.radius)).toEqual([5, 5]);
+    expect(slots(result).map((s) => s.radius)).toEqual([32, 32]);
   });
 
   it('setImageRadius 一次套用到所有圖片槽', () => {
