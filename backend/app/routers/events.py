@@ -181,6 +181,18 @@ async def list_event_summaries() -> list[dict]:
     return event_templates.list_event_summaries()
 
 
+# --- Public homepage listing (this week's events) ---
+
+@router.get("/home")
+async def list_homepage_events() -> dict:
+    """Card-display fields of every event for the homepage, visible to anonymous visitors.
+
+    ``GET /api/events`` filters by ``createdBy``, so anonymous visitors would
+    see nothing; this listing matches ``/list`` visibility instead.
+    """
+    return event_templates.list_homepage_events()
+
+
 # --- GET /api/events/mine (auto-filter from JWT) ---
 
 @router.get("/mine")

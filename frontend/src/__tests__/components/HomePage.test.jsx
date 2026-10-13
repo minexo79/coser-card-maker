@@ -4,7 +4,7 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import HomePage from '../../components/HomePage';
 
 vi.mock('../../services/api', () => ({
-  getEventTemplates: vi.fn(),
+  getHomepageEvents: vi.fn(),
   resolveAssetUrl: (path) => path || '',
 }));
 
@@ -14,7 +14,7 @@ vi.mock('../../utils/eventCalendar.js', () => ({
   formatEventDateRange: (event) => (event?.startDate ? String(event.startDate) : ''),
 }));
 
-import { getEventTemplates } from '../../services/api';
+import { getHomepageEvents } from '../../services/api';
 
 const events = {
   cwtt36: {
@@ -48,7 +48,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('顯示本週場次與「製作預定」按鈕', async () => {
-    getEventTemplates.mockResolvedValue(events);
+    getHomepageEvents.mockResolvedValue(events);
     renderPage();
 
     expect(await screen.findByText('cwtt36')).toBeTruthy();
@@ -57,7 +57,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('有活動名稱時顯示名稱而非代號', async () => {
-    getEventTemplates.mockResolvedValue({
+    getHomepageEvents.mockResolvedValue({
       cwtt36: { ...events.cwtt36, name: '台北動漫祭 CWT T36' },
     });
     renderPage();
@@ -67,7 +67,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('點「製作預定」導向 /:eventId', async () => {
-    getEventTemplates.mockResolvedValue(events);
+    getHomepageEvents.mockResolvedValue(events);
     renderPage();
 
     const btn = await screen.findByRole('button', { name: /製作預定/ });
@@ -78,7 +78,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('本週無場次時顯示空狀態', async () => {
-    getEventTemplates.mockResolvedValue({});
+    getHomepageEvents.mockResolvedValue({});
     renderPage();
 
     await waitFor(() => {
@@ -87,7 +87,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('「想要自己來」按鈕導向 /make', async () => {
-    getEventTemplates.mockResolvedValue(events);
+    getHomepageEvents.mockResolvedValue(events);
     renderPage();
 
     const selfLabel = await screen.findByText(/我要自己來/);
@@ -100,7 +100,7 @@ describe('HomePage 首頁', () => {
   });
 
   it('載入失敗顯示錯誤訊息', async () => {
-    getEventTemplates.mockRejectedValue(new Error('boom'));
+    getHomepageEvents.mockRejectedValue(new Error('boom'));
     renderPage();
 
     await waitFor(() => {

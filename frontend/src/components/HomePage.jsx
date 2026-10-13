@@ -15,7 +15,7 @@ const HomePage = () => {
   useEffect(() => {
     let cancelled = false;
     api
-      .getEventTemplates({ silent: true })
+      .getHomepageEvents({ silent: true })
       .then((data) => {
         if (!cancelled) {
           const entries = Object.entries(data || {}).map(([id, value]) => ({ id, ...(value || {}) }));

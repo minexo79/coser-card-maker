@@ -137,6 +137,11 @@ export async function getEventTemplates() {
   return request('/api/events');
 }
 
+// 首頁「本週場次」用：公開列出所有場次的顯示欄位（未登入也看得到）。
+export async function getHomepageEvents(options = {}) {
+  return request('/api/events/home', options);
+}
+
 // 回傳 [{ id, name }]：id 為活動代號（路由用），name 為顯示名稱。
 export async function getEventList(options = {}) {
   return normalizeEventList(await request('/api/events/list', options));

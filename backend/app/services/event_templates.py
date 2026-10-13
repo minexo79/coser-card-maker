@@ -55,6 +55,19 @@ def list_event_summaries() -> list[dict]:
     return [{"id": doc["_id"], "name": doc.get("name") or doc["_id"]} for doc in docs]
 
 
+def list_homepage_events() -> dict:
+    """Public ``{id: {name, startDate, dayCount, overWriteCanvas.baseImagePath}}`` for the homepage.
+
+    Same visibility as ``list_event_summaries`` (all events); projection keeps
+    the layout payload out so anonymous visitors only get card-display fields.
+    """
+    projection = {"name": 1, "startDate": 1, "dayCount": 1, "overWriteCanvas.baseImagePath": 1}
+    return {
+        doc["_id"]: _with_name(doc["_id"], doc)
+        for doc in get_collection(COLLECTION).find({}, projection)
+    }
+
+
 def get_event_template(event_id: str) -> dict | None:
     doc = get_collection(COLLECTION).find_one({"_id": event_id})
     if doc is None:

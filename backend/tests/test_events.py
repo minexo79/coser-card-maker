@@ -261,3 +261,15 @@ def test_event_list_returns_id_and_name(api):
     by_id = {item["id"]: item for item in listing}
     assert by_id["listname01"] == {"id": "listname01", "name": "清單測試"}
     assert by_id["listname02"] == {"id": "listname02", "name": "listname02"}
+
+
+def test_homepage_listing_is_public_and_projected(api):
+    """匿名訪客也能在首頁看到使用者建立的場次（只回傳卡片顯示欄位）。"""
+    assert api.put("/api/events/home01", json=VALID_TEMPLATE, headers=_auth_headers("userA")).status_code == 200
+
+    listing = api.get("/api/events/home").json()
+    item = listing["home01"]
+    assert item["startDate"] == VALID_TEMPLATE["startDate"]
+    assert item["dayCount"] == VALID_TEMPLATE["dayCount"]
+    assert set(item) <= {"name", "startDate", "dayCount", "overWriteCanvas"}
+    assert set(item.get("overWriteCanvas", {})) <= {"baseImagePath"}

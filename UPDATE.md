@@ -1,4 +1,7 @@
-2026.10.X 更新 (Frontend V1.0.3 / Backend V1.0.1)
+2026.10.13 更新 (Frontend V1.0.4 / Backend V1.0.2)
+- 修正前端Home介面，一般使用者找不到一周預定的問題
+
+2026.10.2 更新 (Frontend V1.0.3 / Backend V1.0.1)
 - 將主題變成深色主題 (依舊把橘色當作主色)
 - 加入載入動畫
 - 手機板Admin選單改用Combox顯示
