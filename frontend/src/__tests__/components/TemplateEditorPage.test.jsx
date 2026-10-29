@@ -145,7 +145,7 @@ describe('components/templateEditor/TemplateEditor - 載入模板', () => {
     expect(payload.name).toBe('開拓動漫祭');
   });
 
-  it('照片圓角為共用設定，預設為 5', async () => {
+  it('照片圓角為共用設定，預設為 32', async () => {
     await act(async () => {
       render(
         <MemoryRouter initialEntries={['/template-editor']}>
@@ -155,6 +155,6 @@ describe('components/templateEditor/TemplateEditor - 載入模板', () => {
     });
 
     const input = screen.getByTestId('template-image-radius').querySelector('input');
-    expect(input.value).toBe('5');
+    expect(input.value).toBe('32');
   });
 });

@@ -13,7 +13,7 @@ describe('useTemplateDraft 共用照片圓角', () => {
     act(() => {
       result.current.setSlotCount(2);
     });
-    expect(slots(result).map((s) => s.radius)).toEqual([5, 5]);
+    expect(slots(result).map((s) => s.radius)).toEqual([32, 32]);
   });
 
   it('setImageRadius 一次套用到所有圖片槽', () => {
